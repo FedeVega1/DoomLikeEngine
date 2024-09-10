@@ -1,3 +1,10 @@
+/x64/
+/x32/
+/DoomCopy/x64
+/DoomCopy/x32
+
+.vs
+
 # Prerequisites
 *.d
 
