@@ -1,18 +1,20 @@
 #include "framework.h"
-#include <chrono>;
+#include <chrono>
 #include "Renderer.h"
 #include "DoomCopy.h"
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
     renderer = Renderer();
-    renderer.InitRenderer();
+
+    InitLogSystem(true, false);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_DOOMCOPY, szWindowClass, MAX_LOADSTRING);
 
     if (!SetupAndCreateWindow(hInstance, nCmdShow)) return FALSE;
+    renderer.InitRenderer(mainHWND);
     return MainLoop();
 }
 
@@ -55,7 +57,7 @@ int MainLoop()
     long long nextGameTick = GetGameTickCount();
     int loops = 0;
 
-    int movePixel = 0;
+    int startingPixel = 300, movePixel = startingPixel, lastPixel = 0;
     while (true)
     {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -68,13 +70,20 @@ int MainLoop()
         }
 
         loops = 0;
+        lastPixel = movePixel;
         movePixel++;
-        if (movePixel > 50) movePixel = 0;
+        if ((movePixel - startingPixel) > 100) movePixel = startingPixel;
+        OLOG_LF("{0} - {1}", movePixel, lastPixel);
 
+        long long start = GetGameTickCount();
         while (GetGameTickCount() > nextGameTick && loops < MAX_FRAMESKIP)
         {
             // GameLoop
-            renderer.SetPixel(300, 300 + movePixel, 0xFF0000);
+            for (int i = 0; i < 30; i++)
+            {
+                renderer.DrawPixel(300 + i, lastPixel, 0x000000);
+                renderer.DrawPixel(300 + i, movePixel, 0x0000FF);
+            }
 
             nextGameTick += SKIP_TICKS;
             loops++;

@@ -1,9 +1,14 @@
 #include "framework.h"
 #include "Renderer.h"
 
-void Renderer::InitRenderer()
+void Renderer::InitRenderer(HWND hwnd)
 {
-    buffer = std::shared_ptr<DWORD>(new DWORD[DEFAULT_WIDTH * DEFAULT_HEIGHT] {0});
+    HDC hDesktop = GetDC(hwnd);
+    memHDC = CreateCompatibleDC(hDesktop);
+    hbmp = CreateCompatibleBitmap(hDesktop, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    SelectObject(memHDC, hbmp);
+
+    //buffer = std::shared_ptr<DWORD>(new DWORD[DEFAULT_WIDTH * DEFAULT_HEIGHT] {0});
     PaintScreen(0x000000);
 }
 
@@ -12,29 +17,13 @@ void Renderer::RenderScreen(HWND hwnd)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
 
-#ifdef GDI_SETPIXEL
-    for (int y = 0; y < DEFAULT_HEIGHT; y++)
-    {
-        for (int x = 0; x < DEFAULT_WIDTH; x++)
-            SetPixel(hdc, x, y, buffer.get()[x * (y + 1)]);
-    }
-#else
-    BITMAPINFOHEADER header = {
-        sizeof(BITMAPINFOHEADER),
-        DEFAULT_WIDTH,
-        DEFAULT_HEIGHT,
-        1,
-        32,
-        BI_RGB,
-        0,
-        10,
-        10
-    };
+    //for (int y = 0; y < DEFAULT_HEIGHT; y++)
+    //{
+    //    for (int x = 0; x < DEFAULT_WIDTH; x++)
+    //        SetPixel(memHDC, x, y, buffer.get()[PIXELPOS(x, y)]);
+    //}
 
-    BITMAPINFO bitmapInfo = { header };
-
-    StretchDIBits(hdc, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT, buffer.get(), &bitmapInfo, 0, SRCCOPY);
-#endif // GDI_SETPIXEL
+    BitBlt(hdc, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT, memHDC, 0, 0, SRCCOPY);
 
     EndPaint(hwnd, &ps);
 }
@@ -44,11 +33,16 @@ void Renderer::PaintScreen(DWORD color)
     for (int y = 0; y < DEFAULT_HEIGHT; y++)
     {
         for (int x = 0; x < DEFAULT_WIDTH; x++)
-            buffer.get()[PIXELPOS(x, y)] = color;
+            SetPixel(memHDC, x, y, color);
     }
 }
 
-void Renderer::SetPixel(int x, int y, DWORD color)
+void Renderer::DrawPixel(int x, int y, DWORD color)
 {
-    buffer.get()[PIXELPOS(x, y)] = color;
+    SetPixel(memHDC, x, y, color);
+}
+
+Renderer::~Renderer()
+{
+    DeleteObject(hbmp);
 }

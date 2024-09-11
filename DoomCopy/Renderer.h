@@ -13,10 +13,15 @@ class Renderer
 {
 public:
 	void RenderScreen(HWND hwnd);
-	void InitRenderer();
-	void SetPixel(int x, int y, DWORD color);
+	void InitRenderer(HWND hwnd);
+	void DrawPixel(int x, int y, DWORD color);
+
+	~Renderer();
 
 private:
 	std::shared_ptr<DWORD> buffer;
+	HDC memHDC;
+	HBITMAP hbmp;
+
 	void PaintScreen(DWORD color);
 };
