@@ -1,17 +1,7 @@
 #include "framework.h"
+#include <chrono>;
 #include "Renderer.h"
 #include "DoomCopy.h"
-
-#define MAX_LOADSTRING 100
-
-HINSTANCE hInst;
-WCHAR szTitle[MAX_LOADSTRING];
-WCHAR szWindowClass[MAX_LOADSTRING];
-Renderer renderer;
-
-ATOM MyRegisterClass(HINSTANCE hInstance);
-BOOL InitInstance(HINSTANCE, int);
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -21,63 +11,85 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_DOOMCOPY, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
 
-    // Perform application initialization:
-    if (!InitInstance(hInstance, nCmdShow)) return FALSE;
+    if (!SetupAndCreateWindow(hInstance, nCmdShow)) return FALSE;
+    return MainLoop();
+}
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DOOMCOPY));
+BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
+{
+    WNDCLASSEXW wcex = {
+        sizeof(WNDCLASSEX),
+        CS_HREDRAW | CS_VREDRAW,
+        WndProc,
+        0,
+        0,
+        hInstance,
+        LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DOOMCOPY)),
+        LoadCursor(nullptr, IDC_ARROW),
+        NULL,
+        NULL,
+        szWindowClass,
+        LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL))
+    };
 
+    startTime = std::chrono::high_resolution_clock::now();
+    RegisterClassExW(&wcex);
+
+    hInst = hInstance; // Store instance handle in our global variable
+
+    mainHWND = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+        CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WIDTH, DEFAULT_HEIGHT, nullptr, nullptr, hInstance, nullptr);
+
+    if (!mainHWND) return FALSE;
+
+    ShowWindow(mainHWND, nCmdShow);
+    UpdateWindow(mainHWND);
+    return TRUE;
+}
+
+int MainLoop()
+{
     MSG msg;
+    
+    long long nextGameTick = GetGameTickCount();
+    int loops = 0;
 
-    // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
+    int movePixel = 0;
+    while (true)
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_QUIT) break;
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+            continue;
         }
+
+        loops = 0;
+        movePixel++;
+        if (movePixel > 50) movePixel = 0;
+
+        while (GetGameTickCount() > nextGameTick && loops < MAX_FRAMESKIP)
+        {
+            // GameLoop
+            renderer.SetPixel(300, 300 + movePixel, 0xFF0000);
+
+            nextGameTick += SKIP_TICKS;
+            loops++;
+        }
+
+        InvalidateRect(mainHWND, NULL, false);
     }
 
-    renderer.~Renderer();
     return (int) msg.wParam;
 }
 
-ATOM MyRegisterClass(HINSTANCE hInstance)
+long long GetGameTickCount()
 {
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DOOMCOPY));
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_DOOMCOPY);
-    wcex.lpszClassName = szWindowClass;
-    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
-}
-
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-    hInst = hInstance; // Store instance handle in our global variable
-
-    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
-
-    if (!hWnd) return FALSE;
-
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
-
-    return TRUE;
+    std::chrono::steady_clock::time_point now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -89,18 +101,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             int wmId = LOWORD(wParam);
             switch (wmId)
             {
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
+                case IDM_EXIT:
+                    DestroyWindow(hWnd);
+                    break;
 
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
+                default:
+                    return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }
             break;
 
         case WM_PAINT:
-            renderer.RenderScreen(hWnd);
+            renderer.RenderScreen(mainHWND);
             break;
 
         case WM_DESTROY:
