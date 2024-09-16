@@ -1,11 +1,16 @@
 #include "framework.h"
 #include <chrono>
-#include "Renderer.h"
 #include "DoomCopy.h"
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-    renderer = Renderer();
+#ifdef GDI_RENDER
+    renderer = GDIRenderer();
+#endif
+
+#ifdef D2_RENDER
+    renderer = D2Renderer();
+#endif
 
     InitLogSystem(true, false);
 
@@ -13,8 +18,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_DOOMCOPY, szWindowClass, MAX_LOADSTRING);
 
-    if (!SetupAndCreateWindow(hInstance, nCmdShow)) return FALSE;
-    renderer.InitRenderer(mainHWND);
+    if (!SetupAndCreateWindow(hInstance, nCmdShow)) return -1;
+    if (IS_ERROR(renderer.InitRenderer(mainHWND))) { Sleep(5000); return -1; }
     return MainLoop();
 }
 
@@ -41,7 +46,7 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
     hInst = hInstance; // Store instance handle in our global variable
 
     mainHWND = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WIDTH, DEFAULT_HEIGHT, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, nullptr, nullptr, hInstance, nullptr);
 
     if (!mainHWND) return FALSE;
 
@@ -57,7 +62,7 @@ int MainLoop()
     long long nextGameTick = GetGameTickCount();
     int loops = 0;
 
-    int startingPixel = 300, movePixel = startingPixel, lastPixel = 0;
+    int startingPixel = 100, movePixel = startingPixel;
     while (true)
     {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -70,25 +75,25 @@ int MainLoop()
         }
 
         loops = 0;
-        lastPixel = movePixel;
-        movePixel++;
-        if ((movePixel - startingPixel) > 100) movePixel = startingPixel;
-        OLOG_LF("{0} - {1}", movePixel, lastPixel);
 
         long long start = GetGameTickCount();
         while (GetGameTickCount() > nextGameTick && loops < MAX_FRAMESKIP)
         {
             // GameLoop
-            for (int i = 0; i < 30; i++)
-            {
-                renderer.DrawPixel(300 + i, lastPixel, 0x000000);
-                renderer.DrawPixel(300 + i, movePixel, 0x0000FF);
-            }
+            movePixel++;
+            if ((movePixel - startingPixel) > 100) movePixel = startingPixel;
+            OLOG_LF("{0} | {1}", movePixel, loops);
 
             nextGameTick += SKIP_TICKS;
             loops++;
         }
 
+        renderer.PaintScreen(0);
+
+        for (int i = 0; i < 250; i++)
+            renderer.DrawPixel(55 + i, movePixel, 0xFF0000);
+
+        renderer.DrawPixel(0, 0, 0);
         InvalidateRect(mainHWND, NULL, false);
     }
 
@@ -122,6 +127,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_PAINT:
             renderer.RenderScreen(mainHWND);
+#ifdef D2_RENDER
+            ValidateRect(hWnd, NULL);
+#endif
             break;
 
         case WM_DESTROY:
