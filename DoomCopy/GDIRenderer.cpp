@@ -1,6 +1,8 @@
 #include "framework.h"
+#include "Game.h"
 #include "Renderer.h"
 #include "GDIRenderer.h"
+#include "TransformComponent.h"
 
 HRESULT GDIRenderer::InitRenderer(HWND hwnd)
 {
@@ -55,10 +57,26 @@ void GDIRenderer::DrawPixel(int x, int y, DWORD color)
     if (y > DEFAULT_BUFFER_HEIGHT) y = DEFAULT_BUFFER_HEIGHT;
     else if (y < 0) y = 0;
 
-    int pos = PixelPos(x, y);
-    //OLOG_LF("Pos {0}", pos);
-    buffer.get()[pos] = color;
+    buffer.get()[PixelPos(x, y)] = color;
 }
+
+void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game) 
+{
+    PaintScreen(0);
+
+    size_t count = game->GetEntityCount();
+    for (size_t i = 0; i < count; i++)
+    {
+        GameObject* go = game->GetGameObject(i);
+        if (!go) continue;
+        DrawPixel(go->GetTransform()->GetX(), go->GetTransform()->GetY(), 0xFF0000);
+    }
+
+    InvalidateRect(hwnd, NULL, false);
+}
+
+GDIRenderer::GDIRenderer() : buffer(NULL), bitmapInfo(), hbmp(NULL), memHDC(NULL)
+{ }
 
 GDIRenderer::~GDIRenderer()
 {

@@ -1,5 +1,4 @@
 #include "framework.h"
-#include <chrono>
 #include "DoomCopy.h"
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
@@ -12,6 +11,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     renderer = D2Renderer();
 #endif
 
+    mainGame = std::shared_ptr<Game>(new Game());
     InitLogSystem(true, false);
 
     // Initialize global strings
@@ -40,7 +40,6 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
         LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL))
     };
 
-    startTime = std::chrono::high_resolution_clock::now();
     RegisterClassExW(&wcex);
 
     hInst = hInstance; // Store instance handle in our global variable
@@ -58,11 +57,8 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
 int MainLoop()
 {
     MSG msg;
-    
-    long long nextGameTick = GetGameTickCount();
-    int loops = 0;
+    mainGame->InitUpdate();
 
-    int startingPixel = 100, movePixel = startingPixel;
     while (true)
     {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -74,36 +70,11 @@ int MainLoop()
             continue;
         }
 
-        loops = 0;
-
-        long long start = GetGameTickCount();
-        while (GetGameTickCount() > nextGameTick && loops < MAX_FRAMESKIP)
-        {
-            // GameLoop
-            movePixel++;
-            if ((movePixel - startingPixel) > 100) movePixel = startingPixel;
-            OLOG_LF("{0} | {1}", movePixel, loops);
-
-            nextGameTick += SKIP_TICKS;
-            loops++;
-        }
-
-        renderer.PaintScreen(0);
-
-        for (int i = 0; i < 250; i++)
-            renderer.DrawPixel(55 + i, movePixel, 0xFF0000);
-
-        renderer.DrawPixel(0, 0, 0);
-        InvalidateRect(mainHWND, NULL, false);
+        mainGame->MainUpdate();
+        renderer.ProcessGame(mainHWND, mainGame);
     }
 
     return (int) msg.wParam;
-}
-
-long long GetGameTickCount()
-{
-    std::chrono::steady_clock::time_point now = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count();
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

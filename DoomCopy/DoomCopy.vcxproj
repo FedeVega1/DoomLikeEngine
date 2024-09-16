@@ -147,18 +147,25 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Component.h" />
     <ClInclude Include="D2Renderer.h" />
     <ClInclude Include="DoomCopy.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="GDIRenderer.h" />
+    <ClInclude Include="GameObjects.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="TransformComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D2Renderer.cpp" />
     <ClCompile Include="DoomCopy.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameObjects.cpp" />
     <ClCompile Include="GDIRenderer.cpp" />
+    <ClCompile Include="TransformComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DoomCopy.rc" />

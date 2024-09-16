@@ -23,6 +23,7 @@ public:
 	virtual HRESULT InitRenderer(HWND hwnd) override;
 	virtual void DrawPixel(int x, int y, DWORD color) override;
 	virtual void PaintScreen(DWORD color) override;
+	virtual void ProcessGame(HWND hwnd, std::shared_ptr<Game> game) override;
 
 	D2Renderer();
 	~D2Renderer();

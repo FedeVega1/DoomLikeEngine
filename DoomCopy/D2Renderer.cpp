@@ -1,4 +1,5 @@
 #include "framework.h"
+#include "Game.h"
 #include "Renderer.h"
 #include "D2Renderer.h"
 
@@ -13,12 +14,7 @@ HRESULT D2Renderer::InitRenderer(HWND hwnd)
 		return hr;
 	}
 
-	RECT rc;
-	GetClientRect(hwnd, &rc);
-
-	D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
 	D2D1_PIXEL_FORMAT pixelFormat = D2D1_PIXEL_FORMAT{ DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_IGNORE };
-
 	D2D1_RENDER_TARGET_PROPERTIES renderProperties = D2D1_RENDER_TARGET_PROPERTIES
 	{
 		D2D1_RENDER_TARGET_TYPE_DEFAULT,
@@ -29,14 +25,14 @@ HRESULT D2Renderer::InitRenderer(HWND hwnd)
 		D2D1_FEATURE_LEVEL_DEFAULT
 	};
 
-	hr = factory->CreateHwndRenderTarget(renderProperties, D2D1::HwndRenderTargetProperties(hwnd, size), &renderTarget);
+	hr = factory->CreateHwndRenderTarget(renderProperties, D2D1::HwndRenderTargetProperties(hwnd, D2D1::SizeU(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)), &renderTarget);
 	if (IS_ERROR(hr))
 	{
 		OLOG_EF("Error while creating Render Target! {0}", hr);
 		return hr;
 	}
 
-	hr = renderTarget->CreateBitmap(size, D2D1::BitmapProperties(pixelFormat), &screenBitmap);
+	hr = renderTarget->CreateBitmap(D2D1::SizeU(DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT), D2D1::BitmapProperties(pixelFormat), &screenBitmap);
 
 	if (IS_ERROR(hr))
 		OLOG_EF("Error while creating Bitmap! {0}", hr);
@@ -80,6 +76,16 @@ void D2Renderer::DrawPixel(int x, int y, DWORD color)
 	else if (y < 0) y = 0;
 
 	buffer.get()[PixelPos(x, y)] = color;
+}
+
+void D2Renderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game)
+{
+	PaintScreen(0);
+
+	for (int i = 0; i < 250; i++)
+		DrawPixel(55 + i, game->GetPixel(), 0x000000FF);
+
+	InvalidateRect(hwnd, NULL, false);
 }
 
 D2Renderer::D2Renderer() : factory(NULL), renderTarget(NULL), screenBitmap(NULL)

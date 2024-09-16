@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resource.h"
+#include "Game.h"
 #include "Renderer.h"
 //#include "D2Renderer.h"
 #include "GDIRenderer.h"
@@ -19,12 +20,10 @@ GDIRenderer renderer;
 D2Renderer renderer;
 #endif
 
-
 HWND mainHWND;
-std::chrono::steady_clock::time_point startTime;
+std::shared_ptr<Game> mainGame;
 std::mt19937 rng;
 
 BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 int MainLoop();
-long long GetGameTickCount();
