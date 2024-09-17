@@ -18,13 +18,7 @@ public:
 	size_t GetEntityCount() const { return entities.size(); }
 	GameObject* GetGameObject(size_t indx) const { return dynamic_cast<GameObject*>(entities[indx]); }
 
-	int GetPixel() const { return movePixel; }
-
 private:
 	std::vector<Entity*> entities;
-	std::chrono::steady_clock::time_point startTime;
-	long long nextGameTick;
-	int loops, startingPixel, movePixel;
-
-	long long GetGameTickCount() const;
+	int loops;
 };

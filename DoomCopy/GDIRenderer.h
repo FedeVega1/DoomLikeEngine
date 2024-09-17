@@ -17,7 +17,7 @@ public:
 	~GDIRenderer();
 
 private:
-	std::shared_ptr<DWORD> buffer;
+	DWORD* buffer;
 	BITMAPINFO bitmapInfo;
 
 	HDC memHDC;

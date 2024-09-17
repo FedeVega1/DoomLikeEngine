@@ -1,4 +1,4 @@
-#include <vector>
+#include "framework.h"
 #include "Component.h"
 #include "GameObjects.h"
 #include "TransformComponent.h"
@@ -39,7 +39,12 @@ Entity::Entity()
 Entity::~Entity()
 {
 	size_t size = components.size();
-	for (size_t i = 0; i > size; i++) delete components[i];
+	for (size_t i = 0; i < size; i++)
+	{
+		components[i]->OnDestroy();
+		delete components[i];
+	}
+
 	components.clear();
 }
 

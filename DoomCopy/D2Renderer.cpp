@@ -82,8 +82,8 @@ void D2Renderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game)
 {
 	PaintScreen(0);
 
-	for (int i = 0; i < 250; i++)
-		DrawPixel(55 + i, game->GetPixel(), 0x000000FF);
+	//for (int i = 0; i < 250; i++)
+	//	DrawPixel(55 + i, game->GetPixel(), 0x000000FF);
 
 	InvalidateRect(hwnd, NULL, false);
 }
