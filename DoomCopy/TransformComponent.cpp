@@ -1,21 +1,17 @@
-#include "framework.h"
+#include "pch.h"
 #include "GameTime.h"
+#include "GameObjects.h"
 #include "Component.h"
 #include "TransformComponent.h"
 
 void Transform::Start()
 {
 	BaseComponent::Start();
-	pos.x = 200;
-	pos.y = 300;
-	OLOG_L("Start!");
 }
 
 void Transform::Tick()
 {
-	pos.y++;
-	if (pos.y > 400) pos.y = 300;
-	OLOG_LF("Ticking! - {0}", Time::INS.GetDeltaTime());
+	//OLOG_LF("Pos - ({0} - {1} - {2})", pos.x, pos.y, pos.z);
 }
 
 void Transform::OnDestroy()
@@ -25,3 +21,14 @@ void Transform::OnDestroy()
 
 Transform::Transform() : pos(), rot(0)
 { }
+
+void Transform::SetPos(Vector3 newPos) { pos = newPos; }
+
+void Transform::TeleportTo(Vector3 newPos) { pos += newPos; }
+
+void Transform::Rotate(float angle)
+{
+	rot += angle;
+	if (angle < 0) angle += 360;
+	if (angle > 359) angle -= 360;
+}

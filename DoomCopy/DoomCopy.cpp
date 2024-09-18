@@ -1,5 +1,9 @@
-#include "framework.h"
+#include "pch.h"
+#include <tchar.h>
 #include "DoomCopy.h"
+
+TCHAR szWindowClass[] = _T("DoomCopy");
+TCHAR szTitle[] = _T("DoomCopy");
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -13,10 +17,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
     mainGame = std::shared_ptr<Game>(new Game());
     InitLogSystem(true, false);
-
-    // Initialize global strings
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_DOOMCOPY, szWindowClass, MAX_LOADSTRING);
 
     if (!SetupAndCreateWindow(hInstance, nCmdShow)) return -1;
     if (IS_ERROR(renderer.InitRenderer(mainHWND))) { Sleep(5000); return -1; }
@@ -32,12 +32,12 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
         0,
         0,
         hInstance,
-        LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DOOMCOPY)),
+        LoadIcon(hInstance, IDI_APPLICATION),
         LoadCursor(nullptr, IDC_ARROW),
         NULL,
         NULL,
         szWindowClass,
-        LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL))
+        LoadIcon(hInstance, IDI_APPLICATION)
     };
 
     RegisterClassExW(&wcex);
@@ -94,6 +94,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }
+            break;
+
+        case WM_KEYDOWN:
+            mainGame->CaptureKeyPress(wParam);
+            break;
+
+        case WM_KEYUP:
+            mainGame->CaptureKeyRelease(wParam);
             break;
 
         case WM_PAINT:

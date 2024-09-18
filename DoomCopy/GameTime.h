@@ -7,6 +7,9 @@ class Time
 public:
 	static Time INS;
 
+	Time() : startTime(), deltaTime(0.0), nextGameTick(0LL)
+	{ }
+
 	double GetDeltaTime() const { return deltaTime; }
 	long long GetTime() const
 	{

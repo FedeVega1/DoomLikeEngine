@@ -49,7 +49,17 @@ typedef struct _vector3
 	}
 
 	_vector3 operator+(_vector3 other) const { return Plus(other); }
+	void operator+=(_vector3 other)
+	{ 
+		Vector3 plus = Plus(other); 
+		x = plus.x;
+		y = plus.y;
+		z = plus.z;
+	}
+
 	_vector3 operator-(_vector3 other) const { return Minus(other); }
+	_vector3 operator-() const { return Vector3(-x, -y, -z); }
+	_vector3 operator-=(_vector3 other) const { return Minus(other); }
 
 	_vector3 operator*(float s) const { return ScalarMult(s); }
 	_vector3 operator/(float s) const { return ScalarDiv(s); }

@@ -8,12 +8,20 @@ public:
 	virtual void Start() { firstTick = true; };
 	virtual void Tick() = 0;
 
-	BaseComponent() : firstTick(false)
-	{}
+	BaseComponent() : baseEntity(nullptr), firstTick(false), baseGameObject(nullptr)
+	{ }
+
+	class GameObject* GetGameObject() 
+	{  
+		if (!baseGameObject) baseGameObject = dynamic_cast<GameObject*>(baseEntity);
+		return baseGameObject;
+	}
 
 protected:
+	class Entity* baseEntity;
 	virtual void OnDestroy() = 0;
 
 private:
 	bool firstTick;
+	class GameObject* baseGameObject;
 };

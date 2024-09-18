@@ -1,15 +1,7 @@
-#include "framework.h"
-#include "Component.h"
+#include "pch.h"
 #include "GameObjects.h"
+#include "Component.h"
 #include "TransformComponent.h"
-
-template<class Comp>
-Comp* Entity::AddComponent()
-{
-	Comp* component = new Comp();
-	components.push_back(component);
-	return component;
-}
 
 void Entity::RemoveComponent()
 {

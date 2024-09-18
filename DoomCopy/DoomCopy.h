@@ -1,16 +1,13 @@
 #pragma once
 
-#include "resource.h"
 #include "Game.h"
 #include "Renderer.h"
 //#include "D2Renderer.h"
 #include "GDIRenderer.h"
 
-#define MAX_LOADSTRING 100
+#define IDM_EXIT 105
 
 HINSTANCE hInst;
-WCHAR szTitle[MAX_LOADSTRING];
-WCHAR szWindowClass[MAX_LOADSTRING];
 
 #ifdef GDI_RENDER
 GDIRenderer renderer;

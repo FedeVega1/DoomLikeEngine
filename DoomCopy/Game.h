@@ -1,6 +1,6 @@
 #pragma once
-#include "Component.h"
 #include "GameObjects.h"
+#include "Component.h"
 
 #define DEFAULT_TICKS_PER_SECOND 30
 #define SKIP_TICKS 1000 / DEFAULT_TICKS_PER_SECOND
@@ -15,10 +15,15 @@ public:
 	void InitUpdate();
 	void MainUpdate();
 
+	void CaptureKeyPress(unsigned long long keycode);
+	void CaptureKeyRelease(unsigned long long keycode);
+
 	size_t GetEntityCount() const { return entities.size(); }
 	GameObject* GetGameObject(size_t indx) const { return dynamic_cast<GameObject*>(entities[indx]); }
+	class Camera* GetMainCamera() const { return mainCamera; }
 
 private:
 	std::vector<Entity*> entities;
+	class Camera* mainCamera;
 	int loops;
 };

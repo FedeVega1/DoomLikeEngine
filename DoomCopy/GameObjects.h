@@ -1,5 +1,5 @@
 #pragma once
-
+class BaseComponent;
 class Transform;
 
 class Entity
@@ -8,7 +8,13 @@ class Entity
 
 public:
 	template<class Comp>
-	Comp* AddComponent();
+	Comp* AddComponent()
+	{
+		Comp* component = new Comp();
+		component->baseEntity = this;
+		components.push_back(component);
+		return component;
+	}
 
 	void RemoveComponent();
 	void GetComponent();

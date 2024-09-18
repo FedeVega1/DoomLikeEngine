@@ -1,4 +1,4 @@
-#include "framework.h"
+#include "pch.h"
 #include "Game.h"
 #include "Renderer.h"
 #include "GDIRenderer.h"
@@ -52,13 +52,7 @@ void GDIRenderer::PaintScreen(DWORD color)
 
 void GDIRenderer::DrawPixel(int x, int y, DWORD color)
 {
-    if (x > DEFAULT_BUFFER_WIDTH) x = DEFAULT_BUFFER_WIDTH;
-    else if (x < 0) x = 0;
-
-    if (y > DEFAULT_BUFFER_HEIGHT) y = DEFAULT_BUFFER_HEIGHT;
-    else if (y < 0) y = 0;
-
-    buffer[PixelPos(x, y)] = color;
+    buffer[PixelPos(std::clamp(x, 0, DEFAULT_BUFFER_WIDTH), std::clamp(y, 0, DEFAULT_BUFFER_HEIGHT))] = color;
 }
 
 void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game) 
@@ -71,7 +65,7 @@ void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game)
         GameObject* go = game->GetGameObject(i);
         if (!go) continue;
         Vector3 pos = go->GetTransform()->GetPos();
-        DrawPixel(std::roundf(pos.x), std::roundf(pos.y), 0xFF0000);
+        DrawPixel((int) std::roundf(pos.x), (int) std::roundf(pos.y), 0xFF0000);
     }
 
     InvalidateRect(hwnd, NULL, false);
