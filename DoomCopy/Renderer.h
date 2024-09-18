@@ -1,10 +1,13 @@
 #pragma once
 
-#define DEFAULT_BUFFER_WIDTH 800
-#define DEFAULT_BUFFER_HEIGHT 600
+#define DEFAULT_BUFFER_WIDTH 320
+#define DEFAULT_BUFFER_HEIGHT 240
 
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
+
+#define HALF_WIDTH DEFAULT_BUFFER_WIDTH / 2
+#define HALF_HEIGHT DEFAULT_BUFFER_HEIGHT / 2
 
 static inline int PixelPos(int x, int y) { return x + (DEFAULT_BUFFER_WIDTH * y); }
 

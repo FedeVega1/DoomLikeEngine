@@ -2,6 +2,34 @@
 
 static float kEpsilon = .00001f;
 
+typedef struct _vector2Int
+{
+	int x, y;
+
+	_vector2Int(int x = 0, int y = 0)
+	{
+		this->x = x;
+		this->y = y;
+	}
+
+	_vector2Int operator+(_vector2Int other) const { return Plus(other); }
+	_vector2Int operator-(_vector2Int other) const { return Minus(other); }
+
+	_vector2Int operator*(int s) const { return ScalarMult(s); }
+	_vector2Int operator/(int s) const { return ScalarDiv(s); }
+	bool operator==(_vector2Int other) const { return Equals(other); }
+
+private:
+	_vector2Int Plus(_vector2Int other) const { return _vector2Int(x + other.x, y + other.y); }
+	_vector2Int Minus(_vector2Int other) const { return _vector2Int(x - other.x, y - other.y); }
+
+	_vector2Int ScalarMult(int scalar) const { return _vector2Int(x * scalar, y * scalar); }
+	_vector2Int ScalarDiv(int scalar) const { return _vector2Int(x / scalar, y / scalar); }
+
+	bool Equals(_vector2Int other) const { return x == other.x && y == other.y; }
+
+} Vector2Int;
+
 typedef struct _vector2
 {
 	float x, y;

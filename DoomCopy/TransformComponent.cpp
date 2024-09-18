@@ -11,7 +11,7 @@ void Transform::Start()
 
 void Transform::Tick()
 {
-	//OLOG_LF("Pos - ({0} - {1} - {2})", pos.x, pos.y, pos.z);
+	//OLOG_LF("Pos - ({0}, {1}, {2})", pos.x, pos.y, pos.z);
 }
 
 void Transform::OnDestroy()
@@ -29,6 +29,6 @@ void Transform::TeleportTo(Vector3 newPos) { pos += newPos; }
 void Transform::Rotate(float angle)
 {
 	rot += angle;
-	if (angle < 0) angle += 360;
-	if (angle > 359) angle -= 360;
+	if (rot < 0) rot += 360;
+	if (rot > 359) rot -= 360;
 }

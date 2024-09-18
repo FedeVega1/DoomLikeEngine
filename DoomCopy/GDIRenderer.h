@@ -4,6 +4,12 @@
 #define GDI_RENDER
 #endif
 
+typedef struct
+{
+	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
+} ScreenSpaceWall;
+
+
 class GDIRenderer : public Renderer
 {
 public:
@@ -22,4 +28,7 @@ private:
 
 	HDC memHDC;
 	HBITMAP hbmp;
+
+	void DrawWall(const Wall& wall);
+	ScreenSpaceWall GetScreenSpaceWall(const Wall& wall);
 };

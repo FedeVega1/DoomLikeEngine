@@ -17,8 +17,17 @@ public:
 	Vector3 GetPos() const { return pos; }
 	float GetRot() const { return rot; }
 
-	Vector3 GetForwardVector() const { return Vector3((float) SCTABLE.sin[(int) std::roundf(rot)], 0, (float) SCTABLE.cos[(int)std::roundf(rot)]); }
-	Vector3 GetRightVector() const { return Vector3((float) SCTABLE.cos[(int)std::roundf(rot)], 0 , (float) SCTABLE.sin[(int)std::roundf(rot)]); }
+	Vector3 GetForwardVector() const 
+	{
+		int currentRot = (int) std::roundf(rot);
+		return Vector3((float) SCTABLE.sin[currentRot], 0, (float) SCTABLE.cos[currentRot]);
+	}
+
+	Vector3 GetRightVector() const 
+	{ 
+		int currentRot = (int) std::roundf(rot);
+		return Vector3((float) SCTABLE.cos[currentRot], 0, (float) -SCTABLE.sin[currentRot]);
+	}
 
 	Transform();
 

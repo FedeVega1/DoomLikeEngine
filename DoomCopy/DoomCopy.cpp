@@ -1,9 +1,8 @@
 #include "pch.h"
-#include <tchar.h>
 #include "DoomCopy.h"
 
-TCHAR szWindowClass[] = _T("DoomCopy");
-TCHAR szTitle[] = _T("DoomCopy");
+wchar_t szWindowClass[] = L"DoomCopy";
+wchar_t szTitle[] = L"DoomCopy Title";
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -25,7 +24,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
 {
-    WNDCLASSEXW wcex = {
+    WNDCLASSEX wcex = {
         sizeof(WNDCLASSEX),
         CS_HREDRAW | CS_VREDRAW,
         WndProc,

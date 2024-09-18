@@ -3,6 +3,7 @@
 #include "CameraComponent.h"
 #include "GameTime.h"
 #include "Inputs.h"
+#include "TransformComponent.h"
 
 Time Time::INS;
 Input Input::INS;
@@ -12,9 +13,15 @@ void Game::InitUpdate()
     Time::INS.nextGameTick = Time::INS.GetGameTickCount();
 	loops = 0;
 
+    world = new World();
+    entities.push_back(world);
+
     GameObject* cameraObject = new GameObject();
     mainCamera = cameraObject->AddComponent<Camera>();
+    mainCamera->world = world;
     entities.push_back(cameraObject);
+
+    cameraObject->GetTransform()->SetPos(Vector3(70, 0, -110));
 }
 
 void Game::MainUpdate()
@@ -38,7 +45,7 @@ void Game::MainUpdate()
     Time::INS.deltaTime = std::chrono::duration<double, std::milli>(now - start).count();
 }
 
-Game::Game() : loops(0), mainCamera(nullptr)
+Game::Game() : loops(0), mainCamera(nullptr), world(nullptr)
 {
     Time::INS = Time();
 	Time::INS.startTime = std::chrono::high_resolution_clock::now();
