@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "DoomCopy.h"
 
-wchar_t szWindowClass[] = L"DoomCopy";
-wchar_t szTitle[] = L"DoomCopy Title";
-
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 #ifdef GDI_RENDER

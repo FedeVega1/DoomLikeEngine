@@ -11,6 +11,7 @@ public:
 	{ }
 
 	double GetDeltaTime() const { return deltaTime; }
+	float GetFDeltaTime() const { return (float) deltaTime; }
 	long long GetTime() const
 	{
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();

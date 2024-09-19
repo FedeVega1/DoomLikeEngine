@@ -3,7 +3,7 @@
 #include "Renderer.h"
 #include "GameObjects.h"
 #include "VectorMath.h"
-#include "World.h"
+#include "CameraComponent.h"
 #include "GDIRenderer.h"
 
 HRESULT GDIRenderer::InitRenderer(HWND hwnd)
@@ -77,10 +77,9 @@ void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game)
     //    DrawPixel((int) std::roundf(pos.x), (int) std::roundf(pos.y), 0xFF0000);
     //}
 
-    DrawWall(game->GetWorldRef()->wall);
-
-    //if (screenPosA.x > 0 && screenPosA.x < DEFAULT_BUFFER_WIDTH && screenPosA.y > 0 && screenPosA.y < DEFAULT_BUFFER_HEIGHT) DrawPixel((int)std::roundf(screenPosA.x), (int)std::roundf(screenPosA.y), 0xFF0000);
-    //if (screenPosB.x > 0 && screenPosB.x < DEFAULT_BUFFER_WIDTH && screenPosB.y > 0 && screenPosB.y < DEFAULT_BUFFER_HEIGHT) DrawPixel((int)std::roundf(screenPosB.x), (int)std::roundf(screenPosB.y), 0xFF0000);
+    ProcessedSector* sectors = game->GetMainCamera()->GetProcessedSectors();
+    if (!sectors) return;
+    for (int i = 0; i < 1; i++) ProcessSector(sectors[i]);
 
     InvalidateRect(hwnd, NULL, false);
 }
@@ -94,13 +93,19 @@ GDIRenderer::~GDIRenderer()
     delete[] buffer;
 }
 
-void GDIRenderer::DrawWall(const Wall& wall)
+void GDIRenderer::ProcessSector(const ProcessedSector& sector) 
 {
-    if (wall.leftBtmPoint.z < 1 && wall.rightBtmPoint.z < 1) return;
+    for (int i = 0; i < sector.numberOfWalls; i++)
+        DrawWall(sector.sectorWalls[i]);
+}
+
+void GDIRenderer::DrawWall(const ProcessedWall& wall)
+{
+    if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
 
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
     int dyb = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
-    int dyt = sWall.rightTopPoint.y - sWall.leftTopPoint.y;
+    int dyt = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
     int dx = sWall.leftBtmPoint.x - sWall.rightBtmPoint.x;
     if (dx == 0) dx = 1;
     int xs = sWall.leftBtmPoint.x;
@@ -111,10 +116,10 @@ void GDIRenderer::DrawWall(const Wall& wall)
     if (sWall.leftBtmPoint.x > DEFAULT_BUFFER_WIDTH) sWall.leftBtmPoint.x = DEFAULT_BUFFER_WIDTH;
     if (sWall.rightBtmPoint.x > DEFAULT_BUFFER_WIDTH) sWall.rightBtmPoint.x = DEFAULT_BUFFER_WIDTH;
 
-    for (int x = sWall.leftBtmPoint.x; x < sWall.rightBtmPoint.x; x++)
+    for (int x = xs; x < sWall.rightBtmPoint.x; x++)
     {
-        int y1 = dyb * (x - xs + .5) / dx + sWall.leftBtmPoint.y;
-        int y2 = dyt * (x - xs + .5) / dx + sWall.leftTopPoint.y;
+        int y1 = dyb * (x - xs + .5f) / dx + sWall.leftBtmPoint.y;
+        int y2 = dyt * (x - xs + .5f) / dx + sWall.leftTopPoint.y;
 
         if (y1 < 0) y1 = 0;
         if (y2 < 0) y2 = 0;
@@ -122,17 +127,24 @@ void GDIRenderer::DrawWall(const Wall& wall)
         if (y1 > DEFAULT_BUFFER_HEIGHT) y1 = DEFAULT_BUFFER_HEIGHT;
         if (y2 > DEFAULT_BUFFER_HEIGHT) y2 = DEFAULT_BUFFER_HEIGHT;
 
-        for (int y = y1; y < y2; y++) DrawPixel(x, y, 0xFF0000);
+        for (int y = y1; y < y2; y++)
+        {
+            DWORD color = sWall.color;
+            //if (x == sWall.leftBtmPoint.x || x == (sWall.rightBtmPoint.x - 1)) color = 0x00FF00;
+            //if (y == y1 || y == (y2 - 1)) color = 0x0000FF;
+            DrawPixel(x, y, color);
+        }
     }
 }
 
-ScreenSpaceWall GDIRenderer::GetScreenSpaceWall(const Wall& wall)
+ScreenSpaceWall GDIRenderer::GetScreenSpaceWall(const ProcessedWall& wall)
 {
     return ScreenSpaceWall
     {
-        Vector2Int((int) std::roundf(wall.leftTopPoint.x * 200 / wall.leftTopPoint.z + HALF_WIDTH), (int) std::roundf(wall.leftTopPoint.y * 200 / wall.leftTopPoint.z + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(wall.rightTopPoint.x * 200 / wall.rightTopPoint.z + HALF_WIDTH), (int) std::roundf(wall.rightTopPoint.y * 200 / wall.rightTopPoint.z + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(wall.leftBtmPoint.x * 200 / wall.leftBtmPoint.z + HALF_WIDTH), (int) std::roundf(wall.leftBtmPoint.y * 200 / wall.leftBtmPoint.z + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(wall.rightBtmPoint.x * 200 / wall.rightBtmPoint.z + HALF_WIDTH), (int) std::roundf(wall.rightBtmPoint.y * 200 / wall.rightBtmPoint.z + HALF_HEIGHT))
+        Vector2Int((int) std::roundf(wall.leftTopPoint.x * 200 / wall.leftTopPoint.y + HALF_WIDTH), (int) std::roundf(wall.leftTopPoint.z * 200 / wall.leftTopPoint.y + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(wall.rightTopPoint.x * 200 / wall.rightTopPoint.y + HALF_WIDTH), (int) std::roundf(wall.rightTopPoint.z  * 200 / wall.rightTopPoint.y + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(wall.leftBtmPoint.x * 200 / wall.leftBtmPoint.y + HALF_WIDTH), (int) std::roundf(wall.leftBtmPoint.z * 200 / wall.leftBtmPoint.y + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(wall.rightBtmPoint.x * 200 / wall.rightBtmPoint.y + HALF_WIDTH), (int) std::roundf(wall.rightBtmPoint.z * 200 / wall.rightBtmPoint.y + HALF_HEIGHT)),
+        wall.color
     };
 }

@@ -2,7 +2,7 @@
 #include "GameObjects.h"
 #include "Component.h"
 #include "VectorMath.h"
-#include "World.h"
+#include "CameraComponent.h"
 
 #define DEFAULT_TICKS_PER_SECOND 30
 #define SKIP_TICKS 1000 / DEFAULT_TICKS_PER_SECOND

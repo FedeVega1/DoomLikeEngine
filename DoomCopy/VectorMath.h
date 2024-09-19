@@ -2,123 +2,175 @@
 
 static float kEpsilon = .00001f;
 
-typedef struct _vector2Int
+struct Vector2Int
 {
 	int x, y;
 
-	_vector2Int(int x = 0, int y = 0)
+	Vector2Int(int x = 0, int y = 0)
 	{
 		this->x = x;
 		this->y = y;
 	}
 
-	_vector2Int operator+(_vector2Int other) const { return Plus(other); }
-	_vector2Int operator-(_vector2Int other) const { return Minus(other); }
+	Vector2Int operator+(Vector2Int other) const { return Plus(other); }
+	void operator+=(Vector2Int other)
+	{
+		Vector2Int res = Plus(other);
+		x = res.x;
+		y = res.y;
+	}
 
-	_vector2Int operator*(int s) const { return ScalarMult(s); }
-	_vector2Int operator/(int s) const { return ScalarDiv(s); }
-	bool operator==(_vector2Int other) const { return Equals(other); }
+	Vector2Int operator-(Vector2Int other) const { return Minus(other); }
+	void operator-=(Vector2Int other)
+	{
+		Vector2Int res = Minus(other);
+		x = res.x;
+		y = res.y;
+	}
+
+	Vector2Int operator-() const { return Vector2Int(-x, -y); }
+	Vector2Int operator*(int s) const { return ScalarMult(s); }
+	Vector2Int operator/(int s) const { return ScalarDiv(s); }
+	bool operator==(Vector2Int other) const { return Equals(other); }
 
 private:
-	_vector2Int Plus(_vector2Int other) const { return _vector2Int(x + other.x, y + other.y); }
-	_vector2Int Minus(_vector2Int other) const { return _vector2Int(x - other.x, y - other.y); }
+	Vector2Int Plus(Vector2Int other) const { return Vector2Int(x + other.x, y + other.y); }
+	Vector2Int Minus(Vector2Int other) const { return Vector2Int(x - other.x, y - other.y); }
 
-	_vector2Int ScalarMult(int scalar) const { return _vector2Int(x * scalar, y * scalar); }
-	_vector2Int ScalarDiv(int scalar) const { return _vector2Int(x / scalar, y / scalar); }
+	Vector2Int ScalarMult(int scalar) const { return Vector2Int(x * scalar, y * scalar); }
+	Vector2Int ScalarDiv(int scalar) const { return Vector2Int(x / scalar, y / scalar); }
 
-	bool Equals(_vector2Int other) const { return x == other.x && y == other.y; }
+	bool Equals(Vector2Int other) const { return x == other.x && y == other.y; }
 
-} Vector2Int;
+};
 
-typedef struct _vector2
+struct Vector2
 {
 	float x, y;
 
-	_vector2(float x = 0, float y = 0)
+	Vector2(float x = 0, float y = 0)
 	{
 		this->x = x;
 		this->y = y;
 	}
 
-	_vector2 operator+(_vector2 other) const { return Plus(other); }
-	_vector2 operator-(_vector2 other) const { return Minus(other); }
+	Vector2 operator+(Vector2 other) const { return Plus(other); }
+	void operator+=(Vector2 other)
+	{
+		Vector2 res = Plus(other);
+		x = res.x;
+		y = res.y;
+	}
 
-	_vector2 operator*(float s) const { return ScalarMult(s); }
-	_vector2 operator/(float s) const { return ScalarDiv(s); }
-	bool operator==(_vector2 other) const { return Equals(other); }
+	Vector2 operator-(Vector2 other) const { return Minus(other); }
+	void operator-=(Vector2 other)
+	{
+		Vector2 res = Minus(other);
+		x = res.x;
+		y = res.y;
+	}
+
+	Vector2 operator-() const { return Vector2(-x, -y); }
+	Vector2 operator*(float s) const { return ScalarMult(s); }
+	Vector2 operator/(float s) const { return ScalarDiv(s); }
+	bool operator==(Vector2 other) const { return Equals(other); }
+
+	static float Distance(Vector2 a, Vector2 b)
+	{
+		Vector2 diff = Vector2(a.x - b.x, a.y - b.y);
+		return std::sqrtf(diff.x * diff.x + diff.y * diff.y);
+	}
 
 private:
-	_vector2 Plus(_vector2 other) const { return _vector2(x + other.x, y + other.y); }
-	_vector2 Minus(_vector2 other) const { return _vector2(x - other.x, y - other.y); }
+	Vector2 Plus(Vector2 other) const { return Vector2(x + other.x, y + other.y); }
+	Vector2 Minus(Vector2 other) const { return Vector2(x - other.x, y - other.y); }
 
-	_vector2 ScalarMult(float scalar) const { return _vector2(x * scalar, y * scalar); }
-	_vector2 ScalarDiv(float scalar) const { return _vector2(x / scalar, y / scalar); }
+	Vector2 ScalarMult(float scalar) const { return Vector2(x * scalar, y * scalar); }
+	Vector2 ScalarDiv(float scalar) const { return Vector2(x / scalar, y / scalar); }
 
-	bool Equals(_vector2 other, float e = .00001f) const { return (std::abs(x - other.x) <= e) && (std::abs(y - other.y) <= e); }
+	bool Equals(Vector2 other, float e = .00001f) const { return (std::abs(x - other.x) <= e) && (std::abs(y - other.y) <= e); }
+};
 
-} Vector2;
-
-typedef struct _vector3
+struct Vector3
 {
 	float x, y, z;
 
-	_vector3(float x = 0, float y = 0, float z = 0)
+	Vector3(float x = 0, float y = 0, float z = 0)
 	{
 		this->x = x;
 		this->y = y;
 		this->z = z;
 	}
 
-	_vector3(Vector2 other)
+	Vector3(Vector2 other)
 	{
 		x = other.x;
 		y = other.y;
 		z = 0;
 	}
 
-	_vector3 operator+(_vector3 other) const { return Plus(other); }
-	void operator+=(_vector3 other)
-	{ 
-		Vector3 plus = Plus(other); 
-		x = plus.x;
-		y = plus.y;
-		z = plus.z;
+	Vector3(Vector2 other, float z)
+	{
+		x = other.x;
+		y = other.y;
+		this->z = z;
 	}
 
-	_vector3 operator-(_vector3 other) const { return Minus(other); }
-	_vector3 operator-() const { return Vector3(-x, -y, -z); }
-	_vector3 operator-=(_vector3 other) const { return Minus(other); }
+	Vector3 operator+(Vector3 other) const { return Plus(other); }
+	void operator+=(Vector3 other)
+	{ 
+		Vector3 res = Plus(other);
+		x = res.x;
+		y = res.y;
+		z = res.z;
+	}
 
-	_vector3 operator*(float s) const { return ScalarMult(s); }
-	_vector3 operator/(float s) const { return ScalarDiv(s); }
-	bool operator==(_vector3 other) const { return Equals(other); }
-
-	static _vector3 Cross(_vector3 a, _vector3 b)
+	Vector3 operator-(Vector3 other) const { return Minus(other); }
+	void operator-=(Vector3 other)
 	{
-		return _vector3(
+		Vector3 res = Minus(other);
+		x = res.x;
+		y = res.y;
+		z = res.z;
+	}
+
+	Vector3 operator-() const { return Vector3(-x, -y, -z); }
+	Vector3 operator*(float s) const { return ScalarMult(s); }
+	Vector3 operator/(float s) const { return ScalarDiv(s); }
+	bool operator==(Vector3 other) const { return Equals(other); }
+
+	static Vector3 Cross(Vector3 a, Vector3 b)
+	{
+		return Vector3(
 			(a.x * b.z) - (a.z * b.y),
 			(a.z * b.x) - (a.x * b.z),
 			(a.x * b.y) - (a.y * b.x)
 		);
 	}
 
-	static _vector3 Normalize(_vector3 vector)
+	static Vector3 Normalize(Vector3 vector)
 	{
 		float magnitude = vector.Magnitude();
 		if (magnitude > kEpsilon) return vector / magnitude;
-		return _vector3();
+		return Vector3();
 	}
 
-	static float Dot(_vector3 a, _vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+	static float Dot(Vector3 a, Vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+	static float Distance(Vector3 a, Vector3 b)
+	{
+		Vector3 diff = Vector3(a.x - b.x, a.y - b.y , a.z - b.z);
+		return std::sqrtf(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+	}
 
 	float Magnitude() const { return std::sqrtf(x * x + y * y + z * z); }
 
 private:
-	_vector3 Plus(_vector3 other) const { return _vector3(x + other.x, y + other.y, z + other.z); }
-	_vector3 Minus(_vector3 other) const { return _vector3(x - other.x, y - other.y, z - other.z); }
+	Vector3 Plus(Vector3 other) const { return Vector3(x + other.x, y + other.y, z + other.z); }
+	Vector3 Minus(Vector3 other) const { return Vector3(x - other.x, y - other.y, z - other.z); }
 
-	_vector3 ScalarMult(float scalar) const { return _vector3(x * scalar, y * scalar, z * scalar); }
-	_vector3 ScalarDiv(float scalar) const { return _vector3(x / scalar, y / scalar, z / scalar); }
+	Vector3 ScalarMult(float scalar) const { return Vector3(x * scalar, y * scalar, z * scalar); }
+	Vector3 ScalarDiv(float scalar) const { return Vector3(x / scalar, y / scalar, z / scalar); }
 
-	bool Equals(_vector3 other, float e = .00001f) const { return (std::abs(x - other.x) <= e) && (std::abs(y - other.y) <= e) && (std::abs(z - other.z) <= e); }
-} Vector3;
+	bool Equals(Vector3 other, float e = .00001f) const { return (std::abs(x - other.x) <= e) && (std::abs(y - other.y) <= e) && (std::abs(z - other.z) <= e); }
+};

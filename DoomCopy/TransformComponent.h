@@ -20,13 +20,13 @@ public:
 	Vector3 GetForwardVector() const 
 	{
 		int currentRot = (int) std::roundf(rot);
-		return Vector3((float) SCTABLE.sin[currentRot], 0, (float) SCTABLE.cos[currentRot]);
+		return Vector3((float) SCTABLE.sin[currentRot], (float)SCTABLE.cos[currentRot], 0);
 	}
 
 	Vector3 GetRightVector() const 
 	{ 
 		int currentRot = (int) std::roundf(rot);
-		return Vector3((float) SCTABLE.cos[currentRot], 0, (float) -SCTABLE.sin[currentRot]);
+		return Vector3((float) -SCTABLE.cos[currentRot], (float)SCTABLE.sin[currentRot], 0);
 	}
 
 	Transform();

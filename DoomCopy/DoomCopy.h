@@ -7,6 +7,8 @@
 
 #define IDM_EXIT 105
 
+wchar_t szWindowClass[] = L"DoomCopy";
+wchar_t szTitle[] = L"DoomCopy Title";
 HINSTANCE hInst;
 
 #ifdef GDI_RENDER

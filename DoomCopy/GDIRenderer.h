@@ -7,6 +7,7 @@
 typedef struct
 {
 	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
+	DWORD color;
 } ScreenSpaceWall;
 
 
@@ -29,6 +30,7 @@ private:
 	HDC memHDC;
 	HBITMAP hbmp;
 
-	void DrawWall(const Wall& wall);
-	ScreenSpaceWall GetScreenSpaceWall(const Wall& wall);
+	void DrawWall(const ProcessedWall& wall);
+	void ProcessSector(const ProcessedSector& sector);
+	ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
 };
