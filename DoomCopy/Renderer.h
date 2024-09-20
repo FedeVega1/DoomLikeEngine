@@ -11,12 +11,23 @@
 
 static inline int PixelPos(int x, int y) { return x + (DEFAULT_BUFFER_WIDTH * y); }
 
+struct ScreenSpaceWall
+{
+	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
+	Color color;
+};
+
 class Renderer
 {
 public:
 	virtual void RenderScreen(HWND hwnd) = 0;
 	virtual HRESULT InitRenderer(HWND hwnd) = 0;
-	virtual void DrawPixel(int x, int y, DWORD color) = 0;
-	virtual void PaintScreen(DWORD color) = 0;
+	virtual void DrawPixel(int x, int y, Color color) = 0;
+	virtual void PaintScreen(Color color) = 0;
 	virtual void ProcessGame(HWND hwnd, std::shared_ptr<Game> game) = 0;
+
+protected:
+	virtual void DrawWall(const ProcessedWall& wall) = 0;
+	virtual void ProcessSector(const ProcessedSector& sector) = 0;
+	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall) = 0;
 };

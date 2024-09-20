@@ -4,7 +4,19 @@ class BaseComponent;
 struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
-	DWORD color;
+	Color color;
+
+	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), color(0, 0, 0)
+	{ }
+
+	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color c)
+	{ 
+		leftTopPoint = ltPoint;
+		rightTopPoint = rtPoint;
+		leftBtmPoint = lbPoint;
+		rightBtmPoint = rbPoint;
+		color = c;
+	}
 };
 
 struct ProcessedSector
@@ -25,7 +37,7 @@ public:
 	virtual void Start() override;
 	virtual void Tick() override;
 
-	Camera() : BaseComponent(), world(nullptr), processedSectors(nullptr)
+	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr)
 	{ }
 
 	~Camera()

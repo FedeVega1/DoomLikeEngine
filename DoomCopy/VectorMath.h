@@ -174,3 +174,26 @@ private:
 
 	bool Equals(Vector3 other, float e = .00001f) const { return (std::abs(x - other.x) <= e) && (std::abs(y - other.y) <= e) && (std::abs(z - other.z) <= e); }
 };
+
+static const Vector2Int V2INT_ZERO = Vector2Int(0, 0);
+static const Vector2Int V2INT_ONE = Vector2Int(1, 1);
+static const Vector2Int V2INT_LEFT = Vector2Int(-1, 0);
+static const Vector2Int V2INT_RIGHT = Vector2Int(1, 0);
+static const Vector2Int V2INT_DOWN = Vector2Int(0, -1);
+static const Vector2Int V2INT_UP = Vector2Int(0, 1);
+
+static const Vector2 V2_ZERO = Vector2(0.0f, 0.0f);
+static const Vector2 V2_ONE = Vector2(1.0f, 1.0f);
+static const Vector2 V2_LEFT = Vector2(-1.0f, 0.0f);
+static const Vector2 V2_RIGHT = Vector2(1.0f, 0.0f);
+static const Vector2 V2_DOWN = Vector2(0.0f, -1.0f);
+static const Vector2 V2_UP = Vector2(0.0f, 1.0f);
+
+static const Vector3 V3_ZERO = Vector3(0.0f, 0.0f, 0.0f);
+static const Vector3 V3_ONE = Vector3(1.0f, 1.0f, 1.0f);
+static const Vector3 V3_LEFT = Vector3(-1.0f, 0.0f, 0.0f);
+static const Vector3 V3_RIGHT = Vector3(1.0f, 0.0f, 0.0f);
+static const Vector3 V3_BACK = Vector3(0.0f, -1.0f, 0.0f);
+static const Vector3 V3_FORWARD = Vector3(0.0f, 1.0f, 0.0f);
+static const Vector3 V3_DOWN = Vector3(0.0f, 0.0f, -1.0f);
+static const Vector3 V3_UP = Vector3(0.0f, 0.0f, 1.0f);

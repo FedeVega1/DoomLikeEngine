@@ -29,6 +29,7 @@ HRESULT GDIRenderer::InitRenderer(HWND hwnd)
     };
 
     SelectObject(memHDC, hbmp);
+
     return S_OK;
 }
 
@@ -44,29 +45,25 @@ void GDIRenderer::RenderScreen(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-void GDIRenderer::PaintScreen(DWORD color)
+void GDIRenderer::PaintScreen(Color color)
 {
     for (int y = 0; y < DEFAULT_BUFFER_HEIGHT; y++)
     {
         for (int x = 0; x < DEFAULT_BUFFER_WIDTH; x++)
-            buffer[PixelPos(x, y)] = color;
+            buffer[PixelPos(x, y)] = color.ToDWORD(true);
     }
 }
 
-void GDIRenderer::DrawPixel(int x, int y, DWORD color)
+void GDIRenderer::DrawPixel(int x, int y, Color color)
 {
-    if (x >= DEFAULT_BUFFER_WIDTH) x = DEFAULT_BUFFER_WIDTH - 1;
-    else if (x < 0) x = 0;
-
-    if (y >= DEFAULT_BUFFER_HEIGHT) y = DEFAULT_BUFFER_HEIGHT - 1;
-    else if (y < 0) y = 0;
-
-    buffer[PixelPos(x, y)] = color;
+    x = std::clamp(x, 0, DEFAULT_BUFFER_WIDTH - 1);
+    y = std::clamp(y, 0, DEFAULT_BUFFER_HEIGHT - 1);
+    buffer[PixelPos(x, y)] = color.ToDWORD(true);
 }
 
 void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game) 
 {
-    PaintScreen(0);
+    PaintScreen(Color(0, 0, 0));
 
     //size_t count = game->GetEntityCount();
     //for (size_t i = 0; i < count; i++)
@@ -104,36 +101,25 @@ void GDIRenderer::DrawWall(const ProcessedWall& wall)
     if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
 
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
-    int dyb = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
-    int dyt = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
+    int dyBottom = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
+    int dyTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
     int dx = sWall.leftBtmPoint.x - sWall.rightBtmPoint.x;
     if (dx == 0) dx = 1;
-    int xs = sWall.leftBtmPoint.x;
+    int xStartPoint = sWall.leftBtmPoint.x;
 
-    if (sWall.leftBtmPoint.x < 0) sWall.leftBtmPoint.x = 0;
-    if (sWall.rightBtmPoint.x < 0) sWall.rightBtmPoint.x = 0;
+    sWall.leftBtmPoint.x = std::clamp(sWall.leftBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+    sWall.rightBtmPoint.x = std::clamp(sWall.rightBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
 
-    if (sWall.leftBtmPoint.x > DEFAULT_BUFFER_WIDTH) sWall.leftBtmPoint.x = DEFAULT_BUFFER_WIDTH;
-    if (sWall.rightBtmPoint.x > DEFAULT_BUFFER_WIDTH) sWall.rightBtmPoint.x = DEFAULT_BUFFER_WIDTH;
-
-    for (int x = xs; x < sWall.rightBtmPoint.x; x++)
+    for (int x = sWall.leftBtmPoint.x; x < sWall.rightBtmPoint.x; x++)
     {
-        int y1 = dyb * (x - xs + .5f) / dx + sWall.leftBtmPoint.y;
-        int y2 = dyt * (x - xs + .5f) / dx + sWall.leftTopPoint.y;
+        int diff = x - xStartPoint;
+        int y1 = dyBottom * diff / dx + sWall.leftBtmPoint.y;
+        int y2 = dyTop * diff / dx + sWall.leftTopPoint.y;
 
-        if (y1 < 0) y1 = 0;
-        if (y2 < 0) y2 = 0;
+        y1 = std::clamp(y1, 0, DEFAULT_BUFFER_HEIGHT);
+        y2 = std::clamp(y2, 0, DEFAULT_BUFFER_HEIGHT);
 
-        if (y1 > DEFAULT_BUFFER_HEIGHT) y1 = DEFAULT_BUFFER_HEIGHT;
-        if (y2 > DEFAULT_BUFFER_HEIGHT) y2 = DEFAULT_BUFFER_HEIGHT;
-
-        for (int y = y1; y < y2; y++)
-        {
-            DWORD color = sWall.color;
-            //if (x == sWall.leftBtmPoint.x || x == (sWall.rightBtmPoint.x - 1)) color = 0x00FF00;
-            //if (y == y1 || y == (y2 - 1)) color = 0x0000FF;
-            DrawPixel(x, y, color);
-        }
+        for (int y = y1; y < y2; y++) DrawPixel(x, y, sWall.color);
     }
 }
 

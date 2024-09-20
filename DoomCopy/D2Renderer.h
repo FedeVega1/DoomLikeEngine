@@ -21,12 +21,17 @@ class D2Renderer : public Renderer
 public:
 	virtual void RenderScreen(HWND hwnd) override;
 	virtual HRESULT InitRenderer(HWND hwnd) override;
-	virtual void DrawPixel(int x, int y, DWORD color) override;
-	virtual void PaintScreen(DWORD color) override;
+	virtual void DrawPixel(int x, int y, Color color) override;
+	virtual void PaintScreen(Color color) override;
 	virtual void ProcessGame(HWND hwnd, std::shared_ptr<Game> game) override;
 
 	D2Renderer();
 	~D2Renderer();
+
+protected:
+	virtual void DrawWall(const ProcessedWall& wall) override;
+	virtual void ProcessSector(const ProcessedSector& sector) override;
+	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall) override;
 
 private:
 	std::shared_ptr<DWORD> buffer;

@@ -3,12 +3,12 @@
 struct Wall
 {
 	Vector2 leftPoint, rightPoint;
-	DWORD color;
+	Color color;
 
-	Wall() : leftPoint(), rightPoint(), color(0)
+	Wall() : leftPoint(), rightPoint(), color(0, 0, 0)
 	{ }
 
-	Wall(Vector2 lPoint, Vector2 rPoint, DWORD c)
+	Wall(Vector2 lPoint, Vector2 rPoint, Color c)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
@@ -48,10 +48,10 @@ public:
 			Sector(
 				new Wall[4]
 				{
-					Wall(Vector2(0, 0), Vector2(32, 0), 0xFF0000),
-					Wall(Vector2(32, 0), Vector2(32, 32), 0xAA0000),
-					Wall(Vector2(32, 32), Vector2(0, 32), 0xFF0000),
-					Wall(Vector2(0, 32), Vector2(0, 0), 0xAA0000),
+					Wall(V2_ZERO, Vector2(32, 0), COLOR_RED),
+					Wall(Vector2(32, 0), Vector2(32, 32), COLOR_DARKRED),
+					Wall(Vector2(32, 32), Vector2(0, 32), COLOR_RED),
+					Wall(Vector2(0, 32), V2_ZERO, COLOR_DARKRED),
 				},
 				4,
 				0.0f,

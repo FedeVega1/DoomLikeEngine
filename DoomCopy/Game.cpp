@@ -52,7 +52,6 @@ Game::Game() : loops(0), mainCamera(nullptr), world(nullptr)
 	Time::INS.startTime = std::chrono::high_resolution_clock::now();
 
     Input::INS = Input();
-
     entities = std::vector<Entity*>();
 }
 

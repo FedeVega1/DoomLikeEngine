@@ -58,6 +58,14 @@ void Camera::Tick()
 		case KeyCode::F:
 			xRotation += rotSpeed * Time::INS.GetFDeltaTime();
 			break;
+
+		case KeyCode::Z:
+			GetGameObject()->GetTransform()->TeleportTo(V3_UP * movSpeed * Time::INS.GetFDeltaTime());
+			break;
+
+		case KeyCode::X:
+			GetGameObject()->GetTransform()->TeleportTo(V3_DOWN * movSpeed * Time::INS.GetFDeltaTime());
+			break;
 	}
 
 	int sectorsToProcess = GetSectorsToProcess();
@@ -87,7 +95,7 @@ void Camera::Tick()
 			wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.leftBtmPoint.z + processedSectors[s].topPoint);
 			wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.rightBtmPoint.z + processedSectors[s].topPoint);
 
-			processedSectors->avrgDistanceToCamera += Vector2::Distance(Vector2(0, 0), Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2));
+			processedSectors->avrgDistanceToCamera += Vector2::Distance(V2_ZERO, Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2));
 			if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
 
 			if (wall.leftBtmPoint.y < 1)
@@ -120,7 +128,7 @@ int Camera::GetSectorsToProcess()
 		{
 			processedSectors[s].sectorWalls[w] = ProcessedWall
 			{
-				Vector3(), Vector3(),
+				V3_ZERO, V3_ZERO,
 				world->sectorData[s].sectorWalls[w].leftPoint, 
 				world->sectorData[s].sectorWalls[w].rightPoint, 
 				world->sectorData[s].sectorWalls[w].color
@@ -142,11 +150,9 @@ void Camera::OnDestroy()
 
 void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
 {
-	float da = pointA.y;
-	float db = pointB.y;
-	float d = da - db;
+	float d = pointA.y - pointB.y;
 	if (d == 0) d = 1;
-	float s = d / (da - db);
+	float s = pointA.y / (pointA.y - pointB.y);
 	pointA.x += s * (pointB.x - pointA.x);
 	pointA.y += s * (pointB.y - pointA.y);
 	pointA.z += s * (pointB.z - pointA.z);
