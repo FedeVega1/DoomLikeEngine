@@ -78,7 +78,7 @@ void D2Renderer::DrawPixel(int x, int y, Color color)
 	buffer.get()[PixelPos(x, y)] = color.ToDWORD(false);
 }
 
-void D2Renderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game)
+void D2Renderer::ProcessGame(HWND hwnd, Game* const game)
 {
 	PaintScreen(Color(0, 0, 0));
 

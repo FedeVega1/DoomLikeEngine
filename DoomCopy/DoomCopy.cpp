@@ -11,7 +11,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     renderer = D2Renderer();
 #endif
 
-    mainGame = std::shared_ptr<Game>(new Game());
+    mainGame = Game();
     InitLogSystem(true, false);
 
     if (!SetupAndCreateWindow(hInstance, nCmdShow)) return -1;
@@ -53,21 +53,25 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
 int MainLoop()
 {
     MSG msg;
-    mainGame->InitUpdate();
+    mainGame.InitUpdate();
 
     while (true)
     {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
-            if (msg.message == WM_QUIT) break;
+            if (msg.message == WM_QUIT)
+            {
+                mainGame.~Game();
+                break;
+            }
 
             TranslateMessage(&msg);
             DispatchMessage(&msg);
             continue;
         }
 
-        mainGame->MainUpdate();
-        renderer.ProcessGame(mainHWND, mainGame);
+        mainGame.MainUpdate();
+        renderer.ProcessGame(mainHWND, &mainGame);
     }
 
     return (int) msg.wParam;
@@ -93,11 +97,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_KEYDOWN:
-            mainGame->CaptureKeyPress(wParam);
+            mainGame.CaptureKeyPress(wParam);
             break;
 
         case WM_KEYUP:
-            mainGame->CaptureKeyRelease(wParam);
+            mainGame.CaptureKeyRelease(wParam);
             break;
 
         case WM_PAINT:

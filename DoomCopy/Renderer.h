@@ -24,7 +24,7 @@ public:
 	virtual HRESULT InitRenderer(HWND hwnd) = 0;
 	virtual void DrawPixel(int x, int y, Color color) = 0;
 	virtual void PaintScreen(Color color) = 0;
-	virtual void ProcessGame(HWND hwnd, std::shared_ptr<Game> game) = 0;
+	virtual void ProcessGame(HWND hwnd, Game* const game) = 0;
 
 protected:
 	virtual void DrawWall(const ProcessedWall& wall) = 0;

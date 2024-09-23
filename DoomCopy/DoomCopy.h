@@ -20,7 +20,7 @@ D2Renderer renderer;
 #endif
 
 HWND mainHWND;
-std::shared_ptr<Game> mainGame;
+Game mainGame;
 std::mt19937 rng;
 
 BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow);

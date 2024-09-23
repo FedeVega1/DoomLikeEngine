@@ -54,6 +54,9 @@ protected:
 	virtual void OnDestroy() override;
 
 private:
+	static const float movSpeed;
+	static const float rotSpeed;
+
 	int xRotation;
 	class World* world;
 	ProcessedSector* processedSectors;
@@ -67,4 +70,8 @@ private:
 	void DebugRight();
 	void DebugRotRight();
 	void DebugRotLeft();
+	void DebugRotUp();
+	void DebugRotDown();
+	void DebugUp();
+	void DebugDown();
 };

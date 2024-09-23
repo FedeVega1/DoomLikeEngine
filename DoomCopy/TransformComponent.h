@@ -23,7 +23,7 @@ public:
 		return Vector3((float) SCTABLE.sin[currentRot], (float) SCTABLE.cos[currentRot], 0);
 	}
 
-	Vector3 GetRightVector() const 
+	Vector3 GetLeftVector() const 
 	{ 
 		int currentRot = (int) std::roundf(rot);
 		return Vector3((float) -SCTABLE.cos[currentRot], (float) SCTABLE.sin[currentRot], 0);

@@ -22,14 +22,18 @@ enum KeyCode
 	F12 = VK_F12
 };
 
-class Component;
-typedef void (Component::*InputCallback)();
+typedef void (BaseComponent::*InputCallback)();
 
-typedef struct
+struct InputCallbackContainer
 {
 	InputCallback callback;
-	Component* component;
-} InputCallbackContainer;
+	BaseComponent* component;
+
+	bool operator==(InputCallbackContainer other) const 
+	{ 
+		return callback == other.callback && component == other.component; 
+	}
+};
 
 class Input
 {
@@ -38,78 +42,75 @@ class Input
 public:
 	static Input INS;
 
-	Input() : lastPressedKey(KeyCode::None), lastReleasedKey(KeyCode::None)
+	Input();
+
+	template<class T>
+	void RegisterKeyPress(KeyCode key, void (T::* callback)(), T* const caller)
 	{
-		//keyCallbacks = std::map<KeyCode, std::vector<InputCallbackContainer>[2]>();
+		if (!keyCallbacks.contains(key)) InitCallbackMapForKey(key);
+		keyCallbacks[key][0].push_back(InputCallbackContainer{ static_cast<InputCallback>(callback), caller });
 	}
 
-	//void RegisterKeyPress(KeyCode key, InputCallback callback, Component* const caller)
-	//{
-	//	if (!keyCallbacks.contains(key))
-	//	{
-	//		keyCallbacks[key][0] = std::vector<InputCallbackContainer>();
-	//		keyCallbacks[key][1] = std::vector<InputCallbackContainer>();
-	//	}
+	template<class T>
+	void RegisterKeyRelease(KeyCode key, void (T::* callback)(), T* const caller)
+	{
+		if (!keyCallbacks.contains(key)) InitCallbackMapForKey(key);
+		keyCallbacks[key][1].push_back(InputCallbackContainer{ static_cast<InputCallback>(callback), caller });
+	}
 
-	//	keyCallbacks[key][0].push_back(InputCallbackContainer{ callback, caller });
-	//}
+	template<class T>
+	void RegisterKeyHold(KeyCode key, void (T::* callback)(), T* const caller)
+	{
+		if (!keyCallbacks.contains(key)) InitCallbackMapForKey(key);
+		keyCallbacks[key][2].push_back(InputCallbackContainer{ static_cast<InputCallback>(callback), caller });
+	}
 
-	//void RegisterKeyRelease(KeyCode key, InputCallback callback, Component* const caller)
-	//{
-	//	if (!keyCallbacks.contains(key))
-	//	{
-	//		keyCallbacks[key][0] = std::vector<InputCallbackContainer>();
-	//		keyCallbacks[key][1] = std::vector<InputCallbackContainer>();
-	//	}
+	template<class T>
+	void UnRegisterKeyPress(KeyCode key, void (T::* callback)(), T* const caller)
+	{
+		InputCallback castedPointer = static_cast<InputCallback>(callback);
+		std::vector<InputCallbackContainer>& vec = keyCallbacks[key][0];
 
-	//	keyCallbacks[key][1].push_back(InputCallbackContainer{ callback, caller });
-	//}
+		for (InputCallbackContainer container : vec)
+		{
+			if (container.callback != castedPointer || container.component != caller) continue;
+			vec.erase(std::remove(vec.begin(), vec.end(), container));
+		}
+	}
 
-	//void UnregisterKeyPress(KeyCode key, InputCallback callback, Component* const caller)
-	//{
-	//	std::vector<InputCallbackContainer>& vec = keyCallbacks[key][0];
+	template<class T>
+	void UnRegisterKeyRelease(KeyCode key, void (T::* callback)(), T* const caller)
+	{
+		InputCallback castedPointer = static_cast<InputCallback>(callback);
+		std::vector<InputCallbackContainer>& vec = keyCallbacks[key][1];
 
-	//	for (InputCallbackContainer container : vec)
-	//	{
-	//		if (container.callback != callback || container.component != caller) continue;
-	//		vec.erase(std::remove(vec.begin(), vec.end(), container));
-	//	}
-	//}
+		for (InputCallbackContainer container : vec)
+		{
+			if (container.callback != castedPointer || container.component != caller) continue;
+			vec.erase(std::remove(vec.begin(), vec.end(), container));
+		}
+	}
 
-	//void UnregisterKeyRelease(KeyCode key, InputCallback callback, Component* const caller)
-	//{
-	//	std::vector<InputCallbackContainer>& vec = keyCallbacks[key][1];
+	template<class T>
+	void UnRegisterKeyHold(KeyCode key, void (T::* callback)(), T* const caller)
+	{
+		InputCallback castedPointer = static_cast<InputCallback>(callback);
+		std::vector<InputCallbackContainer>& vec = keyCallbacks[key][2];
 
-	//	for (InputCallbackContainer container : vec)
-	//	{
-	//		if (container.callback != callback || container.component != caller) continue;
-	//		vec.erase(std::remove(vec.begin(), vec.end(), container));
-	//	}
-	//}
-
-	KeyCode GetLastKeyCode() const { return lastPressedKey; }
+		for (InputCallbackContainer container : vec)
+		{
+			if (container.callback != castedPointer || container.component != caller) continue;
+			vec.erase(std::remove(vec.begin(), vec.end(), container));
+		}
+	}
 
 private:
-	//std::map<KeyCode, std::vector<InputCallbackContainer>[2]> keyCallbacks;
-	KeyCode lastPressedKey, lastReleasedKey;
+	std::map<KeyCode, std::vector<InputCallbackContainer>[3]> keyCallbacks;
+	std::map<KeyCode, bool> currentKeys;
+	std::vector<KeyCode> pressedKeys, releasedKeys;
 
-	void GetKeyPress(KeyCode key)
-	{
-		lastPressedKey = key;
-		lastReleasedKey = KeyCode::None;
-		//if (!keyCallbacks.contains(key)) return;
-		//std::vector<InputCallbackContainer>& vec = keyCallbacks[key][0];
-		//int size = vec.size();
-		//for (int i = 0; i < size; i++) (vec[i].component->*vec[i].callback)();
-	}
-
-	void GetKeyRelease(KeyCode key)
-	{
-		lastReleasedKey = key;
-		lastPressedKey = KeyCode::None;
-		//if (!keyCallbacks.contains(key)) return;
-		//std::vector< InputCallbackContainer>& vec = keyCallbacks[key][1];
-		//int size = vec.size();
-		//for (int i = 0; i < size; i++) (vec[i].component->*vec[i].callback)();
-	}
+	void ProcessInputs();
+	void GetKeyPress(KeyCode key);
+	void GetKeyRelease(KeyCode key);
+	void InitCallbackMapForKey(KeyCode key);
 };

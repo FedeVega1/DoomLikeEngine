@@ -2,12 +2,12 @@
 #include "Game.h"
 #include "CameraComponent.h"
 #include "GameTime.h"
-#include "Inputs.h"
 #include "TransformComponent.h"
+#include "Inputs.h"
 #include "World.h"
 
-Time Time::INS;
-Input Input::INS;
+Time Time::INS = Time();
+Input Input::INS = Input();
 
 void Game::InitUpdate()
 {
@@ -33,7 +33,7 @@ void Game::MainUpdate()
     while (Time::INS.GetGameTickCount() > Time::INS.nextGameTick && loops < MAX_FRAMESKIP)
     {
         // GameLoop
-        Input::INS.lastReleasedKey = KeyCode::None;
+        Input::INS.ProcessInputs();
 
         size_t count = entities.size();
         for (size_t i = 0; i < count; i++) entities[i]->TickComponents();
@@ -48,10 +48,7 @@ void Game::MainUpdate()
 
 Game::Game() : loops(0), mainCamera(nullptr), world(nullptr)
 {
-    Time::INS = Time();
 	Time::INS.startTime = std::chrono::high_resolution_clock::now();
-
-    Input::INS = Input();
     entities = std::vector<Entity*>();
 }
 

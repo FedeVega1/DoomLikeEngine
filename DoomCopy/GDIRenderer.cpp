@@ -61,7 +61,7 @@ void GDIRenderer::DrawPixel(int x, int y, Color color)
     buffer[PixelPos(x, y)] = color.ToDWORD(true);
 }
 
-void GDIRenderer::ProcessGame(HWND hwnd, std::shared_ptr<Game> game) 
+void GDIRenderer::ProcessGame(HWND hwnd, Game* const game) 
 {
     PaintScreen(Color(0, 0, 0));
 

@@ -11,7 +11,7 @@ public:
 	virtual HRESULT InitRenderer(HWND hwnd) override;
 	virtual void DrawPixel(int x, int y, Color color) override;
 	virtual void PaintScreen(Color color) override;
-	virtual void ProcessGame(HWND hwnd, std::shared_ptr<Game> game) override;
+	virtual void ProcessGame(HWND hwnd, Game* const game) override;
 
 	GDIRenderer();
 	~GDIRenderer();
