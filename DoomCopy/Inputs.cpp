@@ -1,13 +1,12 @@
 #include "pch.h"
 #include "GameObjects.h"
 #include "Component.h"
+#include "VectorMath.h"
 #include "Inputs.h"
 
 Input::Input()
 {
 	keyCallbacks = std::map<KeyCode, std::vector<InputCallbackContainer>[3]>();
-	pressedKeys = std::vector<KeyCode>();
-	releasedKeys = std::vector<KeyCode>();
 }
 
 void Input::ProcessInputs()

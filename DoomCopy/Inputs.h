@@ -19,7 +19,9 @@ enum KeyCode
 	Mult = VK_MULTIPLY, Add = VK_ADD, Sep = VK_SEPARATOR, Subs = VK_SUBTRACT, Decimal = VK_DECIMAL, Divide = VK_DIVIDE,
 
 	F1 = VK_F1, F2 = VK_F2, F3 = VK_F3, F4 = VK_F4, F5 = VK_F5, F6 = VK_F6, F7 = VK_F7, F8 = VK_F8, F9 = VK_F9, F10 = VK_F10, F11 = VK_F11,
-	F12 = VK_F12
+	F12 = VK_F12,
+
+	LeftMouse = 0x01, RightMouse = 0x02, MiddleMouse = 0x03, X1Mouse = 0x04, X2Mouse = 0x05
 };
 
 typedef void (BaseComponent::*InputCallback)();
@@ -107,7 +109,7 @@ public:
 private:
 	std::map<KeyCode, std::vector<InputCallbackContainer>[3]> keyCallbacks;
 	std::map<KeyCode, bool> currentKeys;
-	std::vector<KeyCode> pressedKeys, releasedKeys;
+	Vector2 mousePosition;
 
 	void ProcessInputs();
 	void GetKeyPress(KeyCode key);

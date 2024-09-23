@@ -13,6 +13,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
     mainGame = Game();
     InitLogSystem(true, false);
+    SetupWindowMessages();
 
     if (!SetupAndCreateWindow(hInstance, nCmdShow)) return -1;
     if (IS_ERROR(renderer.InitRenderer(mainHWND))) { Sleep(5000); return -1; }
@@ -47,6 +48,7 @@ BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(mainHWND, nCmdShow);
     UpdateWindow(mainHWND);
+    GetClipCursor(&oldCursorClip);
     return TRUE;
 }
 
@@ -79,44 +81,74 @@ int MainLoop()
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
+    if (!messageMap.contains(message)) return DefWindowProc(hWnd, message, wParam, lParam);
+    if (message == WM_COMMAND)
     {
-        case WM_COMMAND:
+        switch (LOWORD(wParam))
         {
-            int wmId = LOWORD(wParam);
-            switch (wmId)
-            {
-                case IDM_EXIT:
-                    DestroyWindow(hWnd);
-                    break;
-
-                default:
-                    return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+            case IDM_EXIT: DestroyWindow(hWnd); return 0;
+            default: return DefWindowProc(hWnd, message, wParam, lParam);
         }
-            break;
+    }
 
-        case WM_KEYDOWN:
-            mainGame.CaptureKeyPress(wParam);
-            break;
+    messageMap[message](wParam, lParam);
+    return 0;
+}
 
-        case WM_KEYUP:
-            mainGame.CaptureKeyRelease(wParam);
-            break;
+void SetupWindowMessages()
+{
+    messageMap = std::map<UINT, WMessagePointer>
+    {
+        { WM_KEYDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyPress(wParam); } },
+        { WM_KEYUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyRelease(wParam); } },
+        { WM_MOUSEMOVE, [](WPARAM wPAram, LPARAM lParam) { mainGame.CaptureMouseMovement(MAKEPOINTS(lParam)); } },
+        { WM_LBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(0); } },
+        { WM_RBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(1); } },
+        { WM_RBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(1); } },
+        { WM_MBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(2); } },
+        { WM_MBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(2); } },
+        { WM_XBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(GET_XBUTTON_WPARAM(wParam) == 1 ? 3 : 4); } },
+        { WM_XBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(GET_XBUTTON_WPARAM(wParam) == 1 ? 3 : 4); } },
+        { WM_CAPTURECHANGED, [](WPARAM wParam, LPARAM lParam) { ClipCursor(&oldCursorClip); }},
 
-        case WM_PAINT:
+        { WM_LBUTTONDOWN, [](WPARAM wParam, LPARAM lParam)
+        { 
+            SetCapture(mainHWND);
+            SetCursor(NULL);
+            GetClipRect();
+            ClipCursor(&newCursorClip);
+            mainGame.CaptureMousePress(0); 
+        } },
+
+        { WM_DESTROY, [](WPARAM wParam, LPARAM lParam) 
+        { 
+            ClipCursor(&oldCursorClip);
+            ReleaseCapture();
+            PostQuitMessage(0);
+        } },
+
+        { WM_PAINT, [](WPARAM wParam, LPARAM lParam) 
+        { 
             renderer.RenderScreen(mainHWND);
 #ifdef D2_RENDER
-            ValidateRect(hWnd, NULL);
+            ValidateRect(mainHWND, NULL);
 #endif
-            break;
+        } },
+    };
+}
 
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
+void GetClipRect()
+{
+    POINT upperLeft, lowerRight;
 
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+    GetClientRect(mainHWND, &newCursorClip);
+    upperLeft.x = newCursorClip.left;
+    upperLeft.y = newCursorClip.top;
+    lowerRight.x = newCursorClip.right + 1;
+    lowerRight.y = newCursorClip.bottom + 1;
+
+    ClientToScreen(mainHWND, &upperLeft);
+    ClientToScreen(mainHWND, &lowerRight);
+
+    SetRect(&newCursorClip, upperLeft.x, upperLeft.y, lowerRight.x, lowerRight.y);
 }

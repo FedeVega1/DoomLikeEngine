@@ -59,6 +59,37 @@ Game::~Game()
     entities.clear();
 }
 
-void Game::CaptureKeyPress(unsigned long long keycode) { Input::INS.GetKeyPress(static_cast<KeyCode>(keycode)); }
+void Game::CaptureKeyPress(unsigned long long keycode)
+{ 
+    KeyCode key = static_cast<KeyCode>(keycode);
+    if (key == KeyCode::Esc) ReleaseCapture();
+    Input::INS.GetKeyPress(key);
+}
 
 void Game::CaptureKeyRelease(unsigned long long keycode) { Input::INS.GetKeyRelease(static_cast<KeyCode>(keycode)); }
+
+void Game::CaptureMousePress(UINT btn) 
+{ 
+    switch (btn)
+    {
+        case 0: Input::INS.GetKeyPress(KeyCode::LeftMouse); break;
+        case 1: Input::INS.GetKeyPress(KeyCode::RightMouse); break;
+        case 2: Input::INS.GetKeyPress(KeyCode::MiddleMouse); break;
+        case 3: Input::INS.GetKeyPress(KeyCode::X1Mouse); break;
+        case 4: Input::INS.GetKeyPress(KeyCode::X2Mouse); break;
+    }
+}
+
+void Game::CaptureMouseRelease(UINT btn) 
+{
+    switch (btn)
+    {
+        case 0: Input::INS.GetKeyRelease(KeyCode::LeftMouse); break;
+        case 1: Input::INS.GetKeyRelease(KeyCode::RightMouse); break;
+        case 2: Input::INS.GetKeyRelease(KeyCode::MiddleMouse); break;
+        case 3: Input::INS.GetKeyRelease(KeyCode::X1Mouse); break;
+        case 4: Input::INS.GetKeyRelease(KeyCode::X2Mouse); break;
+    }
+}
+
+void Game::CaptureMouseMovement(POINTS mousePos) { Input::INS.mousePosition = Vector2(mousePos.x, mousePos.y); }

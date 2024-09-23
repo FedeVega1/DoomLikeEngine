@@ -20,6 +20,10 @@ public:
 	void CaptureKeyPress(unsigned long long keycode);
 	void CaptureKeyRelease(unsigned long long keycode);
 
+	void CaptureMousePress(UINT btn);
+	void CaptureMouseRelease(UINT btn);
+	void CaptureMouseMovement(POINTS mousePos);
+
 	size_t GetEntityCount() const { return entities.size(); }
 	GameObject* GetGameObject(size_t indx) const { return dynamic_cast<GameObject*>(entities[indx]); }
 	class Camera* GetMainCamera() const { return mainCamera; }
