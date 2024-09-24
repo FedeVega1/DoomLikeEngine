@@ -92,4 +92,8 @@ void Game::CaptureMouseRelease(UINT btn)
     }
 }
 
-void Game::CaptureMouseMovement(POINTS mousePos) { Input::INS.mousePosition = Vector2(mousePos.x, mousePos.y); }
+void Game::CaptureMouseMovement(const POINTS* const mousePos, bool isClipped)
+{ 
+    Input::INS.mousePosition = Vector2Int(mousePos->x, mousePos->y); 
+    Input::INS.clippedCursor = isClipped;
+}

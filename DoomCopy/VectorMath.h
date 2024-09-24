@@ -33,6 +33,10 @@ struct Vector2Int
 	Vector2Int operator/(int s) const { return ScalarDiv(s); }
 	bool operator==(Vector2Int other) const { return Equals(other); }
 
+	static Vector2Int Clamp(Vector2Int vector, int min, int max) { return Vector2Int(std::clamp(vector.x, min, max), std::clamp(vector.y, min, max)); }
+
+	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
+
 private:
 	Vector2Int Plus(Vector2Int other) const { return Vector2Int(x + other.x, y + other.y); }
 	Vector2Int Minus(Vector2Int other) const { return Vector2Int(x - other.x, y - other.y); }
@@ -41,7 +45,6 @@ private:
 	Vector2Int ScalarDiv(int scalar) const { return Vector2Int(x / scalar, y / scalar); }
 
 	bool Equals(Vector2Int other) const { return x == other.x && y == other.y; }
-
 };
 
 struct Vector2
@@ -52,6 +55,12 @@ struct Vector2
 	{
 		this->x = x;
 		this->y = y;
+	}
+
+	Vector2(Vector2Int other)
+	{
+		x = static_cast<float>(other.x);
+		y = static_cast<float>(other.y);
 	}
 
 	Vector2 operator+(Vector2 other) const { return Plus(other); }
@@ -80,6 +89,10 @@ struct Vector2
 		Vector2 diff = Vector2(a.x - b.x, a.y - b.y);
 		return std::sqrtf(diff.x * diff.x + diff.y * diff.y);
 	}
+
+	static Vector2 Clamp(Vector2 vector, float min, float max) { return Vector2(std::clamp(vector.x, min, max), std::clamp(vector.y, min, max)); }
+
+	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
 
 private:
 	Vector2 Plus(Vector2 other) const { return Vector2(x + other.x, y + other.y); }
@@ -163,7 +176,11 @@ struct Vector3
 		return std::sqrtf(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 	}
 
+	static Vector3 Clamp(Vector3 vector, float min, float max) { return Vector3(std::clamp(vector.x, min, max), std::clamp(vector.y, min, max), std::clamp(vector.z, min, max)); }
+
 	float Magnitude() const { return std::sqrtf(x * x + y * y + z * z); }
+
+	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")"; }
 
 private:
 	Vector3 Plus(Vector3 other) const { return Vector3(x + other.x, y + other.y, z + other.z); }

@@ -22,7 +22,7 @@ public:
 
 	void CaptureMousePress(UINT btn);
 	void CaptureMouseRelease(UINT btn);
-	void CaptureMouseMovement(POINTS mousePos);
+	void CaptureMouseMovement(const POINTS* const mousePos, bool isClipped);
 
 	size_t GetEntityCount() const { return entities.size(); }
 	GameObject* GetGameObject(size_t indx) const { return dynamic_cast<GameObject*>(entities[indx]); }

@@ -15,25 +15,21 @@ void Camera::Start()
 	processedSectors = new ProcessedSector[5];
 	for (int i = 0; i < 5; i++) processedSectors[i] = ProcessedSector();
 
-	Input::INS.RegisterKeyHold(KeyCode::W, &Camera::DebugForward, this);
-	Input::INS.RegisterKeyHold(KeyCode::S, &Camera::DebugBack, this);
-	Input::INS.RegisterKeyHold(KeyCode::A, &Camera::DebugLeft, this);
-	Input::INS.RegisterKeyHold(KeyCode::D, &Camera::DebugRight, this);
-	Input::INS.RegisterKeyHold(KeyCode::Q, &Camera::DebugRotLeft, this);
-	Input::INS.RegisterKeyHold(KeyCode::E, &Camera::DebugRotRight, this);
-	Input::INS.RegisterKeyHold(KeyCode::R, &Camera::DebugRotUp, this);
-	Input::INS.RegisterKeyHold(KeyCode::F, &Camera::DebugRotDown, this);
-	Input::INS.RegisterKeyHold(KeyCode::Z, &Camera::DebugUp, this);
-	Input::INS.RegisterKeyHold(KeyCode::X, &Camera::DebugDown, this);
+	Input::INS.RegisterAxis("CameraForwardBack", KeyCode::W, KeyCode::S, &Camera::DebugForwardBack, this);
+	Input::INS.RegisterAxis("CameraLeftRight", KeyCode::A, KeyCode::D, &Camera::DebugLeftRight, this);
+	Input::INS.RegisterAxis("CameraUpDown", KeyCode::Z, KeyCode::X, &Camera::DebugUpDown, this);
+	Input::INS.RegisterAxis("CameraRotUpDown", KeyCode::R, KeyCode::F, &Camera::DebugRotUpDown, this);
 }
 
 const float Camera::movSpeed = 15.0f;
-const float Camera::rotSpeed = 15.0f;
+const float Camera::rotSpeed = 10.0f;
 
 ProcessedSector* Camera::GetProcessedSectors() { return processedSectors; };
 
 void Camera::Tick()
 {
+	GetGameObject()->GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
+
 	int sectorsToProcess = GetSectorsToProcess();
 
 	Vector3 currentPos = GetGameObject()->GetTransform()->GetPos();
@@ -111,16 +107,10 @@ int Camera::GetSectorsToProcess()
 
 void Camera::OnDestroy()
 {
-	Input::INS.UnRegisterKeyHold(KeyCode::W, &Camera::DebugForward, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::S, &Camera::DebugBack, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::A, &Camera::DebugLeft, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::D, &Camera::DebugRight, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::Q, &Camera::DebugRotLeft, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::E, &Camera::DebugRotRight, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::R, &Camera::DebugRotUp, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::F, &Camera::DebugRotDown, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::Z, &Camera::DebugUp, this);
-	Input::INS.UnRegisterKeyHold(KeyCode::X, &Camera::DebugDown, this);
+	Input::INS.UnRegisterAxis("CameraForwardBack", this);
+	Input::INS.UnRegisterAxis("CameraRightLeft", this);
+	Input::INS.UnRegisterAxis("CameraUpDown", this);
+	Input::INS.UnRegisterAxis("CameraRotUpDown", this);
 }
 
 void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
@@ -134,34 +124,24 @@ void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
 	if (pointA.y == 0) pointA.y = 1;
 }
 
-void Camera::DebugForward()
+void Camera::DebugForwardBack(float axis)
 {
 	Vector3 fwd = GetGameObject()->GetTransform()->GetForwardVector();
-	GetGameObject()->GetTransform()->TeleportTo(fwd * movSpeed * Time::INS.GetFDeltaTime());
+	GetGameObject()->GetTransform()->TeleportTo(fwd * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
-void Camera::DebugBack()
-{
-	Vector3 fwd = GetGameObject()->GetTransform()->GetForwardVector();
-	GetGameObject()->GetTransform()->TeleportTo(-fwd * movSpeed * Time::INS.GetFDeltaTime());
-}
-
-void Camera::DebugLeft()
+void Camera::DebugLeftRight(float axis)
 {
 	Vector3 left = GetGameObject()->GetTransform()->GetLeftVector();
-	GetGameObject()->GetTransform()->TeleportTo(left * movSpeed * Time::INS.GetFDeltaTime());
-
+	GetGameObject()->GetTransform()->TeleportTo(left * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
-void Camera::DebugRight()
+void Camera::DebugUpDown(float axis)
 {
-	Vector3 left = GetGameObject()->GetTransform()->GetLeftVector();
-	GetGameObject()->GetTransform()->TeleportTo(-left * movSpeed * Time::INS.GetFDeltaTime());
+	GetGameObject()->GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
-void Camera::DebugRotRight() { GetGameObject()->GetTransform()->Rotate(rotSpeed * Time::INS.GetFDeltaTime()); }
-void Camera::DebugRotLeft() { GetGameObject()->GetTransform()->Rotate(-rotSpeed * Time::INS.GetFDeltaTime()); }
-void Camera::DebugRotUp() { xRotation -= (int) std::roundf(rotSpeed * Time::INS.GetFDeltaTime()); }
-void Camera::DebugRotDown() { xRotation += (int) std::roundf(rotSpeed * Time::INS.GetFDeltaTime()); }
-void Camera::DebugUp() { GetGameObject()->GetTransform()->TeleportTo(V3_UP * movSpeed * Time::INS.GetFDeltaTime()); }
-void Camera::DebugDown() { GetGameObject()->GetTransform()->TeleportTo(V3_DOWN * movSpeed * Time::INS.GetFDeltaTime()); }
+void Camera::DebugRotUpDown(float axis)
+{
+	xRotation -= (int) std::roundf(rotSpeed * axis * Time::INS.GetFDeltaTime());
+}

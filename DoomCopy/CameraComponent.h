@@ -64,14 +64,8 @@ private:
 	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
 	int GetSectorsToProcess();
 
-	void DebugForward();
-	void DebugBack();
-	void DebugLeft();
-	void DebugRight();
-	void DebugRotRight();
-	void DebugRotLeft();
-	void DebugRotUp();
-	void DebugRotDown();
-	void DebugUp();
-	void DebugDown();
+	void DebugLeftRight(float axis);
+	void DebugForwardBack(float axis);
+	void DebugUpDown(float axis);
+	void DebugRotUpDown(float axis);
 };

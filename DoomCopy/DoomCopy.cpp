@@ -101,7 +101,6 @@ void SetupWindowMessages()
     {
         { WM_KEYDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyPress(wParam); } },
         { WM_KEYUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyRelease(wParam); } },
-        { WM_MOUSEMOVE, [](WPARAM wPAram, LPARAM lParam) { mainGame.CaptureMouseMovement(MAKEPOINTS(lParam)); } },
         { WM_LBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(0); } },
         { WM_RBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(1); } },
         { WM_RBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(1); } },
@@ -109,26 +108,60 @@ void SetupWindowMessages()
         { WM_MBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(2); } },
         { WM_XBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(GET_XBUTTON_WPARAM(wParam) == 1 ? 3 : 4); } },
         { WM_XBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(GET_XBUTTON_WPARAM(wParam) == 1 ? 3 : 4); } },
-        { WM_CAPTURECHANGED, [](WPARAM wParam, LPARAM lParam) { ClipCursor(&oldCursorClip); }},
+
+        { WM_MOUSEMOVE, [](WPARAM wPAram, LPARAM lParam) 
+        { 
+            POINTS mousePos = MAKEPOINTS(lParam);
+
+            if (clippedCursor)
+            {
+                RECT r;
+                GetClientRect(mainHWND, &r);
+                bool overflow = false;
+
+                if (mousePos.x >= r.right) { mousePos.x = (SHORT) r.left; overflow = true; }
+                else if (mousePos.x <= r.left) { mousePos.x = (SHORT) r.right; overflow = true; }
+
+                if (mousePos.y >= r.bottom) { mousePos.y = (SHORT) r.top; overflow = true; }
+                else if (mousePos.y <= r.top) { mousePos.y = (SHORT) r.bottom; overflow = true; }
+
+                if (overflow)
+                {
+                    POINT screenPos{ mousePos.x, mousePos.y };
+                    ClientToScreen(mainHWND, &screenPos);
+                    SetCursorPos(screenPos.x, screenPos.y);
+                }
+            }
+
+            mainGame.CaptureMouseMovement(&mousePos, clippedCursor);
+        } },
+
+        { WM_CAPTURECHANGED, [](WPARAM wParam, LPARAM lParam) 
+        { 
+            ClipCursor(&oldCursorClip); 
+            clippedCursor = false; 
+        } },
 
         { WM_LBUTTONDOWN, [](WPARAM wParam, LPARAM lParam)
-        { 
+        {
             SetCapture(mainHWND);
             SetCursor(NULL);
             GetClipRect();
             ClipCursor(&newCursorClip);
-            mainGame.CaptureMousePress(0); 
+            clippedCursor = true;
+            mainGame.CaptureMousePress(0);
         } },
 
-        { WM_DESTROY, [](WPARAM wParam, LPARAM lParam) 
-        { 
+        { WM_DESTROY, [](WPARAM wParam, LPARAM lParam)
+        {
             ClipCursor(&oldCursorClip);
             ReleaseCapture();
+            clippedCursor = false;
             PostQuitMessage(0);
         } },
 
-        { WM_PAINT, [](WPARAM wParam, LPARAM lParam) 
-        { 
+        { WM_PAINT, [](WPARAM wParam, LPARAM lParam)
+        {
             renderer.RenderScreen(mainHWND);
 #ifdef D2_RENDER
             ValidateRect(mainHWND, NULL);

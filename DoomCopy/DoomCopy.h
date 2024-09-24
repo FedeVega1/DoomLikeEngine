@@ -27,6 +27,7 @@ RECT oldCursorClip;
 RECT newCursorClip;
 std::mt19937 rng;
 std::map<UINT, WMessagePointer> messageMap;
+bool clippedCursor;
 
 BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
