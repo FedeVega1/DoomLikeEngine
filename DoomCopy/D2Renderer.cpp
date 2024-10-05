@@ -91,9 +91,10 @@ void D2Renderer::ProcessGame(HWND hwnd, Game* const game)
 	//    DrawPixel((int) std::roundf(pos.x), (int) std::roundf(pos.y), 0xFF0000);
 	//}
 
-	ProcessedSector* sectors = game->GetMainCamera()->GetProcessedSectors();
+	const ProcessedSector* sectors = nullptr;
+	int numbSectors = game->GetMainCamera()->GetProcessedSectors(&sectors);
 	if (!sectors) return;
-	for (int i = 0; i < 1; i++) ProcessSector(sectors[i]);
+	for (int i = 0; i < numbSectors; i++) ProcessSector(sectors[i]);
 
 	InvalidateRect(hwnd, NULL, false);
 }

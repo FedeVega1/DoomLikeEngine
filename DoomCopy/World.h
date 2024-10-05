@@ -21,16 +21,19 @@ struct Sector
 	Wall* sectorWalls;
 	int numberOfWalls;
 	float bottomPoint, topPoint;
+	Color floorColor, ceillingColor;
 
-	Sector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f)
+	Sector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0)
 	{ }
 
-	Sector(Wall* _sectorWalls, int _numberOfWalls, float _bottomPoint, float _topPoint)
+	Sector(Wall* _sectorWalls, int _numberOfWalls, float _bottomPoint, float _topPoint, Color _floor, Color _ceilling)
 	{ 
 		sectorWalls = _sectorWalls;
 		numberOfWalls = _numberOfWalls;
 		bottomPoint = _bottomPoint;
 		topPoint = _topPoint;
+		floorColor = _floor;
+		ceillingColor = _ceilling;
 	}
 };
 
@@ -42,7 +45,7 @@ public:
 
 	World() : Entity()
 	{
-		numberOfSectors = 1;
+		numberOfSectors = 2;
 		sectorData = new Sector[numberOfSectors]
 		{
 			Sector(
@@ -55,7 +58,23 @@ public:
 				},
 				4,
 				0.0f,
-				40.0f
+				40.0f,
+				COLOR_GREEN, 
+				COLOR_DARKGREEN
+			),
+			Sector(
+				new Wall[4]
+				{
+					Wall(Vector2(48, 0), Vector2(80, 48), COLOR_BLUE),
+					Wall(Vector2(80, 48), Vector2(80, 80), COLOR_DARKBLUE),
+					Wall(Vector2(80, 80), Vector2(48, 80), COLOR_BLUE),
+					Wall(Vector2(48, 80), Vector2(48, 0), COLOR_DARKBLUE),
+				},
+				4,
+				0.0f,
+				40.0f,
+				COLOR_GREEN, 
+				COLOR_DARKGREEN
 			)
 		};
 	}

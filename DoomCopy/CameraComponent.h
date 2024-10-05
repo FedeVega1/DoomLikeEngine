@@ -1,6 +1,8 @@
 #pragma once
 class BaseComponent;
 
+enum SectorSurface { SurfNone, Above, Below, DrawAbove, DrawBelow };
+
 struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
@@ -24,8 +26,10 @@ struct ProcessedSector
 	ProcessedWall* sectorWalls;
 	int numberOfWalls;
 	float bottomPoint, topPoint, avrgDistanceToCamera;
+	Color floorColor, ceillingColor;
+	SectorSurface surface;
 
-	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), avrgDistanceToCamera(0.0f)
+	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), surface(SectorSurface::SurfNone)
 	{ }
 };
 
@@ -37,7 +41,7 @@ public:
 	virtual void Start() override;
 	virtual void Tick() override;
 
-	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr)
+	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0)
 	{ }
 
 	~Camera()
@@ -48,7 +52,7 @@ public:
 		delete[] processedSectors;
 	}
 
-	ProcessedSector* GetProcessedSectors();
+	 int GetProcessedSectors(const ProcessedSector** outProcessedSectors);
 
 protected:
 	virtual void OnDestroy() override;
@@ -56,13 +60,16 @@ protected:
 private:
 	static const float movSpeed;
 	static const float rotSpeed;
+	static const int numberOfSectorsToProcess = 5;
 
+	int numbProcessedSectors;
 	int xRotation;
 	class World* world;
 	ProcessedSector* processedSectors;
 
 	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
 	int GetSectorsToProcess();
+	void OrderSectorsByDistance();
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

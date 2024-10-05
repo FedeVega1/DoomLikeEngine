@@ -12,8 +12,8 @@ void Camera::Start()
 {
 	BaseComponent::Start();
 
-	processedSectors = new ProcessedSector[5];
-	for (int i = 0; i < 5; i++) processedSectors[i] = ProcessedSector();
+	processedSectors = new ProcessedSector[Camera::numberOfSectorsToProcess];
+	for (int i = 0; i < Camera::numberOfSectorsToProcess; i++) processedSectors[i] = ProcessedSector();
 
 	Input::INS.RegisterAxis("CameraForwardBack", KeyCode::W, KeyCode::S, &Camera::DebugForwardBack, this);
 	Input::INS.RegisterAxis("CameraLeftRight", KeyCode::A, KeyCode::D, &Camera::DebugLeftRight, this);
@@ -24,40 +24,49 @@ void Camera::Start()
 const float Camera::movSpeed = 15.0f;
 const float Camera::rotSpeed = 10.0f;
 
-ProcessedSector* Camera::GetProcessedSectors() { return processedSectors; };
+int Camera::GetProcessedSectors(const ProcessedSector** outProcessedSectors) 
+{ 
+	*outProcessedSectors = processedSectors;
+	return numbProcessedSectors;
+}
 
 void Camera::Tick()
 {
 	GetGameObject()->GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
 
-	int sectorsToProcess = GetSectorsToProcess();
+	numbProcessedSectors = GetSectorsToProcess();
 
 	Vector3 currentPos = GetGameObject()->GetTransform()->GetPos();
 	int currentRotation = (int) std::roundf(GetGameObject()->GetTransform()->GetRot());
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
 
-	for (int s = 0; s < sectorsToProcess; s++)
+	for (int s = 0; s < numbProcessedSectors; s++)
 	{
-		processedSectors->avrgDistanceToCamera = 0;
+		processedSectors[s].avrgDistanceToCamera = 0;
+		processedSectors[s].bottomPoint -= currentPos.z;
+
+		if (currentPos.z < processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Below;
+		else if (currentPos.z > processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Above;
+		else processedSectors[s].surface = SectorSurface::SurfNone;
+
 		int walls = processedSectors->numberOfWalls;
 		for (int w = 0; w < walls; w++)
 		{
 			ProcessedWall& wall = processedSectors[s].sectorWalls[w];
 			wall.leftBtmPoint -= currentPos;
 			wall.rightBtmPoint -= currentPos;
-			processedSectors[s].bottomPoint -= currentPos.z;
 
 			wall.leftBtmPoint = Vector3(wall.leftBtmPoint.x * cos - wall.leftBtmPoint.y * sin, wall.leftBtmPoint.y * cos + wall.leftBtmPoint.x * sin, processedSectors[s].bottomPoint);
 			wall.rightBtmPoint = Vector3(wall.rightBtmPoint.x * cos - wall.rightBtmPoint.y * sin, wall.rightBtmPoint.y * cos + wall.rightBtmPoint.x * sin, processedSectors[s].bottomPoint);
 
-			wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32);
-			wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32);
+			wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+			wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
 			wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.leftBtmPoint.z + processedSectors[s].topPoint);
 			wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.rightBtmPoint.z + processedSectors[s].topPoint);
 
-			processedSectors->avrgDistanceToCamera += Vector2::Distance(V2_ZERO, Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2));
+			processedSectors[s].avrgDistanceToCamera += Vector2::Distance(V2_ZERO, Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2.0f, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2.0f));
 			if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
 
 			if (wall.leftBtmPoint.y < 1)
@@ -73,17 +82,19 @@ void Camera::Tick()
 			}
 		}
 
-		processedSectors->avrgDistanceToCamera /= walls;
+		processedSectors[s].avrgDistanceToCamera /= walls;
 	}
+
+	OrderSectorsByDistance();
 }
 
 int Camera::GetSectorsToProcess()
 {
-	int size = world->numberOfSectors > 5 ? 5 : world->numberOfSectors;
+	int size = world->numberOfSectors > Camera::numberOfSectorsToProcess ? Camera::numberOfSectorsToProcess : world->numberOfSectors;
 	for (int s = 0; s < size; s++)
 	{
 		int walls = world->sectorData[s].numberOfWalls;
-		if (processedSectors[s].sectorWalls) delete[] processedSectors[s].sectorWalls;
+		if (processedSectors[s].sectorWalls != nullptr) delete[] processedSectors[s].sectorWalls;
 
 		processedSectors[s].sectorWalls = new ProcessedWall[walls];
 		for (int w = 0; w < walls; w++)
@@ -100,6 +111,8 @@ int Camera::GetSectorsToProcess()
 		processedSectors[s].numberOfWalls = world->sectorData[s].numberOfWalls;
 		processedSectors[s].bottomPoint = world->sectorData[s].bottomPoint;
 		processedSectors[s].topPoint = world->sectorData[s].topPoint;
+		processedSectors[s].floorColor = world->sectorData[s].floorColor;
+		processedSectors[s].ceillingColor = world->sectorData[s].ceillingColor;
 	}
 
 	return size;
@@ -122,6 +135,21 @@ void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
 	pointA.y += s * (pointB.y - pointA.y);
 	pointA.z += s * (pointB.z - pointA.z);
 	if (pointA.y == 0) pointA.y = 1;
+}
+
+void Camera::OrderSectorsByDistance()
+{
+	int sectors = numbProcessedSectors - 1;
+	for (int i = 0; i < sectors; i++)
+	{
+		for (int j = 0; j < sectors - i; j++)
+		{
+			if (processedSectors[j].avrgDistanceToCamera >= processedSectors[j + 1].avrgDistanceToCamera) continue;
+			const ProcessedSector sector = processedSectors[j];
+			processedSectors[j] = processedSectors[j + 1];
+			processedSectors[j + 1] = sector;
+		}
+	}
 }
 
 void Camera::DebugForwardBack(float axis)
