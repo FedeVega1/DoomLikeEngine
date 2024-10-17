@@ -10,6 +10,7 @@
 #include <chrono>
 #include <numbers>
 #include <map>
+#include <array>
 
 typedef struct _sinCosTable
 {
@@ -29,9 +30,10 @@ typedef struct _sinCosTable
 
 struct Color
 {
+	bool isLittleEndian;
 	BYTE r, g, b;
 
-	Color() : r(0), g(0), b(0)
+	Color() : r(0), g(0), b(0), isLittleEndian(false)
 	{ }
 
 	Color(BYTE r, BYTE g, BYTE b)
@@ -39,10 +41,13 @@ struct Color
 		this->r = r;
 		this->g = g;
 		this->b = b;
+		isLittleEndian = false;
 	}
 
 	Color(DWORD rgb, bool littleEndian)
 	{
+		isLittleEndian = littleEndian;
+
 		if (littleEndian)
 		{
 			this->r = (rgb >> 24) & 0xFF;
@@ -56,11 +61,16 @@ struct Color
 		this->b = rgb & 0xFF;
 	}
 
+	bool operator==(Color other) const { return other.r == r && other.g == g && other.b == b && other.isLittleEndian == isLittleEndian; }
+	bool operator==(DWORD other) const { return other == ToDWORD(isLittleEndian); }
+
 	DWORD ToDWORD(bool littleEndian) const
 	{
 		if (littleEndian) return (((DWORD) r) << 16) | (((DWORD) g) << 8) | ((DWORD) b);
 		return (((DWORD) b) << 16) | (((DWORD) g) << 8) | ((DWORD) r);
 	}
+
+	std::string ToString() const { return "(R = " + std::to_string(r) + ", G = " + std::to_string(g) + ", B = " + std::to_string(b) + ")"; }
 };
 
 static SinCosTable SCTABLE;

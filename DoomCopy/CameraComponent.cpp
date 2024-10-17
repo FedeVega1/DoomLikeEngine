@@ -32,53 +32,67 @@ int Camera::GetProcessedSectors(const ProcessedSector** outProcessedSectors)
 
 void Camera::Tick()
 {
-	GetGameObject()->GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
+	GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
 
 	numbProcessedSectors = GetSectorsToProcess();
 
-	Vector3 currentPos = GetGameObject()->GetTransform()->GetPos();
-	int currentRotation = (int) std::roundf(GetGameObject()->GetTransform()->GetRot());
+	Vector3 currentPos = GetTransform()->GetPos();
+	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
 
 	for (int s = 0; s < numbProcessedSectors; s++)
 	{
 		processedSectors[s].avrgDistanceToCamera = 0;
-		processedSectors[s].bottomPoint -= currentPos.z;
 
 		if (currentPos.z < processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Below;
-		else if (currentPos.z > processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Above;
+		else if ((currentPos.z + processedSectors[s].topPoint) > processedSectors[s].topPoint) processedSectors[s].surface = SectorSurface::Above;
 		else processedSectors[s].surface = SectorSurface::SurfNone;
 
 		int walls = processedSectors->numberOfWalls;
 		for (int w = 0; w < walls; w++)
 		{
-			ProcessedWall& wall = processedSectors[s].sectorWalls[w];
-			wall.leftBtmPoint -= currentPos;
-			wall.rightBtmPoint -= currentPos;
-
-			wall.leftBtmPoint = Vector3(wall.leftBtmPoint.x * cos - wall.leftBtmPoint.y * sin, wall.leftBtmPoint.y * cos + wall.leftBtmPoint.x * sin, processedSectors[s].bottomPoint);
-			wall.rightBtmPoint = Vector3(wall.rightBtmPoint.x * cos - wall.rightBtmPoint.y * sin, wall.rightBtmPoint.y * cos + wall.rightBtmPoint.x * sin, processedSectors[s].bottomPoint);
-
-			wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
-			wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
-
-			wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.leftBtmPoint.z + processedSectors[s].topPoint);
-			wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.rightBtmPoint.z + processedSectors[s].topPoint);
-
-			processedSectors[s].avrgDistanceToCamera += Vector2::Distance(V2_ZERO, Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2.0f, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2.0f));
-			if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
-
-			if (wall.leftBtmPoint.y < 1)
+			int cycles = processedSectors[s].surface != SectorSurface::SurfNone ? 2 : 1;
+			for (int i = 0; i < cycles; i++)
 			{
-				ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
-				ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
-			}
+				ProcessedWall& wall = processedSectors[s].sectorWalls[(w * 2) + i];
 
-			if (wall.rightBtmPoint.y < 1)
-			{
-				ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
-				ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
+				wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
+				wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
+
+				if (i == 1)
+				{
+					Vector3 swp = wall.leftBtmPoint;
+					wall.leftBtmPoint = wall.rightBtmPoint;
+					wall.rightBtmPoint = swp;
+				}
+
+				wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), processedSectors[s].bottomPoint + currentPos.z);
+				wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), processedSectors[s].bottomPoint + currentPos.z);
+
+				wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+				wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+
+				wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, processedSectors[s].topPoint + currentPos.z);
+				wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, processedSectors[s].topPoint + currentPos.z);
+
+				wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+				wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+
+				processedSectors[s].avrgDistanceToCamera += Vector2::Distance(V2_ZERO, Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2.0f, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2.0f));
+				if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
+
+				if (wall.leftBtmPoint.y < 1)
+				{
+					ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
+					ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
+				}
+
+				if (wall.rightBtmPoint.y < 1)
+				{
+					ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
+					ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
+				}
 			}
 		}
 
@@ -96,16 +110,18 @@ int Camera::GetSectorsToProcess()
 		int walls = world->sectorData[s].numberOfWalls;
 		if (processedSectors[s].sectorWalls != nullptr) delete[] processedSectors[s].sectorWalls;
 
-		processedSectors[s].sectorWalls = new ProcessedWall[walls];
-		for (int w = 0; w < walls; w++)
+		processedSectors[s].sectorWalls = new ProcessedWall[walls * 2];
+		for (int w = 0, i = 0; w < walls; i++)
 		{
-			processedSectors[s].sectorWalls[w] = ProcessedWall
+			processedSectors[s].sectorWalls[i] = ProcessedWall
 			{
 				V3_ZERO, V3_ZERO,
 				world->sectorData[s].sectorWalls[w].leftPoint, 
 				world->sectorData[s].sectorWalls[w].rightPoint, 
 				world->sectorData[s].sectorWalls[w].color
 			};
+
+			if (i != 0 && i % 2 != 0) w++;
 		}
 
 		processedSectors[s].numberOfWalls = world->sectorData[s].numberOfWalls;
@@ -154,19 +170,19 @@ void Camera::OrderSectorsByDistance()
 
 void Camera::DebugForwardBack(float axis)
 {
-	Vector3 fwd = GetGameObject()->GetTransform()->GetForwardVector();
-	GetGameObject()->GetTransform()->TeleportTo(fwd * axis * movSpeed * Time::INS.GetFDeltaTime());
+	Vector3 fwd = GetTransform()->GetForwardVector();
+	GetTransform()->TeleportTo(fwd * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
 void Camera::DebugLeftRight(float axis)
 {
-	Vector3 left = GetGameObject()->GetTransform()->GetLeftVector();
-	GetGameObject()->GetTransform()->TeleportTo(left * axis * movSpeed * Time::INS.GetFDeltaTime());
+	Vector3 left = GetTransform()->GetLeftVector();
+	GetTransform()->TeleportTo(left * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
 void Camera::DebugUpDown(float axis)
 {
-	GetGameObject()->GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::INS.GetFDeltaTime());
+	GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::INS.GetFDeltaTime());
 }
 
 void Camera::DebugRotUpDown(float axis)

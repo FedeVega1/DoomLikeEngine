@@ -1,7 +1,7 @@
 #pragma once
 class BaseComponent;
 
-enum SectorSurface { SurfNone, Above, Below, DrawAbove, DrawBelow };
+enum SectorSurface { SurfNone, Above, Below };
 
 struct ProcessedWall
 {

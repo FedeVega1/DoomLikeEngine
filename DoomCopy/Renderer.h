@@ -20,14 +20,16 @@ struct ScreenSpaceWall
 class Renderer
 {
 public:
-	virtual void RenderScreen(HWND hwnd) = 0;
+	virtual void RenderScreen(HWND hwnd, Game* const game) = 0;
 	virtual HRESULT InitRenderer(HWND hwnd) = 0;
 	virtual void DrawPixel(int x, int y, Color color) = 0;
 	virtual void PaintScreen(Color color) = 0;
 	virtual void ProcessGame(HWND hwnd, Game* const game) = 0;
 
 protected:
-	virtual void DrawWall(const ProcessedWall& wall) = 0;
+	virtual void DrawWall(const ProcessedWall& wall, SectorSurface surface) = 0;
+	virtual void DrawBackWall(const ProcessedWall& wall, SectorSurface surface, std::array<int, DEFAULT_BUFFER_WIDTH>& points) = 0;
+	virtual void DrawSurfaces(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceilling, Color floor) = 0;
 	virtual void ProcessSector(const ProcessedSector& sector) = 0;
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall) = 0;
 };

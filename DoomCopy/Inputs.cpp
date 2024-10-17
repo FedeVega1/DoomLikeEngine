@@ -4,7 +4,7 @@
 #include "VectorMath.h"
 #include "Inputs.h"
 
-Input::Input() : clippedCursor(false), senstivity(.4)
+Input::Input() : clippedCursor(false), senstivity(.4f)
 {
 	keyCallbacks = std::map<KeyCode, std::vector<InputCallbackContainer>[3]>();
 	keyFloatCallbacks = std::map<std::string, InputCallbackFloatContainer>();

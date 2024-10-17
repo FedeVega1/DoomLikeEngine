@@ -99,7 +99,7 @@ void SetupWindowMessages()
 {
     messageMap = std::map<UINT, WMessagePointer>
     {
-        { WM_KEYDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyPress(wParam); } },
+        { WM_KEYDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyPress(wParam); if (wParam == VK_END) renderer.ToggleStepDraw(true); }},
         { WM_KEYUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureKeyRelease(wParam); } },
         { WM_LBUTTONUP, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMouseRelease(0); } },
         { WM_RBUTTONDOWN, [](WPARAM wParam, LPARAM lParam) { mainGame.CaptureMousePress(1); } },
@@ -162,7 +162,7 @@ void SetupWindowMessages()
 
         { WM_PAINT, [](WPARAM wParam, LPARAM lParam)
         {
-            renderer.RenderScreen(mainHWND);
+            renderer.RenderScreen(mainHWND, &mainGame);
 #ifdef D2_RENDER
             ValidateRect(mainHWND, NULL);
 #endif

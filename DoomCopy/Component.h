@@ -21,6 +21,8 @@ protected:
 	class Entity* baseEntity;
 	virtual void OnDestroy() = 0;
 
+	Transform* GetTransform() { return GetGameObject()->GetTransform(); }
+
 private:
 	bool firstTick;
 	class GameObject* baseGameObject;

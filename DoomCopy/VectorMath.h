@@ -182,6 +182,24 @@ struct Vector3
 
 	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")"; }
 
+	void SetXY(float x, float y) { this->x = x; this->y = y; }
+	void SetXY(Vector2 xy) { x = xy.x; y = xy.y; }
+
+	void AddXY(float x, float y) { this->x += x; this->y += y; }
+	void AddXY(Vector2 xy) { x += xy.x; y += xy.y; }
+
+	void SetXZ(float x, float z) { this->x = x; this->z = z; }
+	void SetXZ(Vector2 xz) { x = xz.x; z = xz.y; }
+
+	void AddXZ(float x, float z) { this->x += x; this->z += z; }
+	void AddXZ(Vector2 xz) { x += xz.x; z += xz.y; }
+
+	void SetYZ(float y, float z) { this->y = y; this->z = z; }
+	void SetYZ(Vector2 yz) { y = yz.x; z = yz.y; }
+
+	void AddYZ(float y, float z) { this->y += y; this->z += z; }
+	void AddYZ(Vector2 yz) { y += yz.x; z += yz.y; }
+
 private:
 	Vector3 Plus(Vector3 other) const { return Vector3(x + other.x, y + other.y, z + other.z); }
 	Vector3 Minus(Vector3 other) const { return Vector3(x - other.x, y - other.y, z - other.z); }
