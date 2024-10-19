@@ -2,8 +2,10 @@
 /int/
 /x64/
 /x32/
-/DoomCopy/x64
-/DoomCopy/x32
+/DoomCopy/x64/
+/DoomCopy/x32/
+/LevelEditor/bin/
+/LevelEditor/obj/
 
 .vs
 
@@ -23,7 +25,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+#*.dll
 
 # Fortran module files
 *.mod
