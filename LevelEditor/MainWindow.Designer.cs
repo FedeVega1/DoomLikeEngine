@@ -34,12 +34,14 @@ namespace LevelEditor
             OptionsPanel = new Panel();
             BtnFile = new Button();
             BrushPanel = new Panel();
+            BtnLines = new Button();
             LblOrigin = new Label();
             LblCursor = new Label();
             LblGridSize = new Label();
             EditorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).BeginInit();
             OptionsPanel.SuspendLayout();
+            BrushPanel.SuspendLayout();
             SuspendLayout();
             // 
             // EditorPanel
@@ -88,10 +90,21 @@ namespace LevelEditor
             // BrushPanel
             // 
             BrushPanel.BorderStyle = BorderStyle.FixedSingle;
+            BrushPanel.Controls.Add(BtnLines);
             BrushPanel.Location = new Point(691, 41);
             BrushPanel.Name = "BrushPanel";
             BrushPanel.Size = new Size(107, 378);
             BrushPanel.TabIndex = 1;
+            // 
+            // BtnLines
+            // 
+            BtnLines.Location = new Point(12, 14);
+            BtnLines.Name = "BtnLines";
+            BtnLines.Size = new Size(75, 23);
+            BtnLines.TabIndex = 0;
+            BtnLines.Text = "Draw Lines";
+            BtnLines.UseVisualStyleBackColor = true;
+            BtnLines.Click += BtnLines_Click;
             // 
             // LblOrigin
             // 
@@ -143,6 +156,7 @@ namespace LevelEditor
             EditorPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
             OptionsPanel.ResumeLayout(false);
+            BrushPanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -156,5 +170,6 @@ namespace LevelEditor
         private PictureBox ImgEditorDraw;
         private Label LblCursor;
         private Label LblGridSize;
+        private Button BtnLines;
     }
 }
