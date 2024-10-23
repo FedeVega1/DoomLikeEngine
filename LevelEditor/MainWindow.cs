@@ -25,13 +25,14 @@ namespace LevelEditor
                     return true;
 
                 case Keys.Escape:
-                    gridEditor.ToggleLineMode(false);
+                    if (!gridEditor.IsDrawingLine) gridEditor.ToggleLineMode(false);
+                    else gridEditor.ToggleLineDrawMode(false);
                     return true;
 
-                case Keys.Up: gridEditor.MoveOrigin(new PointF(0, -1)); return true;
-                case Keys.Down: gridEditor.MoveOrigin(new PointF(0, 1)); return true;
-                case Keys.Left: gridEditor.MoveOrigin(new PointF(-1, 0)); return true;
-                case Keys.Right: gridEditor.MoveOrigin(new PointF(1, 0)); return true;
+                case Keys.Up: gridEditor.MoveOrigin(new PointF(0, 1)); return true;
+                case Keys.Down: gridEditor.MoveOrigin(new PointF(0, -1)); return true;
+                case Keys.Left: gridEditor.MoveOrigin(new PointF(1, 0)); return true;
+                case Keys.Right: gridEditor.MoveOrigin(new PointF(-1, 0)); return true;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
