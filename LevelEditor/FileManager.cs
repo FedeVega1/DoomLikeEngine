@@ -2,31 +2,58 @@
 {
     internal class FileManager
     {
-        public void SaveToFile(Stream fileStream, ref List<Sector> sectors)
+        public string CurrentOpenedFile { get; private set; }
+
+        public FileManager()
         {
-            int size = sectors.Count;
-            fileStream.Write(ToByteArray(size, out int arrSize), 0, arrSize);
-
-            for (int i = 0; i < size; i++)
-            {
-                int count = sectors[i].walls.Count;
-                fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
-
-                for (int j = 0; j < count; j++)
-                {
-                    fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
-                    fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
-                    fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
-                }
-
-                fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
-                fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
-                fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
-                fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
-            }
+            CurrentOpenedFile = "NULL";
         }
 
-        public void LoadFromFile(Stream fileStream, out List<Sector> sectors)
+        public bool SaveToFile(string fileName, Stream fileStream, ref List<Sector> sectors)
+        {
+            COLoggerImport.LogNormal("Saving to {0}", fileName);
+
+            int size = sectors.Count;
+            COLoggerImport.LogNormal("Number of sectors {0}", size);
+
+            try
+            {
+                fileStream.Write(ToByteArray(size, out int arrSize), 0, arrSize);
+
+                for (int i = 0; i < size; i++)
+                {
+                    int count = sectors[i].walls.Count;
+                    fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
+
+                    for (int j = 0; j < count; j++)
+                    {
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                    }
+
+                    fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
+
+                    COLoggerImport.LogNormal("Saved sector {0} correct", i);
+                }
+            }
+            catch (Exception e)
+            {
+                COLoggerImport.LogError("Error while trying to save file {0}", fileName);
+                COLoggerImport.LogError(e.Message);
+                if (e.StackTrace != null) COLoggerImport.LogError(e.StackTrace);
+                return false;
+            }
+
+            COLoggerImport.LogNormal("Save Correct!");
+            CurrentOpenedFile = fileName;
+            return true;
+        }
+
+        public bool LoadFromFile(string fileName, Stream fileStream, out List<Sector> sectors)
         {
             sectors = new List<Sector>();
 
@@ -36,48 +63,66 @@
             byte[] pointBuffer = new byte[pointSize];
             byte[] colorBuffer = new byte[colorSize];
 
-            fileStream.Read(intBuffer, 0, intSize);
-            int size = ByteArrayToInt(intBuffer);
+            COLoggerImport.LogNormal("loading File {0}", fileName);
 
-            for (int i = 0; i < size; i++)
+            try
             {
-                Sector sector = new Sector();
-                sector.walls = new List<Wall>();
-                
                 fileStream.Read(intBuffer, 0, intSize);
-                int count = ByteArrayToInt(intBuffer);
+                int size = ByteArrayToInt(intBuffer);
+                COLoggerImport.LogNormal("Number of sectors {0} in file", size);
 
-                for (int j = 0; j < count; j++)
+                for (int i = 0; i < size; i++)
                 {
-                    Wall wall = new Wall();
+                    Sector sector = new Sector();
+                    sector.walls = new List<Wall>();
 
-                    fileStream.Read(pointBuffer, 0, pointSize);
-                    wall.leftPoint = ByteArrayToPoint(pointBuffer);
+                    fileStream.Read(intBuffer, 0, intSize);
+                    int count = ByteArrayToInt(intBuffer);
 
-                    fileStream.Read(pointBuffer, 0, pointSize);
-                    wall.rightPoint = ByteArrayToPoint(pointBuffer);
+                    for (int j = 0; j < count; j++)
+                    {
+                        Wall wall = new Wall();
+
+                        fileStream.Read(pointBuffer, 0, pointSize);
+                        wall.leftPoint = ByteArrayToPoint(pointBuffer);
+
+                        fileStream.Read(pointBuffer, 0, pointSize);
+                        wall.rightPoint = ByteArrayToPoint(pointBuffer);
+
+                        fileStream.Read(colorBuffer, 0, colorSize);
+                        wall.color = ByteArrayToColor(colorBuffer);
+
+                        wall.UpdateMiddleAndNormal();
+                        sector.walls.Add(wall);
+                    }
+
+                    fileStream.Read(intBuffer, 0, intSize);
+                    sector.floorHeight = ByteArrayToInt(intBuffer);
+
+                    fileStream.Read(intBuffer, 0, intSize);
+                    sector.ceillingHeight = ByteArrayToInt(intBuffer);
 
                     fileStream.Read(colorBuffer, 0, colorSize);
-                    wall.color = ByteArrayToColor(colorBuffer);
+                    sector.floorColor = ByteArrayToColor(colorBuffer);
 
-                    wall.UpdateMiddleAndNormal();
-                    sector.walls.Add(wall);
+                    fileStream.Read(colorBuffer, 0, colorSize);
+                    sector.ceillingColor = ByteArrayToColor(colorBuffer);
+
+                    sectors.Add(sector);
+                    COLoggerImport.LogNormal("Load sector {0} correct", i);
                 }
-
-                fileStream.Read(intBuffer, 0, intSize);
-                sector.floorHeight = ByteArrayToInt(intBuffer);
-
-                fileStream.Read(intBuffer, 0, intSize);
-                sector.ceillingHeight = ByteArrayToInt(intBuffer);
-
-                fileStream.Read(colorBuffer, 0, colorSize);
-                sector.floorColor = ByteArrayToColor(colorBuffer);
-
-                fileStream.Read(colorBuffer, 0, colorSize);
-                sector.ceillingColor = ByteArrayToColor(colorBuffer);
-
-                sectors.Add(sector);
             }
+            catch (Exception e)
+            {
+                COLoggerImport.LogError("Error while trying to open file {0}", fileName);
+                COLoggerImport.LogError(e.Message);
+                if (e.StackTrace != null) COLoggerImport.LogError(e.StackTrace);
+                return false;
+            }
+
+            CurrentOpenedFile = fileName;
+            COLoggerImport.LogNormal("Load Correct!");
+            return true;
         }
 
         static byte[] ToByteArray(int dataToConvert, out int size)
@@ -86,10 +131,7 @@
             byte[] array = new byte[size];
 
             for (int i = 0; i < size; i++)
-            {
                 array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
-                COLoggerImport.LogNormal(array[i]);
-            }
 
             return array;
         }
@@ -100,10 +142,7 @@
             byte[] array = new byte[size];
 
             for (int i = 0; i < size; i++)
-            {
                 array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
-                COLoggerImport.LogNormal(array[i]);
-            }
 
             return array;
         }

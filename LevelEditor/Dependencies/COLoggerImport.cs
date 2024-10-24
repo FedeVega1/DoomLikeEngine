@@ -13,17 +13,17 @@ namespace LevelEditor
         [DllImport(@"Dependencies\COLogger.dll")]
         public static extern void ClearConsole();
 
-        public static void LogVerbose(string message) => Log(0, message.ToCharArray());
-        public static void LogNormal(string message) => Log(1, message.ToCharArray());
-        public static void LogWarning(string message) => Log(2, message.ToCharArray());
-        public static void LogError(string message) => Log(3, message.ToCharArray());
-        public static void LogCritical(string message) => Log(4, message.ToCharArray());
+        public static void LogVerbose(string message) => Log(0, (message + "\0").ToCharArray());
+        public static void LogNormal(string message) => Log(1, (message + "\0").ToCharArray());
+        public static void LogWarning(string message) => Log(2, (message + "\0").ToCharArray());
+        public static void LogError(string message) => Log(3, (message + "\0").ToCharArray());
+        public static void LogCritical(string message) => Log(4, (message + "\0").ToCharArray());
 
-        public static void LogVerbose(string message, params dynamic[] args) => LogVerbose(Format(message, args: args));
-        public static void LogNormal(string message, params dynamic[] args) => LogNormal(Format(message, args: args));
-        public static void LogWarning(string message, params dynamic[] args) => LogWarning(Format(message, args: args));
-        public static void LogError(string message, params dynamic[] args) => LogError(Format(message, args: args));
-        public static void LogCritical(string message, params dynamic[] args) => LogCritical(Format(message, args: args));
+        public static void LogVerbose(string message, params dynamic[] args) => LogVerbose(Format((message + "\0"), args: args));
+        public static void LogNormal(string message, params dynamic[] args) => LogNormal(Format((message + "\0"), args: args));
+        public static void LogWarning(string message, params dynamic[] args) => LogWarning(Format((message + "\0"), args: args));
+        public static void LogError(string message, params dynamic[] args) => LogError(Format((message + "\0"), args: args));
+        public static void LogCritical(string message, params dynamic[] args) => LogCritical(Format((message + "\0"), args: args));
 
         public static void LogVerbose(dynamic obj) => LogVerbose(Format("{0}", args: [obj]));
         public static void LogNormal(dynamic obj) => LogNormal(Format("{0}", args: [obj]));
@@ -33,7 +33,7 @@ namespace LevelEditor
 
         static string Format(string messageToFormat, int indx = 0, params dynamic[] args)
         {
-            if (indx >= args.Length) return messageToFormat + "\0";
+            if (indx >= args.Length) return messageToFormat;
             string formattedString = "";
 
             int size = messageToFormat.Length;
@@ -64,7 +64,7 @@ namespace LevelEditor
                 appendedArg = true;
             }
 
-            if (indx >= args.Length) return formattedString + "\0";
+            if (indx >= args.Length) return formattedString;
             return Format(formattedString, indx, args);
         }
 

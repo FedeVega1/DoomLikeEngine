@@ -40,10 +40,16 @@ namespace LevelEditor
             BtnFile = new ToolStripMenuItem();
             BtnFileNew = new ToolStripMenuItem();
             BtnFileLoad = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
             BtnFileSave = new ToolStripMenuItem();
+            BtnFileSaveAs = new ToolStripMenuItem();
             BtnEdit = new ToolStripMenuItem();
             BtnEditUndo = new ToolStripMenuItem();
             BtnEditRedo = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            BtnEditSettings = new ToolStripMenuItem();
+            BtnHelp = new ToolStripMenuItem();
+            BtnHelpAbout = new ToolStripMenuItem();
             OpenFilePanel = new OpenFileDialog();
             SaveFilePanel = new SaveFileDialog();
             EditorPanel.SuspendLayout();
@@ -131,16 +137,17 @@ namespace LevelEditor
             // 
             // MainToolbar
             // 
-            MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit });
+            MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit, BtnHelp });
             MainToolbar.Location = new Point(0, 0);
             MainToolbar.Name = "MainToolbar";
+            MainToolbar.RenderMode = ToolStripRenderMode.System;
             MainToolbar.Size = new Size(800, 24);
             MainToolbar.TabIndex = 5;
             MainToolbar.Text = "ToolBar";
             // 
             // BtnFile
             // 
-            BtnFile.DropDownItems.AddRange(new ToolStripItem[] { BtnFileNew, BtnFileLoad, BtnFileSave });
+            BtnFile.DropDownItems.AddRange(new ToolStripItem[] { BtnFileNew, BtnFileLoad, toolStripSeparator2, BtnFileSave, BtnFileSaveAs });
             BtnFile.Name = "BtnFile";
             BtnFile.Size = new Size(37, 20);
             BtnFile.Text = "File";
@@ -148,27 +155,39 @@ namespace LevelEditor
             // BtnFileNew
             // 
             BtnFileNew.Name = "BtnFileNew";
-            BtnFileNew.Size = new Size(100, 22);
+            BtnFileNew.Size = new Size(114, 22);
             BtnFileNew.Text = "New";
             BtnFileNew.Click += BtnFileNew_Click;
             // 
             // BtnFileLoad
             // 
             BtnFileLoad.Name = "BtnFileLoad";
-            BtnFileLoad.Size = new Size(100, 22);
+            BtnFileLoad.Size = new Size(114, 22);
             BtnFileLoad.Text = "Load";
             BtnFileLoad.Click += BtnFileLoad_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(111, 6);
             // 
             // BtnFileSave
             // 
             BtnFileSave.Name = "BtnFileSave";
-            BtnFileSave.Size = new Size(100, 22);
+            BtnFileSave.Size = new Size(114, 22);
             BtnFileSave.Text = "Save";
             BtnFileSave.Click += BtnFileSave_Click;
             // 
+            // BtnFileSaveAs
+            // 
+            BtnFileSaveAs.Name = "BtnFileSaveAs";
+            BtnFileSaveAs.Size = new Size(114, 22);
+            BtnFileSaveAs.Text = "Save &As";
+            BtnFileSaveAs.Click += BtnFileSaveAs_Click;
+            // 
             // BtnEdit
             // 
-            BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo });
+            BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo, toolStripSeparator1, BtnEditSettings });
             BtnEdit.Name = "BtnEdit";
             BtnEdit.Size = new Size(39, 20);
             BtnEdit.Text = "Edit";
@@ -176,16 +195,41 @@ namespace LevelEditor
             // BtnEditUndo
             // 
             BtnEditUndo.Name = "BtnEditUndo";
-            BtnEditUndo.Size = new Size(103, 22);
+            BtnEditUndo.Size = new Size(116, 22);
             BtnEditUndo.Text = "Undo";
             BtnEditUndo.Click += BtnEditUndo_Click;
             // 
             // BtnEditRedo
             // 
             BtnEditRedo.Name = "BtnEditRedo";
-            BtnEditRedo.Size = new Size(103, 22);
+            BtnEditRedo.Size = new Size(116, 22);
             BtnEditRedo.Text = "Redo";
             BtnEditRedo.Click += BtnEditRedo_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(113, 6);
+            // 
+            // BtnEditSettings
+            // 
+            BtnEditSettings.Name = "BtnEditSettings";
+            BtnEditSettings.Size = new Size(116, 22);
+            BtnEditSettings.Text = "Settings";
+            // 
+            // BtnHelp
+            // 
+            BtnHelp.DropDownItems.AddRange(new ToolStripItem[] { BtnHelpAbout });
+            BtnHelp.Name = "BtnHelp";
+            BtnHelp.Size = new Size(44, 20);
+            BtnHelp.Text = "Help";
+            // 
+            // BtnHelpAbout
+            // 
+            BtnHelpAbout.Name = "BtnHelpAbout";
+            BtnHelpAbout.Size = new Size(180, 22);
+            BtnHelpAbout.Text = "About";
+            BtnHelpAbout.Click += BtnHelpAbout_Click;
             // 
             // OpenFilePanel
             // 
@@ -213,7 +257,7 @@ namespace LevelEditor
             Controls.Add(MainToolbar);
             MainMenuStrip = MainToolbar;
             Name = "MainWindow";
-            Text = "Form1";
+            Text = "Level Editor";
             EditorPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
             BrushPanel.ResumeLayout(false);
@@ -241,5 +285,11 @@ namespace LevelEditor
         private ToolStripMenuItem BtnFileSave;
         private OpenFileDialog OpenFilePanel;
         private SaveFileDialog SaveFilePanel;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem BtnEditSettings;
+        private ToolStripMenuItem BtnHelp;
+        private ToolStripMenuItem BtnHelpAbout;
+        private ToolStripMenuItem BtnFileSaveAs;
+        private ToolStripSeparator toolStripSeparator2;
     }
 }

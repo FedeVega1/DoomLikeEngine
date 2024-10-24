@@ -4,10 +4,13 @@ namespace LevelEditor
     {
         MapGridEditor gridEditor;
         FileManager fileManager;
+        AboutWindow about;
 
         public MainWindow()
         {
             InitializeComponent();
+            Text = "Level Editor - NewProject.map";
+            about = new AboutWindow();
             COLoggerImport.InitLogSys(true, false);
 
             gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw));
@@ -62,7 +65,18 @@ namespace LevelEditor
 
         void BtnFileLoad_Click(object sender, EventArgs e) => OpenFilePanel.ShowDialog();
 
-        void BtnFileSave_Click(object sender, EventArgs e) => SaveFilePanel.ShowDialog();
+        void BtnFileSave_Click(object sender, EventArgs e)
+        {
+            if (fileManager.CurrentOpenedFile != "NULL")
+            {
+                SaveFile();
+                return;
+            }
+
+            SaveFilePanel.ShowDialog();
+        }
+
+        void BtnFileSaveAs_Click(object sender, EventArgs e) => SaveFilePanel.ShowDialog();
 
         void BtnEditUndo_Click(object sender, EventArgs e)
         {
@@ -79,16 +93,28 @@ namespace LevelEditor
             using (Stream fileStream = OpenFilePanel.OpenFile())
             {
                 gridEditor.ResetData();
-                fileManager.LoadFromFile(fileStream, out List<Sector> sectors);
+                fileManager.LoadFromFile(OpenFilePanel.FileName, fileStream, out List<Sector> sectors);
                 gridEditor.LoadSectors(sectors);
+                Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
             }
         }
 
-        void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
+        void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e) => SaveFile();
+
+        void SaveFile()
         {
+            bool error = false;
             gridEditor.GetSectors(out List<Sector> sectors);
             using (Stream fileStream = SaveFilePanel.OpenFile())
-                fileManager.SaveToFile(fileStream, ref sectors);
+            {
+                error = !fileManager.SaveToFile(SaveFilePanel.FileName, fileStream, ref sectors);
+                Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
+            }
+
+            if (!error || fileManager.CurrentOpenedFile == SaveFilePanel.FileName) return;
+            File.Delete(SaveFilePanel.FileName);
         }
+
+        void BtnHelpAbout_Click(object sender, EventArgs e) => about.ShowDialog();
     }
 }

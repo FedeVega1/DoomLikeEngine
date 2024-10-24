@@ -121,7 +121,7 @@
     {
         enum EditorMode { None, LineMode, NodeMode }
 
-        bool isDraggingPanel, onLineMode;
+        bool isDraggingPanel;
         EditorMode currentMode;
         Point lastMousePos;
         GridEditorData refData;
