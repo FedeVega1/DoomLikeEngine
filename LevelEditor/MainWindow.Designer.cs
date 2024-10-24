@@ -31,17 +31,25 @@ namespace LevelEditor
         {
             EditorPanel = new Panel();
             ImgEditorDraw = new PictureBox();
-            OptionsPanel = new Panel();
-            BtnFile = new Button();
             BrushPanel = new Panel();
             BtnLines = new Button();
             LblOrigin = new Label();
             LblCursor = new Label();
             LblGridSize = new Label();
+            MainToolbar = new MenuStrip();
+            BtnFile = new ToolStripMenuItem();
+            BtnFileNew = new ToolStripMenuItem();
+            BtnFileLoad = new ToolStripMenuItem();
+            BtnFileSave = new ToolStripMenuItem();
+            BtnEdit = new ToolStripMenuItem();
+            BtnEditUndo = new ToolStripMenuItem();
+            BtnEditRedo = new ToolStripMenuItem();
+            OpenFilePanel = new OpenFileDialog();
+            SaveFilePanel = new SaveFileDialog();
             EditorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).BeginInit();
-            OptionsPanel.SuspendLayout();
             BrushPanel.SuspendLayout();
+            MainToolbar.SuspendLayout();
             SuspendLayout();
             // 
             // EditorPanel
@@ -68,24 +76,6 @@ namespace LevelEditor
             ImgEditorDraw.MouseLeave += ImgEditorDraw_MouseLeave;
             ImgEditorDraw.MouseMove += ImgEditorDraw_MouseMove;
             ImgEditorDraw.MouseUp += ImgEditorDraw_MouseUp;
-            // 
-            // OptionsPanel
-            // 
-            OptionsPanel.BorderStyle = BorderStyle.FixedSingle;
-            OptionsPanel.Controls.Add(BtnFile);
-            OptionsPanel.Location = new Point(1, 2);
-            OptionsPanel.Name = "OptionsPanel";
-            OptionsPanel.Size = new Size(797, 33);
-            OptionsPanel.TabIndex = 0;
-            // 
-            // BtnFile
-            // 
-            BtnFile.Location = new Point(3, 3);
-            BtnFile.Name = "BtnFile";
-            BtnFile.Size = new Size(75, 23);
-            BtnFile.TabIndex = 0;
-            BtnFile.Text = "File";
-            BtnFile.UseVisualStyleBackColor = true;
             // 
             // BrushPanel
             // 
@@ -139,6 +129,76 @@ namespace LevelEditor
             LblGridSize.TabIndex = 4;
             LblGridSize.Text = "GridSize: 000";
             // 
+            // MainToolbar
+            // 
+            MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit });
+            MainToolbar.Location = new Point(0, 0);
+            MainToolbar.Name = "MainToolbar";
+            MainToolbar.Size = new Size(800, 24);
+            MainToolbar.TabIndex = 5;
+            MainToolbar.Text = "ToolBar";
+            // 
+            // BtnFile
+            // 
+            BtnFile.DropDownItems.AddRange(new ToolStripItem[] { BtnFileNew, BtnFileLoad, BtnFileSave });
+            BtnFile.Name = "BtnFile";
+            BtnFile.Size = new Size(37, 20);
+            BtnFile.Text = "File";
+            // 
+            // BtnFileNew
+            // 
+            BtnFileNew.Name = "BtnFileNew";
+            BtnFileNew.Size = new Size(100, 22);
+            BtnFileNew.Text = "New";
+            BtnFileNew.Click += BtnFileNew_Click;
+            // 
+            // BtnFileLoad
+            // 
+            BtnFileLoad.Name = "BtnFileLoad";
+            BtnFileLoad.Size = new Size(100, 22);
+            BtnFileLoad.Text = "Load";
+            BtnFileLoad.Click += BtnFileLoad_Click;
+            // 
+            // BtnFileSave
+            // 
+            BtnFileSave.Name = "BtnFileSave";
+            BtnFileSave.Size = new Size(100, 22);
+            BtnFileSave.Text = "Save";
+            BtnFileSave.Click += BtnFileSave_Click;
+            // 
+            // BtnEdit
+            // 
+            BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo });
+            BtnEdit.Name = "BtnEdit";
+            BtnEdit.Size = new Size(39, 20);
+            BtnEdit.Text = "Edit";
+            // 
+            // BtnEditUndo
+            // 
+            BtnEditUndo.Name = "BtnEditUndo";
+            BtnEditUndo.Size = new Size(103, 22);
+            BtnEditUndo.Text = "Undo";
+            BtnEditUndo.Click += BtnEditUndo_Click;
+            // 
+            // BtnEditRedo
+            // 
+            BtnEditRedo.Name = "BtnEditRedo";
+            BtnEditRedo.Size = new Size(103, 22);
+            BtnEditRedo.Text = "Redo";
+            BtnEditRedo.Click += BtnEditRedo_Click;
+            // 
+            // OpenFilePanel
+            // 
+            OpenFilePanel.DefaultExt = "map";
+            OpenFilePanel.Filter = ".map Files|*.map";
+            OpenFilePanel.FileOk += OpenFilePanel_FileOk;
+            // 
+            // SaveFilePanel
+            // 
+            SaveFilePanel.DefaultExt = "map";
+            SaveFilePanel.Filter = ".map Files|*.map";
+            SaveFilePanel.FileOk += SaveFilePanel_FileOk;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -149,27 +209,37 @@ namespace LevelEditor
             Controls.Add(LblCursor);
             Controls.Add(LblOrigin);
             Controls.Add(BrushPanel);
-            Controls.Add(OptionsPanel);
             Controls.Add(EditorPanel);
+            Controls.Add(MainToolbar);
+            MainMenuStrip = MainToolbar;
             Name = "MainWindow";
             Text = "Form1";
             EditorPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
-            OptionsPanel.ResumeLayout(false);
             BrushPanel.ResumeLayout(false);
+            MainToolbar.ResumeLayout(false);
+            MainToolbar.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
         private Panel EditorPanel;
-        private Panel OptionsPanel;
-        private Button BtnFile;
         private Panel BrushPanel;
         private Label LblOrigin;
         private PictureBox ImgEditorDraw;
         private Label LblCursor;
         private Label LblGridSize;
         private Button BtnLines;
+        private MenuStrip MainToolbar;
+        private ToolStripMenuItem BtnFile;
+        private ToolStripMenuItem BtnFileNew;
+        private ToolStripMenuItem BtnFileLoad;
+        private ToolStripMenuItem BtnEdit;
+        private ToolStripMenuItem BtnEditUndo;
+        private ToolStripMenuItem BtnEditRedo;
+        private ToolStripMenuItem BtnFileSave;
+        private OpenFileDialog OpenFilePanel;
+        private SaveFileDialog SaveFilePanel;
     }
 }

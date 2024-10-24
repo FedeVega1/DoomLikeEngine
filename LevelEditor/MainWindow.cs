@@ -3,6 +3,7 @@ namespace LevelEditor
     public partial class MainWindow : Form
     {
         MapGridEditor gridEditor;
+        FileManager fileManager;
 
         public MainWindow()
         {
@@ -10,6 +11,7 @@ namespace LevelEditor
             COLoggerImport.InitLogSys(true, false);
 
             gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw));
+            fileManager = new FileManager();
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -55,5 +57,38 @@ namespace LevelEditor
         void ImgEditorDraw_MouseLeave(object sender, EventArgs e) => gridEditor.OnMouseLeave();
 
         void BtnLines_Click(object sender, EventArgs e) => gridEditor.ToggleLineMode(true);
+
+        void BtnFileNew_Click(object sender, EventArgs e) => gridEditor.ResetData();
+
+        void BtnFileLoad_Click(object sender, EventArgs e) => OpenFilePanel.ShowDialog();
+
+        void BtnFileSave_Click(object sender, EventArgs e) => SaveFilePanel.ShowDialog();
+
+        void BtnEditUndo_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        void BtnEditRedo_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        void OpenFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            using (Stream fileStream = OpenFilePanel.OpenFile())
+            {
+                gridEditor.ResetData();
+                fileManager.LoadFromFile(fileStream, out List<Sector> sectors);
+                gridEditor.LoadSectors(sectors);
+            }
+        }
+
+        void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            gridEditor.GetSectors(out List<Sector> sectors);
+            using (Stream fileStream = SaveFilePanel.OpenFile())
+                fileManager.SaveToFile(fileStream, ref sectors);
+        }
     }
 }

@@ -1,0 +1,140 @@
+﻿namespace LevelEditor
+{
+    internal class FileManager
+    {
+        public void SaveToFile(Stream fileStream, ref List<Sector> sectors)
+        {
+            int size = sectors.Count;
+            fileStream.Write(ToByteArray(size, out int arrSize), 0, arrSize);
+
+            for (int i = 0; i < size; i++)
+            {
+                int count = sectors[i].walls.Count;
+                fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
+
+                for (int j = 0; j < count; j++)
+                {
+                    fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                }
+
+                fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
+            }
+        }
+
+        public void LoadFromFile(Stream fileStream, out List<Sector> sectors)
+        {
+            sectors = new List<Sector>();
+
+            int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(byte) * 3;
+
+            byte[] intBuffer = new byte[intSize];
+            byte[] pointBuffer = new byte[pointSize];
+            byte[] colorBuffer = new byte[colorSize];
+
+            fileStream.Read(intBuffer, 0, intSize);
+            int size = ByteArrayToInt(intBuffer);
+
+            for (int i = 0; i < size; i++)
+            {
+                Sector sector = new Sector();
+                sector.walls = new List<Wall>();
+                
+                fileStream.Read(intBuffer, 0, intSize);
+                int count = ByteArrayToInt(intBuffer);
+
+                for (int j = 0; j < count; j++)
+                {
+                    Wall wall = new Wall();
+
+                    fileStream.Read(pointBuffer, 0, pointSize);
+                    wall.leftPoint = ByteArrayToPoint(pointBuffer);
+
+                    fileStream.Read(pointBuffer, 0, pointSize);
+                    wall.rightPoint = ByteArrayToPoint(pointBuffer);
+
+                    fileStream.Read(colorBuffer, 0, colorSize);
+                    wall.color = ByteArrayToColor(colorBuffer);
+
+                    wall.UpdateMiddleAndNormal();
+                    sector.walls.Add(wall);
+                }
+
+                fileStream.Read(intBuffer, 0, intSize);
+                sector.floorHeight = ByteArrayToInt(intBuffer);
+
+                fileStream.Read(intBuffer, 0, intSize);
+                sector.ceillingHeight = ByteArrayToInt(intBuffer);
+
+                fileStream.Read(colorBuffer, 0, colorSize);
+                sector.floorColor = ByteArrayToColor(colorBuffer);
+
+                fileStream.Read(colorBuffer, 0, colorSize);
+                sector.ceillingColor = ByteArrayToColor(colorBuffer);
+
+                sectors.Add(sector);
+            }
+        }
+
+        static byte[] ToByteArray(int dataToConvert, out int size)
+        {
+            size = sizeof(int);
+            byte[] array = new byte[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+                COLoggerImport.LogNormal(array[i]);
+            }
+
+            return array;
+        }
+
+        static byte[] ToByteArray(int dataToConvert)
+        {
+            int size = sizeof(int);
+            byte[] array = new byte[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+                COLoggerImport.LogNormal(array[i]);
+            }
+
+            return array;
+        }
+
+        static byte[] ToByteArray(Point dataToConvert, out int size)
+        {
+            int intSize = sizeof(int);
+            size = intSize * 2;
+
+            byte[] array = new byte[size];
+            byte[] x = ToByteArray(dataToConvert.X);
+            byte[] y = ToByteArray(dataToConvert.Y);
+
+            for (int i = 0; i < intSize; i++)
+            {
+                array[i] = x[i];
+                array[i + intSize] = y[i];
+            }
+
+            return array;
+        }
+
+        static byte[] ToByteArray(Color dataToConvert, out int size)
+        {
+            size = 3;
+            return [dataToConvert.R, dataToConvert.G, dataToConvert.B];
+        }
+
+        static int ByteArrayToInt(byte[] dataToConvert) => (int) dataToConvert[3] << 24 | (int) dataToConvert[2] << 16 | (int) dataToConvert[1] << 8 | (int) dataToConvert[0];
+
+        static Point ByteArrayToPoint(byte[] dataToConvert) => new Point(ByteArrayToInt([dataToConvert[0], dataToConvert[1], dataToConvert[2], dataToConvert[3]]), ByteArrayToInt([dataToConvert[4], dataToConvert[5], dataToConvert[6], dataToConvert[7]]));
+        static Color ByteArrayToColor(byte[] dataToConvert) => Color.FromArgb(0, dataToConvert[0], dataToConvert[1], dataToConvert[2]);
+    }
+}
