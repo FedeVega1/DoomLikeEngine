@@ -1,3 +1,5 @@
+using System.Windows.Forms.VisualStyles;
+
 namespace LevelEditor
 {
     public partial class MainWindow : Form
@@ -59,7 +61,7 @@ namespace LevelEditor
 
         void ImgEditorDraw_MouseLeave(object sender, EventArgs e) => gridEditor.OnMouseLeave();
 
-        void BtnLines_Click(object sender, EventArgs e) => gridEditor.ToggleLineMode(true);
+        void BtnLinesMode_Click(object sender, EventArgs e) => gridEditor.ToggleLineMode(true);
 
         void BtnFileNew_Click(object sender, EventArgs e) => gridEditor.ResetData();
 
@@ -91,15 +93,18 @@ namespace LevelEditor
         void OpenFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
             using (Stream fileStream = OpenFilePanel.OpenFile())
-            {
-                gridEditor.ResetData();
-                fileManager.LoadFromFile(OpenFilePanel.FileName, fileStream, out List<Sector> sectors);
-                gridEditor.LoadSectors(sectors);
-                Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
-            }
+                LoadFile(fileStream);
         }
 
         void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e) => SaveFile();
+
+        void LoadFile(Stream fileStream)
+        {
+            gridEditor.ResetData();
+            fileManager.LoadFromFile(OpenFilePanel.FileName, fileStream, out List<Sector> sectors);
+            gridEditor.LoadSectors(sectors);
+            Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
+        }
 
         void SaveFile()
         {
@@ -116,5 +121,25 @@ namespace LevelEditor
         }
 
         void BtnHelpAbout_Click(object sender, EventArgs e) => about.ShowDialog();
+
+        void MainWindow_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            string[]? data = (string[]?) e.Data.GetData(DataFormats.FileDrop);
+
+            if (data == null || !File.Exists(data[0])) return;
+
+            using (FileStream stream = File.Open(data[0], FileMode.Open))
+                LoadFile(stream);
+        }
+
+        void MainWindow_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data == null) return;
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+            else e.Effect = DragDropEffects.None;
+        }
+
+        void MainWindow_Resize(object sender, EventArgs e) => gridEditor.OnResize();
     }
 }

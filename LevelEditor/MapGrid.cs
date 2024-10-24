@@ -3,8 +3,8 @@
     internal class Grid
     {
         const int DefaultUnitSize = 10, MinGridSize = 1, MaxGridSize = 8;
-        public static readonly Point InitialOriginPos = new Point(330, 210);
-        public static readonly Point MaxMapSizeX = new Point(-1500, 1500), MaxMapSizeY = new Point(-1500, 1500);
+        public static readonly Point MaxMapSize = new Point(2000, 2000);
+        public static Point InitialOriginPos = new Point(330, 210);
 
         int gridSize = 3;
         Point originPosition;
@@ -16,8 +16,9 @@
         public int GridSize => gridSize;
         public int UnitSize => DefaultUnitSize * gridSize;
 
-        public Grid()
+        public Grid(int right, int bottom)
         {
+            AdjustOrigin(right, bottom);
             originPosition = InitialOriginPos;
 
             float[] dash = { .5f, .5f };
@@ -63,7 +64,7 @@
             originPosition.X += (int) MathF.Round(delta.X);
             originPosition.Y += (int) MathF.Round(delta.Y);
 
-            originPosition = originPosition.Clamp(MaxMapSizeX.X, MaxMapSizeX.Y, MaxMapSizeY.X, MaxMapSizeY.Y);
+            originPosition = originPosition.Clamp(-MaxMapSize.X, MaxMapSize.X, -MaxMapSize.Y, MaxMapSize.Y);
         }
 
         public Point ParseMousePosToGridPos(Point mousePos)
@@ -91,8 +92,8 @@
             int panelWidth = (int) MathF.Round(graph.VisibleClipBounds.Right);
             int panelHeight = (int) MathF.Round(graph.VisibleClipBounds.Bottom);
 
-            int sizeX = (Math.Abs(MaxMapSizeX.X) + MaxMapSizeX.Y) / UnitSize;
-            int sizeY = (Math.Abs(MaxMapSizeY.X) + MaxMapSizeY.Y) / UnitSize;
+            int sizeX = (MaxMapSize.X * 2) / UnitSize;
+            int sizeY = (MaxMapSize.Y * 2) / UnitSize;
 
             if (originPosition.X >= 0 && originPosition.X <= panelWidth)
                 graph.DrawLine(originVertical, new Point(originPosition.X, 0), new Point(originPosition.X, panelHeight));
@@ -104,7 +105,7 @@
             {
                 int xPos = originPosition.X + (UnitSize * i++ * dir);
 
-                if (xPos >= MaxMapSizeX.Y)
+                if (xPos >= MaxMapSize.X)
                 {
                     dir *= -1;
                     i = 1;
@@ -119,7 +120,7 @@
             {
                 int yPos = originPosition.Y + (UnitSize * i++ * dir);
 
-                if (yPos >= MaxMapSizeY.Y)
+                if (yPos >= MaxMapSize.Y)
                 {
                     dir *= -1;
                     i = 1;
@@ -129,6 +130,17 @@
                 if (yPos >= 0 && yPos <= panelHeight)
                     graph.DrawLine(i % 2 == 0 ? horizontalEven : horizontalOdd, new Point(0, yPos), new Point(panelWidth, yPos));
             }
+        }
+
+        public void AdjustOrigin(int right, int bottom)
+        {
+            Point oldInitPos = InitialOriginPos;
+            InitialOriginPos.X = right / 2;
+            InitialOriginPos.Y = bottom / 2;
+
+            PointF diff = InitialOriginPos.Subtract(oldInitPos);
+            originPosition.X += (int) MathF.Round(diff.X);
+            originPosition.Y += (int) MathF.Round(diff.Y);
         }
     }
 }

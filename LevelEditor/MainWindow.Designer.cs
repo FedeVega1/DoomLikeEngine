@@ -29,13 +29,7 @@ namespace LevelEditor
         /// </summary>
         private void InitializeComponent()
         {
-            EditorPanel = new Panel();
-            ImgEditorDraw = new PictureBox();
-            BrushPanel = new Panel();
-            BtnLines = new Button();
-            LblOrigin = new Label();
-            LblCursor = new Label();
-            LblGridSize = new Label();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             MainToolbar = new MenuStrip();
             BtnFile = new ToolStripMenuItem();
             BtnFileNew = new ToolStripMenuItem();
@@ -52,102 +46,40 @@ namespace LevelEditor
             BtnHelpAbout = new ToolStripMenuItem();
             OpenFilePanel = new OpenFileDialog();
             SaveFilePanel = new SaveFileDialog();
-            EditorPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).BeginInit();
-            BrushPanel.SuspendLayout();
+            StatusBar = new StatusStrip();
+            LblGridSize = new ToolStripStatusLabel();
+            LblOrigin = new ToolStripStatusLabel();
+            LblCursor = new ToolStripStatusLabel();
+            panel1 = new Panel();
+            toolStrip1 = new ToolStrip();
+            BtnLinesMode = new ToolStripButton();
+            ImgEditorDraw = new PictureBox();
+            LayoutPanel = new TableLayoutPanel();
+            label1 = new Label();
             MainToolbar.SuspendLayout();
+            StatusBar.SuspendLayout();
+            panel1.SuspendLayout();
+            toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).BeginInit();
+            LayoutPanel.SuspendLayout();
             SuspendLayout();
-            // 
-            // EditorPanel
-            // 
-            EditorPanel.BackColor = Color.White;
-            EditorPanel.BorderStyle = BorderStyle.FixedSingle;
-            EditorPanel.Controls.Add(ImgEditorDraw);
-            EditorPanel.Location = new Point(12, 41);
-            EditorPanel.Name = "EditorPanel";
-            EditorPanel.Size = new Size(663, 378);
-            EditorPanel.TabIndex = 1;
-            // 
-            // ImgEditorDraw
-            // 
-            ImgEditorDraw.BackColor = Color.FromArgb(  35,   35,   35);
-            ImgEditorDraw.Location = new Point(-1, -1);
-            ImgEditorDraw.Name = "ImgEditorDraw";
-            ImgEditorDraw.Size = new Size(663, 378);
-            ImgEditorDraw.TabIndex = 0;
-            ImgEditorDraw.TabStop = false;
-            ImgEditorDraw.Paint += ImgEditorDraw_Paint;
-            ImgEditorDraw.MouseDown += ImgEditorDraw_MouseDown;
-            ImgEditorDraw.MouseEnter += ImgEditorDraw_MouseEnter;
-            ImgEditorDraw.MouseLeave += ImgEditorDraw_MouseLeave;
-            ImgEditorDraw.MouseMove += ImgEditorDraw_MouseMove;
-            ImgEditorDraw.MouseUp += ImgEditorDraw_MouseUp;
-            // 
-            // BrushPanel
-            // 
-            BrushPanel.BorderStyle = BorderStyle.FixedSingle;
-            BrushPanel.Controls.Add(BtnLines);
-            BrushPanel.Location = new Point(691, 41);
-            BrushPanel.Name = "BrushPanel";
-            BrushPanel.Size = new Size(107, 378);
-            BrushPanel.TabIndex = 1;
-            // 
-            // BtnLines
-            // 
-            BtnLines.Location = new Point(12, 14);
-            BtnLines.Name = "BtnLines";
-            BtnLines.Size = new Size(75, 23);
-            BtnLines.TabIndex = 0;
-            BtnLines.Text = "Draw Lines";
-            BtnLines.UseVisualStyleBackColor = true;
-            BtnLines.Click += BtnLines_Click;
-            // 
-            // LblOrigin
-            // 
-            LblOrigin.Anchor =  AnchorStyles.Bottom | AnchorStyles.Right;
-            LblOrigin.AutoSize = true;
-            LblOrigin.ForeColor = SystemColors.Control;
-            LblOrigin.Location = new Point(567, 426);
-            LblOrigin.Name = "LblOrigin";
-            LblOrigin.Size = new Size(108, 15);
-            LblOrigin.TabIndex = 2;
-            LblOrigin.Text = "Origin: (0000, 0000)";
-            // 
-            // LblCursor
-            // 
-            LblCursor.Anchor =  AnchorStyles.Bottom | AnchorStyles.Right;
-            LblCursor.AutoSize = true;
-            LblCursor.ForeColor = SystemColors.Control;
-            LblCursor.Location = new Point(451, 426);
-            LblCursor.Name = "LblCursor";
-            LblCursor.Size = new Size(110, 15);
-            LblCursor.TabIndex = 3;
-            LblCursor.Text = "Cursor: (0000, 0000)";
-            // 
-            // LblGridSize
-            // 
-            LblGridSize.Anchor =  AnchorStyles.Bottom | AnchorStyles.Right;
-            LblGridSize.AutoSize = true;
-            LblGridSize.ForeColor = SystemColors.Control;
-            LblGridSize.Location = new Point(691, 426);
-            LblGridSize.Name = "LblGridSize";
-            LblGridSize.Size = new Size(73, 15);
-            LblGridSize.TabIndex = 4;
-            LblGridSize.Text = "GridSize: 000";
             // 
             // MainToolbar
             // 
+            MainToolbar.BackColor = Color.White;
             MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit, BtnHelp });
             MainToolbar.Location = new Point(0, 0);
             MainToolbar.Name = "MainToolbar";
             MainToolbar.RenderMode = ToolStripRenderMode.System;
-            MainToolbar.Size = new Size(800, 24);
+            MainToolbar.Size = new Size(804, 24);
             MainToolbar.TabIndex = 5;
             MainToolbar.Text = "ToolBar";
             // 
             // BtnFile
             // 
+            BtnFile.BackColor = SystemColors.Control;
             BtnFile.DropDownItems.AddRange(new ToolStripItem[] { BtnFileNew, BtnFileLoad, toolStripSeparator2, BtnFileSave, BtnFileSaveAs });
+            BtnFile.ForeColor = SystemColors.ControlText;
             BtnFile.Name = "BtnFile";
             BtnFile.Size = new Size(37, 20);
             BtnFile.Text = "File";
@@ -188,6 +120,7 @@ namespace LevelEditor
             // BtnEdit
             // 
             BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo, toolStripSeparator1, BtnEditSettings });
+            BtnEdit.ForeColor = SystemColors.ControlText;
             BtnEdit.Name = "BtnEdit";
             BtnEdit.Size = new Size(39, 20);
             BtnEdit.Text = "Edit";
@@ -219,7 +152,9 @@ namespace LevelEditor
             // 
             // BtnHelp
             // 
+            BtnHelp.BackColor = SystemColors.Window;
             BtnHelp.DropDownItems.AddRange(new ToolStripItem[] { BtnHelpAbout });
+            BtnHelp.ForeColor = SystemColors.ControlText;
             BtnHelp.Name = "BtnHelp";
             BtnHelp.Size = new Size(44, 20);
             BtnHelp.Text = "Help";
@@ -227,7 +162,7 @@ namespace LevelEditor
             // BtnHelpAbout
             // 
             BtnHelpAbout.Name = "BtnHelpAbout";
-            BtnHelpAbout.Size = new Size(180, 22);
+            BtnHelpAbout.Size = new Size(107, 22);
             BtnHelpAbout.Text = "About";
             BtnHelpAbout.Click += BtnHelpAbout_Click;
             // 
@@ -243,38 +178,150 @@ namespace LevelEditor
             SaveFilePanel.Filter = ".map Files|*.map";
             SaveFilePanel.FileOk += SaveFilePanel_FileOk;
             // 
+            // StatusBar
+            // 
+            StatusBar.BackColor = SystemColors.Desktop;
+            StatusBar.Items.AddRange(new ToolStripItem[] { LblGridSize, LblOrigin, LblCursor });
+            StatusBar.Location = new Point(0, 429);
+            StatusBar.Name = "StatusBar";
+            StatusBar.RightToLeft = RightToLeft.Yes;
+            StatusBar.Size = new Size(804, 22);
+            StatusBar.SizingGrip = false;
+            StatusBar.TabIndex = 6;
+            StatusBar.Text = "Statusbar";
+            // 
+            // LblGridSize
+            // 
+            LblGridSize.ForeColor = Color.White;
+            LblGridSize.Name = "LblGridSize";
+            LblGridSize.RightToLeft = RightToLeft.No;
+            LblGridSize.Size = new Size(79, 17);
+            LblGridSize.Text = "GridSize: 0000";
+            // 
+            // LblOrigin
+            // 
+            LblOrigin.ForeColor = Color.White;
+            LblOrigin.Name = "LblOrigin";
+            LblOrigin.RightToLeft = RightToLeft.No;
+            LblOrigin.Size = new Size(108, 17);
+            LblOrigin.Text = "Origin: (0000, 0000)";
+            // 
+            // LblCursor
+            // 
+            LblCursor.ForeColor = Color.White;
+            LblCursor.Name = "LblCursor";
+            LblCursor.RightToLeft = RightToLeft.No;
+            LblCursor.Size = new Size(110, 17);
+            LblCursor.Text = "Cursor: (0000, 0000)";
+            // 
+            // panel1
+            // 
+            panel1.BorderStyle = BorderStyle.FixedSingle;
+            panel1.Controls.Add(label1);
+            panel1.Controls.Add(toolStrip1);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(684, 10);
+            panel1.Margin = new Padding(10, 0, 0, 0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(120, 385);
+            panel1.TabIndex = 7;
+            // 
+            // toolStrip1
+            // 
+            toolStrip1.BackColor = Color.White;
+            toolStrip1.GripStyle = ToolStripGripStyle.Hidden;
+            toolStrip1.Items.AddRange(new ToolStripItem[] { BtnLinesMode });
+            toolStrip1.Location = new Point(0, 0);
+            toolStrip1.Name = "toolStrip1";
+            toolStrip1.RenderMode = ToolStripRenderMode.System;
+            toolStrip1.Size = new Size(118, 25);
+            toolStrip1.TabIndex = 0;
+            toolStrip1.Text = "toolStrip1";
+            // 
+            // BtnLinesMode
+            // 
+            BtnLinesMode.Image = (Image) resources.GetObject("BtnLinesMode.Image");
+            BtnLinesMode.ImageTransparentColor = Color.Magenta;
+            BtnLinesMode.Margin = new Padding(10, 1, 0, 2);
+            BtnLinesMode.Name = "BtnLinesMode";
+            BtnLinesMode.Size = new Size(84, 22);
+            BtnLinesMode.Text = "Draw Lines";
+            BtnLinesMode.Click += BtnLinesMode_Click;
+            // 
+            // ImgEditorDraw
+            // 
+            ImgEditorDraw.BackColor = Color.FromArgb(  35,   35,   35);
+            ImgEditorDraw.BorderStyle = BorderStyle.FixedSingle;
+            ImgEditorDraw.Dock = DockStyle.Fill;
+            ImgEditorDraw.Location = new Point(0, 10);
+            ImgEditorDraw.Margin = new Padding(0, 0, 5, 0);
+            ImgEditorDraw.Name = "ImgEditorDraw";
+            ImgEditorDraw.Size = new Size(669, 385);
+            ImgEditorDraw.TabIndex = 0;
+            ImgEditorDraw.TabStop = false;
+            ImgEditorDraw.Paint += ImgEditorDraw_Paint;
+            ImgEditorDraw.MouseDown += ImgEditorDraw_MouseDown;
+            ImgEditorDraw.MouseEnter += ImgEditorDraw_MouseEnter;
+            ImgEditorDraw.MouseLeave += ImgEditorDraw_MouseLeave;
+            ImgEditorDraw.MouseMove += ImgEditorDraw_MouseMove;
+            ImgEditorDraw.MouseUp += ImgEditorDraw_MouseUp;
+            // 
+            // LayoutPanel
+            // 
+            LayoutPanel.ColumnCount = 2;
+            LayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 83.84728F));
+            LayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16.1527157F));
+            LayoutPanel.Controls.Add(ImgEditorDraw, 0, 0);
+            LayoutPanel.Controls.Add(panel1, 1, 0);
+            LayoutPanel.Dock = DockStyle.Fill;
+            LayoutPanel.Location = new Point(0, 24);
+            LayoutPanel.Name = "LayoutPanel";
+            LayoutPanel.Padding = new Padding(0, 10, 0, 10);
+            LayoutPanel.RowCount = 1;
+            LayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 75.80247F));
+            LayoutPanel.Size = new Size(804, 405);
+            LayoutPanel.TabIndex = 8;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(20, 154);
+            label1.Name = "label1";
+            label1.Size = new Size(38, 15);
+            label1.TabIndex = 1;
+            label1.Text = "label1";
+            // 
             // MainWindow
             // 
+            AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Black;
-            ClientSize = new Size(800, 450);
-            Controls.Add(LblGridSize);
-            Controls.Add(LblCursor);
-            Controls.Add(LblOrigin);
-            Controls.Add(BrushPanel);
-            Controls.Add(EditorPanel);
+            ClientSize = new Size(804, 451);
+            Controls.Add(LayoutPanel);
+            Controls.Add(StatusBar);
             Controls.Add(MainToolbar);
             MainMenuStrip = MainToolbar;
             Name = "MainWindow";
             Text = "Level Editor";
-            EditorPanel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
-            BrushPanel.ResumeLayout(false);
+            DragDrop += MainWindow_DragDrop;
+            DragEnter += MainWindow_DragEnter;
+            Resize += MainWindow_Resize;
             MainToolbar.ResumeLayout(false);
             MainToolbar.PerformLayout();
+            StatusBar.ResumeLayout(false);
+            StatusBar.PerformLayout();
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
+            toolStrip1.ResumeLayout(false);
+            toolStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
+            LayoutPanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private Panel EditorPanel;
-        private Panel BrushPanel;
-        private Label LblOrigin;
-        private PictureBox ImgEditorDraw;
-        private Label LblCursor;
-        private Label LblGridSize;
-        private Button BtnLines;
         private MenuStrip MainToolbar;
         private ToolStripMenuItem BtnFile;
         private ToolStripMenuItem BtnFileNew;
@@ -291,5 +338,15 @@ namespace LevelEditor
         private ToolStripMenuItem BtnHelpAbout;
         private ToolStripMenuItem BtnFileSaveAs;
         private ToolStripSeparator toolStripSeparator2;
+        private StatusStrip StatusBar;
+        private ToolStripStatusLabel LblGridSize;
+        private ToolStripStatusLabel LblOrigin;
+        private ToolStripStatusLabel LblCursor;
+        private Panel panel1;
+        private ToolStrip toolStrip1;
+        private ToolStripButton BtnLinesMode;
+        private TableLayoutPanel LayoutPanel;
+        private PictureBox ImgEditorDraw;
+        private Label label1;
     }
 }

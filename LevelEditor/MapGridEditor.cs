@@ -1,11 +1,13 @@
-﻿namespace LevelEditor
+﻿using System.Collections.Specialized;
+
+namespace LevelEditor
 {
     readonly internal struct GridEditorData
     {
-        public readonly Label lblCursor, lblOrigin, lblGridSize;
+        public readonly ToolStripStatusLabel lblCursor, lblOrigin, lblGridSize;
         public readonly PictureBox imgEditorDraw;
 
-        public GridEditorData(ref Label cursor, ref Label origin, ref Label gridSize, ref PictureBox editorDraw)
+        public GridEditorData(ref ToolStripStatusLabel cursor, ref ToolStripStatusLabel origin, ref ToolStripStatusLabel gridSize, ref PictureBox editorDraw)
         {
             lblCursor = cursor;
             lblOrigin = origin;
@@ -91,6 +93,11 @@
             timerTick = tick;
         }
 
+        ~MapCursor()
+        {
+            moveMapTimer.Stop();
+        }
+
         public void ToggleCursor(bool toggle)
         {
             if (toggle)
@@ -131,8 +138,9 @@
 
         public bool IsDrawingLine => !drawLineStart.IsEmpty && !drawLineEnd.IsEmpty;
 
-        readonly SolidBrush sectorBrush;
+        readonly SolidBrush sectorBrush;//, displaytextBrush;
         readonly Pen wallLine;
+        //readonly Font displayFont;
 
         List<Sector> sectors;
         List<Wall> currentDrawnWalls;
@@ -143,13 +151,15 @@
             sectors = new List<Sector>();
             currentDrawnWalls = new List<Wall>();
 
-            grid = new Grid();
+            grid = new Grid(refData.imgEditorDraw.Right, refData.imgEditorDraw.Bottom);
             cursor = new MapCursor(MoveMapTimer_Tick);
 
             sectorBrush = new SolidBrush(Color.FromArgb(0x77, 0xFF, 0xFF, 0xED));
             wallLine = new Pen(Color.Yellow, 2);
+            //displayFont = new Font("Roboto", 24);
+            //displaytextBrush = new SolidBrush(Color.FromArgb(0xBB, 0x46, 0x9E, 0x94));
 
-            refData.lblCursor.Enabled = false;
+            refData.lblCursor.Visible = false;
             UpdateOriginPosText();
             UpdateGridSizeText();
         }
@@ -158,6 +168,7 @@
         {
             sectorBrush.Dispose();
             wallLine.Dispose();
+            //displayFont.Dispose();
         }
 
         #region Events
@@ -173,6 +184,9 @@
                 if (currentDrawnWalls.Count > 0) DrawWalls(ref graph, ref currentDrawnWalls, true);
                 cursor.DrawCursor(ref graph);
             }
+
+            //graph.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            //graph.DrawString(currentMode.ToString(), displayFont, displaytextBrush, graph.VisibleClipBounds.Right - 100, graph.VisibleClipBounds.Bottom - 32);
         }
 
         public void OnMouseDown(MouseButtons button, Point location)
@@ -197,7 +211,7 @@
 
             isDraggingPanel = true;
             lastMousePos = location;
-            refData.lblCursor.Enabled = false;
+            refData.lblCursor.Visible = false;
         }
 
         public void OnMouseMove(Point location)
@@ -226,7 +240,7 @@
         {
             if (button != MouseButtons.Left) return;
             isDraggingPanel = false;
-            refData.lblCursor.Enabled = true;
+            refData.lblCursor.Visible = true;
         }
 
         public void OnMouseEnter()
@@ -234,13 +248,13 @@
             if (currentMode == EditorMode.LineMode) cursor.ToggleCursor(true);
 
             if (isDraggingPanel) return;
-            refData.lblCursor.Enabled = true;
+            refData.lblCursor.Visible = true;
         }
 
         public void OnMouseLeave()
         {
             if (currentMode != EditorMode.LineMode)
-                refData.lblCursor.Enabled = false;
+                refData.lblCursor.Visible = false;
         }
 
         #endregion
@@ -287,8 +301,8 @@
                     wall.rightPoint.X += (int) MathF.Round(delta.X);
                     wall.rightPoint.Y += (int) MathF.Round(delta.Y);
 
-                    wall.leftPoint = wall.leftPoint.Clamp(Grid.MaxMapSizeX.X, Grid.MaxMapSizeX.Y, Grid.MaxMapSizeY.X, Grid.MaxMapSizeY.Y);
-                    wall.rightPoint = wall.rightPoint.Clamp(Grid.MaxMapSizeX.X, Grid.MaxMapSizeX.Y, Grid.MaxMapSizeY.X, Grid.MaxMapSizeY.Y);
+                    wall.leftPoint = wall.leftPoint.Clamp(-Grid.MaxMapSize.X, Grid.MaxMapSize.X, -Grid.MaxMapSize.Y, Grid.MaxMapSize.Y);
+                    wall.rightPoint = wall.rightPoint.Clamp(-Grid.MaxMapSize.X, Grid.MaxMapSize.X, -Grid.MaxMapSize.Y, Grid.MaxMapSize.Y);
 
                     wall.UpdateMiddleAndNormal();
                     sectors[i].walls[j] = wall;
@@ -446,6 +460,12 @@
             grid.ResetData();
 
             UpdateOriginPosText();
+            refData.imgEditorDraw.Invalidate();
+        }
+
+        public void OnResize()
+        {
+            grid.AdjustOrigin(refData.imgEditorDraw.Right, refData.imgEditorDraw.Bottom);
             refData.imgEditorDraw.Invalidate();
         }
     }
