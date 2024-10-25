@@ -37,6 +37,8 @@ void Camera::Tick()
 	numbProcessedSectors = GetSectorsToProcess();
 
 	Vector3 currentPos = GetTransform()->GetPos();
+	currentPos.z += cameraZOffset;
+
 	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
@@ -45,7 +47,7 @@ void Camera::Tick()
 	{
 		processedSectors[s].avrgDistanceToCamera = 0;
 
-		if (currentPos.z < processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Below;
+		if ((currentPos.z - processedSectors[s].bottomPoint) < processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Below;
 		else if ((currentPos.z + processedSectors[s].topPoint) > processedSectors[s].topPoint) processedSectors[s].surface = SectorSurface::Above;
 		else processedSectors[s].surface = SectorSurface::SurfNone;
 
@@ -60,7 +62,7 @@ void Camera::Tick()
 				wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 				wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 
-				if (i == 1)
+				if (i == 0)
 				{
 					Vector3 swp = wall.leftBtmPoint;
 					wall.leftBtmPoint = wall.rightBtmPoint;

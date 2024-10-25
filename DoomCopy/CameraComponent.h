@@ -41,18 +41,23 @@ public:
 	virtual void Start() override;
 	virtual void Tick() override;
 
-	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0)
+	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0), cameraZOffset(0)
 	{ }
 
 	~Camera()
 	{
 		for (int i = 0; i < 5; i++)
+		{
 			delete[] processedSectors[i].sectorWalls;
+			processedSectors[i].sectorWalls = nullptr;
+		}
 
 		delete[] processedSectors;
+		processedSectors = nullptr;
 	}
 
 	 int GetProcessedSectors(const ProcessedSector** outProcessedSectors);
+	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
 
 protected:
 	virtual void OnDestroy() override;
@@ -64,6 +69,7 @@ private:
 
 	int numbProcessedSectors;
 	int xRotation;
+	float cameraZOffset;
 	class World* world;
 	ProcessedSector* processedSectors;
 

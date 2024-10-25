@@ -14,7 +14,7 @@ void Game::InitUpdate()
     Time::INS.nextGameTick = Time::INS.GetGameTickCount();
 	loops = 0;
 
-    world = new World();
+    world = new World(mapToOpen);
     entities.push_back(world);
 
     GameObject* cameraObject = new GameObject();
@@ -22,7 +22,8 @@ void Game::InitUpdate()
     mainCamera->world = world;
     entities.push_back(cameraObject);
 
-    cameraObject->GetTransform()->SetPos(Vector3(70, -110, 0));
+    cameraObject->GetTransform()->SetPos(Vector3(0, 0, 0));
+    mainCamera->SetCameraZOffset(-25);
 }
 
 void Game::MainUpdate()

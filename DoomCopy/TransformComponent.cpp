@@ -28,7 +28,9 @@ void Transform::TeleportTo(Vector3 newPos) { pos += newPos; }
 
 void Transform::Rotate(float angle)
 {
+	angle = std::clamp(angle, -360.0f, 360.0f);
 	rot += angle;
+
 	if (rot < 0) rot += 360;
 	if (rot > 359) rot -= 360;
 }

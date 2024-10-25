@@ -8,6 +8,7 @@
 /LevelEditor/obj/
 
 .vs
+*.map
 
 # Prerequisites
 *.d

@@ -445,7 +445,23 @@ namespace LevelEditor
             refData.imgEditorDraw.Invalidate();
         }
 
-        public void GetSectors(out List<Sector> sectors) => sectors = new List<Sector>(this.sectors);
+        public void GetSectors(out List<Sector> sectors)
+        {
+            sectors = new List<Sector>(this.sectors);
+
+            int sectSize = sectors.Count;
+            for (int i = 0; i < sectSize; i++)
+            {
+                int size = sectors[i].walls.Count;
+                for (int j = 0; j < size; j++)
+                {
+                    Wall wall = sectors[i].walls[j];
+                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos);
+                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos);
+                    sectors[i].walls[j] = wall;
+                }
+            }
+        }
 
         public void LoadSectors(List<Sector> sectors)
         {
