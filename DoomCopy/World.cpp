@@ -51,14 +51,16 @@ World::World(const std::string& mapFileName) : Entity()
 			}
 
 			mapFile.read(intBuffer, intSize);
-			mapFile.read(intBuffer, intSize);
-			mapFile.read(colorBuffer, colorSize);
-			mapFile.read(colorBuffer, colorSize);
+			sector.bottomPoint = ByteArrayToInt(intBuffer);
 
-			sector.bottomPoint = 0;
-			sector.topPoint = 60;
-			sector.floorColor = COLOR_DARKGREEN;
-			sector.ceillingColor = COLOR_GREEN;
+			mapFile.read(intBuffer, intSize);
+			sector.topPoint = ByteArrayToInt(intBuffer);
+
+			mapFile.read(colorBuffer, colorSize);
+			sector.floorColor = ByteArrayToColor(colorBuffer);
+
+			mapFile.read(colorBuffer, colorSize);
+			sector.ceillingColor = ByteArrayToColor(colorBuffer);
 
 			sectorData[i] = sector;
 			OLOG_LF("Loaded Sector: {0} Correct", i);

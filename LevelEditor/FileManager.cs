@@ -32,8 +32,8 @@
                         fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
                     }
 
-                    fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
 
@@ -124,6 +124,8 @@
             COLoggerImport.LogNormal("Load Correct!");
             return true;
         }
+
+        public void ResetCurrentFile() => CurrentOpenedFile = "NULL";
 
         static byte[] ToByteArray(int dataToConvert, out int size)
         {

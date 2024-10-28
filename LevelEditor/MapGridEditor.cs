@@ -1,6 +1,4 @@
-﻿using System.Collections.Specialized;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     readonly internal struct GridEditorData
     {
@@ -48,8 +46,25 @@ namespace LevelEditor
     internal struct Sector
     {
         public List<Wall> walls;
-        public int floorHeight, ceillingHeight;
         public Color floorColor, ceillingColor;
+        public int floorHeight, ceillingHeight;
+
+        public Sector() 
+        {
+            walls = new List<Wall>();
+            floorHeight = 0;
+            ceillingHeight = 10;
+            ceillingColor = floorColor = Color.Black;
+        }
+
+        public Sector(Sector sector)
+        {
+            walls = new List<Wall>(sector.walls);
+            floorHeight = sector.floorHeight;
+            ceillingHeight = sector.ceillingHeight;
+            floorColor = sector.floorColor;
+            ceillingColor = sector.ceillingColor;
+        }
 
         public bool CheckWallsOrientation()
         {
@@ -77,6 +92,14 @@ namespace LevelEditor
                 wall.UpdateMiddleAndNormal();
                 walls[i] = wall;
             }
+        }
+
+        public void ResetDrawSector()
+        {
+            walls.Clear();
+            floorHeight = 0;
+            ceillingHeight = 10;
+            ceillingColor = floorColor = Color.Black;
         }
     }
 
@@ -126,7 +149,7 @@ namespace LevelEditor
 
     internal class MapGridEditor
     {
-        enum EditorMode { None, LineMode, NodeMode }
+        enum EditorMode { None, LineMode, NodeMode, WallMode, SectorMode }
 
         bool isDraggingPanel;
         EditorMode currentMode;
@@ -142,14 +165,19 @@ namespace LevelEditor
         readonly Pen wallLine;
         //readonly Font displayFont;
 
+        List<Sector> selectedSectors;
+        List<Wall> selectedWalls;
+        List<Point> selectedNodes;
+
         List<Sector> sectors;
-        List<Wall> currentDrawnWalls;
+        Sector currentDrawnSector;
+        Color currentDrawnWallsColor;
 
         public MapGridEditor(GridEditorData data)
         {
             refData = data;
             sectors = new List<Sector>();
-            currentDrawnWalls = new List<Wall>();
+            currentDrawnSector = new Sector();
 
             grid = new Grid(refData.imgEditorDraw.Right, refData.imgEditorDraw.Bottom);
             cursor = new MapCursor(MoveMapTimer_Tick);
@@ -158,6 +186,10 @@ namespace LevelEditor
             wallLine = new Pen(Color.Yellow, 2);
             //displayFont = new Font("Roboto", 24);
             //displaytextBrush = new SolidBrush(Color.FromArgb(0xBB, 0x46, 0x9E, 0x94));
+
+            selectedSectors = new List<Sector>();
+            selectedWalls = new List<Wall>();
+            selectedNodes = new List<Point>();
 
             refData.lblCursor.Visible = false;
             UpdateOriginPosText();
@@ -181,7 +213,7 @@ namespace LevelEditor
             if (currentMode == EditorMode.LineMode)
             {
                 DrawLine(ref graph);
-                if (currentDrawnWalls.Count > 0) DrawWalls(ref graph, ref currentDrawnWalls, true);
+                if (currentDrawnSector.walls.Count > 0) DrawWalls(ref graph, ref currentDrawnSector.walls, true);
                 cursor.DrawCursor(ref graph);
             }
 
@@ -201,10 +233,10 @@ namespace LevelEditor
                     return;
                 }
 
-                currentDrawnWalls.Add(new Wall(drawLineStart, drawLineEnd, Color.White));
+                currentDrawnSector.walls.Add(new Wall(drawLineStart, drawLineEnd, currentDrawnWallsColor));
                 drawLineEnd = drawLineStart = cursor.MouseCurrentPos;
 
-                if (currentDrawnWalls[currentDrawnWalls.Count - 1].rightPoint == currentDrawnWalls[0].leftPoint)
+                if (currentDrawnSector.walls[currentDrawnSector.walls.Count - 1].rightPoint == currentDrawnSector.walls[0].leftPoint)
                     MakeNewSector();
                 return;
             }
@@ -331,12 +363,12 @@ namespace LevelEditor
             if (!toggle)
             {
                 drawLineEnd = drawLineStart = Point.Empty;
-                currentDrawnWalls.Clear();
+                currentDrawnSector.ResetDrawSector();
                 return;
             }
 
             drawLineEnd = drawLineStart = cursor.MouseCurrentPos;
-            if (currentDrawnWalls.Count > 0) currentDrawnWalls.Clear();
+            if (currentDrawnSector.walls.Count > 0) currentDrawnSector.ResetDrawSector();
         }
 
         void DrawLine(ref Graphics graph)
@@ -434,13 +466,13 @@ namespace LevelEditor
 
         void MakeNewSector()
         {
-            Sector newSector = new Sector { walls = new List<Wall>(currentDrawnWalls) };
+            Sector newSector = new Sector(currentDrawnSector);
             if (!newSector.CheckWallsOrientation()) newSector.FlipWalls();
 
             sectors.Add(newSector);
 
             drawLineEnd = drawLineStart = Point.Empty;
-            currentDrawnWalls.Clear();
+            currentDrawnSector.ResetDrawSector();
 
             refData.imgEditorDraw.Invalidate();
         }
@@ -465,6 +497,19 @@ namespace LevelEditor
 
         public void LoadSectors(List<Sector> sectors)
         {
+            int sectSize = sectors.Count();
+            for (int i = 0; i < sectSize; i++)
+            {
+                int size = sectors[i].walls.Count;
+                for (int j = 0; j < size; j++)
+                {
+                    Wall wall = sectors[i].walls[j];
+                    wall.leftPoint = wall.leftPoint.Add(Grid.InitialOriginPos);
+                    wall.rightPoint = wall.rightPoint.Add(Grid.InitialOriginPos);
+                    sectors[i].walls[j] = wall;
+                }
+            }
+
             this.sectors = sectors;
             refData.imgEditorDraw.Invalidate();
         }
@@ -483,6 +528,71 @@ namespace LevelEditor
         {
             grid.AdjustOrigin(refData.imgEditorDraw.Right, refData.imgEditorDraw.Bottom);
             refData.imgEditorDraw.Invalidate();
+        }
+
+        public void ChangedWallColor(Color newColor)
+        {
+            currentDrawnWallsColor = newColor;
+
+            int size = selectedWalls.Count;
+            for (int i = 0; i < size; i++)
+            {
+                Wall wall = selectedWalls[i];
+                wall.color = newColor;
+                selectedWalls[i] = selectedWalls[i];
+            }
+        }
+
+        public void ChangedSectorFloorHeight(int newHeight)
+        {
+            currentDrawnSector.floorHeight = newHeight;
+
+            int size = selectedSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                Sector sector = selectedSectors[i];
+                sector.floorHeight = newHeight;
+                selectedSectors[i] = sector;
+            }
+        }
+
+        public void ChangedSectorCeillingHeight(int newHeight)
+        {
+            currentDrawnSector.ceillingHeight = newHeight;
+
+            int size = selectedSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                Sector sector = selectedSectors[i];
+                sector.ceillingHeight = newHeight;
+                selectedSectors[i] = sector;
+            }
+        }
+
+        public void ChangedSectorFloorColor(Color newColor)
+        {
+            currentDrawnSector.floorColor = newColor;
+
+            int size = selectedSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                Sector sector = selectedSectors[i];
+                sector.floorColor = newColor;
+                selectedSectors[i] = sector;
+            }
+        }
+
+        public void ChangedSectorCeillingColor(Color newColor)
+        {
+            currentDrawnSector.ceillingColor = newColor;
+
+            int size = selectedSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                Sector sector = selectedSectors[i];
+                sector.ceillingColor = newColor;
+                selectedSectors[i] = sector;
+            }
         }
     }
 }
