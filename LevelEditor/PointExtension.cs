@@ -19,6 +19,12 @@
             return PointF.Empty;
         }
 
+        public static float Distance(this Point a, Point b)
+        {
+            Point diff = new Point(a.X - b.X, a.Y - b.Y);
+            return MathF.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
+        }
+
         public static float Dot(this PointF left, PointF right) => left.X * right.Y - left.Y * right.X;
 
         public static PointF Add(this PointF left, PointF right) => new PointF(left.X + right.X, left.Y + right.Y);

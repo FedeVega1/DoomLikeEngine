@@ -52,14 +52,21 @@ namespace LevelEditor
                     return true;
 
                 case Keys.Escape:
-                    if (!gridEditor.IsDrawingLine) gridEditor.ToggleLineMode(false);
-                    else gridEditor.ToggleLineDrawMode(false);
+                    gridEditor.ExitCurrentMode();
                     return true;
 
                 case Keys.Up: gridEditor.MoveOrigin(new PointF(0, 1)); return true;
                 case Keys.Down: gridEditor.MoveOrigin(new PointF(0, -1)); return true;
                 case Keys.Left: gridEditor.MoveOrigin(new PointF(1, 0)); return true;
                 case Keys.Right: gridEditor.MoveOrigin(new PointF(-1, 0)); return true;
+
+                case Keys.ShiftKey:
+                    gridEditor.ShiftKeyDown = msg.Msg == 0x0100;
+                    return true;
+
+                case Keys.ControlKey:
+                    gridEditor.CtrlKeyDown = msg.Msg == 0x0100;
+                    return true;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -72,16 +79,15 @@ namespace LevelEditor
         }
 
         void ImgEditorDraw_MouseDown(object sender, MouseEventArgs e) => gridEditor.OnMouseDown(e.Button, e.Location);
-
         void ImgEditorDraw_MouseMove(object sender, MouseEventArgs e) => gridEditor.OnMouseMove(e.Location);
-
         void ImgEditorDraw_MouseUp(object sender, MouseEventArgs e) => gridEditor.OnMouseUp(e.Button);
-
         void ImgEditorDraw_MouseEnter(object sender, EventArgs e) => gridEditor.OnMouseEnter();
-
         void ImgEditorDraw_MouseLeave(object sender, EventArgs e) => gridEditor.OnMouseLeave();
 
-        void BtnLinesMode_Click(object sender, EventArgs e) => gridEditor.ToggleLineMode(true);
+        void BtnLinesMode_Click(object sender, EventArgs e) => gridEditor.ChangeCurrentMode(EditorMode.LineMode);
+        void BtnEditNodes_Click(object sender, EventArgs e) => gridEditor.ChangeCurrentMode(EditorMode.NodeMode);
+        void BtnEditWalls_Click(object sender, EventArgs e) => gridEditor.ChangeCurrentMode(EditorMode.WallMode);
+        void LblEditSectors_Click(object sender, EventArgs e) => gridEditor.ChangeCurrentMode(EditorMode.SectorMode);
 
         void BtnFileNew_Click(object sender, EventArgs e)
         {

@@ -203,6 +203,7 @@ namespace LevelEditor
             BtnEditNodes.Name = "BtnEditNodes";
             BtnEditNodes.Size = new Size(176, 20);
             BtnEditNodes.Text = "Nodes";
+            BtnEditNodes.Click += BtnEditNodes_Click;
             // 
             // BtnEditWalls
             // 
@@ -212,6 +213,7 @@ namespace LevelEditor
             BtnEditWalls.Name = "BtnEditWalls";
             BtnEditWalls.Size = new Size(176, 20);
             BtnEditWalls.Text = "Walls";
+            BtnEditWalls.Click += BtnEditWalls_Click;
             // 
             // LblEditSectors
             // 
@@ -221,6 +223,7 @@ namespace LevelEditor
             LblEditSectors.Name = "LblEditSectors";
             LblEditSectors.Size = new Size(176, 20);
             LblEditSectors.Text = "Sectors";
+            LblEditSectors.Click += LblEditSectors_Click;
             // 
             // LayoutPanel
             // 
