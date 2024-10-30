@@ -273,16 +273,16 @@ namespace LevelEditor
         public void UpdateDrawnSectorFloorColor(Color color) => currentDrawnSector.floorColor = color;
         public void UpdateDrawnSectorCeillingColor(Color color) => currentDrawnSector.ceillingColor = color;
 
-        public bool CheckForNodes(Point mousePoint, float dist, out (int, int) indx)
+        public bool CheckForNodesInPos(Point mousePoint, float dist, out (int, int) indx)
         {
             (int, int) foundIndx = (-1, -1);
             bool found = false;
 
             LoopSectorWalls((int i, int j, Wall wall) =>
             {
-                float lftdist = wall.leftPoint.Distance(mousePoint);
+                float lftDist = wall.leftPoint.Distance(mousePoint);
 
-                if (lftdist <= dist)
+                if (lftDist <= dist)
                 {
                     foundIndx.Item1 = i;
                     foundIndx.Item2 = j;
@@ -295,6 +295,65 @@ namespace LevelEditor
 
             indx = foundIndx;
             return found;
+        }
+
+        public bool CheckForWallsInPos(Point mousePoint, float dist, out (int, int) indx)
+        {
+            (int, int) foundIndx = (-1, -1);
+            bool found = false;
+
+            LoopSectorWalls((int i, int j, Wall wall) =>
+            {
+                float lftDist = wall.leftPoint.Distance(mousePoint);
+                float rgtDist = wall.rightPoint.Distance(mousePoint);
+                float totalDist = wall.leftPoint.Distance(wall.rightPoint);
+                float sum = lftDist + rgtDist;
+
+                if (sum - totalDist <= dist)
+                {
+                    foundIndx.Item1 = i;
+                    foundIndx.Item2 = j;
+                    found = true;
+                    return true;
+                }
+
+                return false;
+            }, true);
+
+            indx = foundIndx;
+            return found;
+        }
+
+        public bool CheckForSectorsInPos(Point mousePoint, float dist, out int indx)
+        {
+            indx = -1;
+
+            int sectorSize = sectors.Count;
+            for (int i = 0; i < sectorSize; i++)
+            {
+                Point min = new Point(int.MaxValue, int.MaxValue), max = new Point(int.MinValue, int.MinValue);
+                int wallsSize = sectors[i].walls.Count;
+                for (int j = 0; j < wallsSize; j++)
+                {
+                    if (ActiveSectors[i].walls[j].leftPoint.X < min.X) min.X = ActiveSectors[i].walls[j].leftPoint.X;
+                    else if (ActiveSectors[i].walls[j].leftPoint.X > max.X) max.X = ActiveSectors[i].walls[j].leftPoint.X;
+
+                    if (ActiveSectors[i].walls[j].rightPoint.X < min.X) min.X = ActiveSectors[i].walls[j].rightPoint.X;
+                    else if (ActiveSectors[i].walls[j].rightPoint.X > max.X) max.X = ActiveSectors[i].walls[j].rightPoint.X;
+
+                    if (ActiveSectors[i].walls[j].leftPoint.Y < min.Y) min.Y = ActiveSectors[i].walls[j].leftPoint.Y;
+                    else if (ActiveSectors[i].walls[j].leftPoint.Y > max.Y) max.Y = ActiveSectors[i].walls[j].leftPoint.Y;
+
+                    if (ActiveSectors[i].walls[j].rightPoint.Y < min.Y) min.Y = ActiveSectors[i].walls[j].rightPoint.Y;
+                    else if (ActiveSectors[i].walls[j].rightPoint.Y > max.Y) max.Y = ActiveSectors[i].walls[j].rightPoint.Y;
+                }
+
+                if (mousePoint.X < min.X || mousePoint.X > max.X || mousePoint.Y < min.Y || mousePoint.Y > max.Y) continue;
+                indx = i;
+                return true;
+            }
+
+            return false;
         }
 
         public void LoopSectorWalls(Func<int, int, Wall, bool> callback, bool breakOrReturn = false)

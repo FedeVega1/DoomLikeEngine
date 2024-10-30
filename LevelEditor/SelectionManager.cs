@@ -23,6 +23,7 @@
     internal class SelectionManager
     {
         bool isMouseDown;
+        Point lastMousePos;
         SectorDrawer sectorDrawer;
         Grid grid;
 
@@ -47,17 +48,29 @@
             switch (CurrentSelectionType)
             {
                 case SelectionType.Node:
-                    if (!sectorDrawer.CheckForNodes(mousePos, 5, out (int, int) foundIndx)) break;
-                    if (isCtrlKeyDown) RemoveSelection(new SelectionData(ref foundIndx));
-                    else currentSelection.Add(new SelectionData(ref foundIndx));
+                    {
+                        if (!sectorDrawer.CheckForNodesInPos(mousePos, 5, out (int, int) foundIndx)) break;
+                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(ref foundIndx));
+                        else currentSelection.Add(new SelectionData(ref foundIndx));
+                    }
                     return;
 
                 case SelectionType.Wall:
-
+                    {
+                        if (!sectorDrawer.CheckForWallsInPos(mousePos, 5, out (int, int) foundIndx)) break;
+                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(ref foundIndx));
+                        else currentSelection.Add(new SelectionData(ref foundIndx));
+                        lastMousePos = mousePos;
+                    }
                     return;
 
                 case SelectionType.Sector:
-
+                    {
+                        if (!sectorDrawer.CheckForSectorsInPos(mousePos, 5, out int foundIndx)) break;
+                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(foundIndx, -1));
+                        else currentSelection.Add(new SelectionData(foundIndx, -1));
+                        lastMousePos = mousePos;
+                    }
                     return;
             }
 
@@ -73,9 +86,7 @@
                 case SelectionType.Node:
                     LoopWalls((int i, int j, Wall wall) =>
                     {
-                        int otherWallIndex = j - 1;
-                        if (otherWallIndex < 0) otherWallIndex = ActiveSectors[i].walls.Count - 1;
-                        else if (otherWallIndex >= ActiveSectors[i].walls.Count) otherWallIndex = 0;
+                        int otherWallIndex = ClampWallIndex(i, j - 1);
                         Wall otherWall = ActiveSectors[i].walls[otherWallIndex];
 
                         otherWall.rightPoint = wall.leftPoint = mousePos;
@@ -91,15 +102,24 @@
                 case SelectionType.Wall:
                     LoopWalls((int i, int j, Wall wall) =>
                     {
-                        //wall.leftPoint.X += (int) MathF.Round(delta.X);
-                        //wall.leftPoint.Y += (int) MathF.Round(delta.Y);
+                        int laterWallIndex = ClampWallIndex(i, j - 1), nextWallIndex = ClampWallIndex(i, j + 1);
+                        Wall laterWall = ActiveSectors[i].walls[laterWallIndex], nextWall = ActiveSectors[i].walls[nextWallIndex];
 
-                        //wall.rightPoint.X += (int) MathF.Round(delta.X);
-                        //wall.rightPoint.Y += (int) MathF.Round(delta.Y);
+                        Point diff = mousePos.Subtract(lastMousePos);
 
+                        laterWall.rightPoint = wall.leftPoint = wall.leftPoint.Add(diff);
+                        nextWall.leftPoint = wall.rightPoint = wall.rightPoint.Add(diff);
+
+                        laterWall.UpdateMiddleAndNormal();
                         wall.UpdateMiddleAndNormal();
+                        nextWall.UpdateMiddleAndNormal();
+
+                        ActiveSectors[i].walls[laterWallIndex] = laterWall;
                         ActiveSectors[i].walls[j] = wall;
+                        ActiveSectors[i].walls[nextWallIndex] = nextWall;
                     });
+
+                    lastMousePos = mousePos;
                     break;
 
                 case SelectionType.Sector:
@@ -110,11 +130,9 @@
                         {
                             Wall wall = sector.walls[j];
 
-                            //wall.leftPoint.X += (int) MathF.Round(delta.X);
-                            //wall.leftPoint.Y += (int) MathF.Round(delta.Y);
-
-                            //wall.rightPoint.X += (int) MathF.Round(delta.X);
-                            //wall.rightPoint.Y += (int) MathF.Round(delta.Y);
+                            Point diff = mousePos.Subtract(lastMousePos);
+                            wall.leftPoint = wall.leftPoint.Add(diff);
+                            wall.rightPoint = wall.rightPoint.Add(diff);
 
                             wall.UpdateMiddleAndNormal();
                             sector.walls[j] = wall;
@@ -122,13 +140,28 @@
 
                         ActiveSectors[i] = sector;
                     });
+
+                    lastMousePos = mousePos;
                     break;
             }
+        }
+
+        int ClampWallIndex(int currentSector, int indx)
+        {
+            if (indx < 0) indx = ActiveSectors[currentSector].walls.Count - 1;
+            else if (indx >= ActiveSectors[currentSector].walls.Count) indx = 0;
+            return indx;
         }
 
         public void OnMouseUp()
         {
             isMouseDown = false;
+
+            //LoopSectors((int i, Sector sector) =>
+            //{
+            //    if (sector.CheckWallsOrientation()) sector.FlipWalls();
+            //    ActiveSectors[i] = sector;
+            //});
         }
 
         void RemoveSelection(SelectionData data)

@@ -114,11 +114,11 @@
                     break;
 
                 case EditorMode.WallMode:
-
+                    sectorDrawer.DrawSector(ref graph, new SectorDrawingData { showWallNodes = false });
                     break;
 
                 case EditorMode.SectorMode:
-
+                    sectorDrawer.DrawSector(ref graph, new SectorDrawingData { showWallNodes = false });
                     break;
 
                 default:
@@ -168,7 +168,7 @@
                     cursor.MouseCurrentPos = grid.ParseMousePosToGridPos(location);
                     sectorDrawer.OnMouseMove(cursor.MouseCurrentPos);
                     refData.imgEditorDraw.Invalidate();
-                    return;
+                    break;
 
                 case EditorMode.NodeMode:
                 case EditorMode.WallMode:
@@ -176,7 +176,6 @@
                     selectionManager.OnMouseMove(grid.ParseMousePosToGridPos(location));
                     refData.imgEditorDraw.Invalidate();
                     lastMousePos = location;
-                    if (selectionManager.HasSelection) return;
                     break;
             }
 
