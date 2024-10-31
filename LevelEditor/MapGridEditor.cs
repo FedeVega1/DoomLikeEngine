@@ -87,7 +87,7 @@
 
             grid = new Grid(refData.imgEditorDraw.Right, refData.imgEditorDraw.Bottom);
             cursor = new MapCursor(MoveMapTimer_Tick);
-            sectorDrawer = new SectorDrawer();
+            sectorDrawer = new SectorDrawer(this);
             selectionManager = new SelectionManager(ref sectorDrawer, ref grid);
 
             refData.lblCursor.Visible = false;
@@ -166,13 +166,14 @@
             {
                 case EditorMode.LineMode:
                     cursor.MouseCurrentPos = grid.ParseMousePosToGridPos(location);
-                    sectorDrawer.OnMouseMove(cursor.MouseCurrentPos);
+                    sectorDrawer.SetLineEnd(cursor.MouseCurrentPos);
                     refData.imgEditorDraw.Invalidate();
                     break;
 
                 case EditorMode.NodeMode:
                 case EditorMode.WallMode:
                 case EditorMode.SectorMode:
+                    sectorDrawer.GetMousePos(location);
                     selectionManager.OnMouseMove(grid.ParseMousePosToGridPos(location));
                     refData.imgEditorDraw.Invalidate();
                     lastMousePos = location;
@@ -206,7 +207,18 @@
 
         public void OnMouseEnter()
         {
-            if (currentMode == EditorMode.LineMode) cursor.ToggleCursor(true);
+            switch (currentMode)
+            {
+                case EditorMode.LineMode:
+                    cursor.ToggleCursor(true);
+                    break;
+
+                case EditorMode.NodeMode:
+                case EditorMode.WallMode:
+                case EditorMode.SectorMode:
+                    sectorDrawer.OnMouseEnter();
+                    break;
+            }
 
             if (isDraggingPanel) return;
             refData.lblCursor.Visible = true;
@@ -214,8 +226,18 @@
 
         public void OnMouseLeave()
         {
-            if (currentMode != EditorMode.LineMode)
-                refData.lblCursor.Visible = false;
+            switch (currentMode)
+            {
+                case EditorMode.LineMode:
+                    refData.lblCursor.Visible = false;
+                    break;
+
+                case EditorMode.NodeMode:
+                case EditorMode.WallMode:
+                case EditorMode.SectorMode:
+                    sectorDrawer.OnMouseLeave();
+                    break;
+            }
         }
 
         #endregion
@@ -406,5 +428,8 @@
             if (mag > .000001f) delta.Divide(mag);
             return delta;
         }
+
+        public SelectionType GetCurrentSelectionType() => selectionManager.CurrentSelectionType;
+        public SelectionData[] GetCurrentSelection() => selectionManager.GetCurrentSelection();
     }
 }

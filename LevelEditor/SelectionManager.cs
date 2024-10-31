@@ -1,4 +1,6 @@
-﻿namespace LevelEditor
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace LevelEditor
 {
     internal enum SelectionType { Node, Wall, Sector }
 
@@ -17,6 +19,16 @@
         {
             sectorIndex = indx.Item1;
             wallIndex = indx.Item2;
+        }
+
+        public static bool operator==(SelectionData left, SelectionData right)
+        {
+            return left.sectorIndex == right.sectorIndex && left.wallIndex == right.wallIndex;
+        }
+
+        public static bool operator !=(SelectionData left, SelectionData right)
+        {
+            return left.sectorIndex != right.sectorIndex || left.wallIndex != right.wallIndex;
         }
     }
 
@@ -43,32 +55,39 @@
         public void OnMouseDown(Point mousePos, bool isShiftKeyDown, bool isCtrlKeyDown)
         {
             isMouseDown = true;
-            if (!isShiftKeyDown) currentSelection.Clear();
+            if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
 
             switch (CurrentSelectionType)
             {
                 case SelectionType.Node:
                     {
                         if (!sectorDrawer.CheckForNodesInPos(mousePos, 5, out (int, int) foundIndx)) break;
-                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(ref foundIndx));
-                        else currentSelection.Add(new SelectionData(ref foundIndx));
+                        SelectionData data = new SelectionData(ref foundIndx);
+
+                        if (isCtrlKeyDown) RemoveSelection(data);
+                        else if (!ContainsSelection(data)) currentSelection.Add(data);
+                        lastMousePos = mousePos;
                     }
                     return;
 
                 case SelectionType.Wall:
                     {
                         if (!sectorDrawer.CheckForWallsInPos(mousePos, 5, out (int, int) foundIndx)) break;
-                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(ref foundIndx));
-                        else currentSelection.Add(new SelectionData(ref foundIndx));
+                        SelectionData data = new SelectionData(ref foundIndx);
+
+                        if (isCtrlKeyDown) RemoveSelection(data);
+                        else if (!ContainsSelection(data)) currentSelection.Add(data);
                         lastMousePos = mousePos;
                     }
                     return;
 
                 case SelectionType.Sector:
                     {
-                        if (!sectorDrawer.CheckForSectorsInPos(mousePos, 5, out int foundIndx)) break;
-                        if (isCtrlKeyDown) RemoveSelection(new SelectionData(foundIndx, -1));
-                        else currentSelection.Add(new SelectionData(foundIndx, -1));
+                        if (!sectorDrawer.CheckForSectorsInPos(mousePos, out int foundIndx)) break;
+                        SelectionData data = new SelectionData(foundIndx, -1);
+
+                        if (isCtrlKeyDown) RemoveSelection(data);
+                        else if (!ContainsSelection(data)) currentSelection.Add(data);
                         lastMousePos = mousePos;
                     }
                     return;
@@ -89,7 +108,8 @@
                         int otherWallIndex = ClampWallIndex(i, j - 1);
                         Wall otherWall = ActiveSectors[i].walls[otherWallIndex];
 
-                        otherWall.rightPoint = wall.leftPoint = mousePos;
+                        Point diff = mousePos.Subtract(lastMousePos);
+                        otherWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
 
                         wall.UpdateMiddleAndNormal();
                         otherWall.UpdateMiddleAndNormal();
@@ -97,6 +117,8 @@
                         ActiveSectors[i].walls[j] = wall;
                         ActiveSectors[i].walls[otherWallIndex] = otherWall;
                     });
+
+                    lastMousePos = mousePos;
                     break;
 
                 case SelectionType.Wall:
@@ -107,8 +129,8 @@
 
                         Point diff = mousePos.Subtract(lastMousePos);
 
-                        laterWall.rightPoint = wall.leftPoint = wall.leftPoint.Add(diff);
-                        nextWall.leftPoint = wall.rightPoint = wall.rightPoint.Add(diff);
+                        laterWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
+                        nextWall.leftPoint = wall.rightPoint = grid.ParseMousePosToGridPos(wall.rightPoint.Add(diff));
 
                         laterWall.UpdateMiddleAndNormal();
                         wall.UpdateMiddleAndNormal();
@@ -131,8 +153,8 @@
                             Wall wall = sector.walls[j];
 
                             Point diff = mousePos.Subtract(lastMousePos);
-                            wall.leftPoint = wall.leftPoint.Add(diff);
-                            wall.rightPoint = wall.rightPoint.Add(diff);
+                            wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
+                            wall.rightPoint = grid.ParseMousePosToGridPos(wall.rightPoint.Add(diff));
 
                             wall.UpdateMiddleAndNormal();
                             sector.walls[j] = wall;
@@ -169,10 +191,22 @@
             int size = currentSelection.Count;
             for (int i = 0; i < size; i++)
             {
-                if (currentSelection[i].sectorIndex != data.sectorIndex || currentSelection[i].wallIndex != data.wallIndex) continue;
+                if (currentSelection[i] != data) continue;
                 currentSelection.RemoveAt(i);
                 return;
             }
+        }
+
+        bool ContainsSelection(SelectionData data)
+        {
+            int size = currentSelection.Count;
+            for (int i = 0; i < size; i++)
+            {
+                if (currentSelection[i] != data) continue;
+                return true;
+            }
+
+            return false;
         }
 
         public void UpdateWallColor(Color newColor)
@@ -246,5 +280,7 @@
                 callbackPerWall?.Invoke(sector, wall, ActiveSectors[sector].walls[wall]);
             }
         }
+
+        public SelectionData[] GetCurrentSelection() => currentSelection.ToArray();
     }
 }

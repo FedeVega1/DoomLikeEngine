@@ -2,14 +2,10 @@ namespace LevelEditor
 {
     public partial class MainWindow : Form
     {
-        enum ColorPanelCallers { None, Wall, Floor, Ceilling }
-
         MapGridEditor gridEditor;
         FileManager fileManager;
         AboutWindow about;
-
-        ColorPanelCallers currentColorPanelCaller;
-        System.Windows.Forms.Timer listenToColorPanelTimer;
+        System.Windows.Forms.Timer shiftCtrlTimer;
 
         public MainWindow()
         {
@@ -18,7 +14,11 @@ namespace LevelEditor
             SaveFilePanel.FileName = "NewProject";
 
             WindowState = FormWindowState.Maximized;
-            listenToColorPanelTimer = new System.Windows.Forms.Timer();
+            shiftCtrlTimer = new System.Windows.Forms.Timer();
+            shiftCtrlTimer.Tick += CheckShiftCtrlKey;
+            shiftCtrlTimer.Start();
+
+            FormClosed += OnFormClosed;
 
             if (NumbCeillingHeight.NumericUpDownControl != null)
             {
@@ -39,9 +39,39 @@ namespace LevelEditor
             fileManager = new FileManager();
         }
 
+        void OnFormClosed(object? sender, FormClosedEventArgs e)
+        {
+            shiftCtrlTimer.Tick -= CheckShiftCtrlKey;
+            shiftCtrlTimer.Stop();
+            shiftCtrlTimer.Dispose();
+        }
+
+        void CheckShiftCtrlKey(object? sender, EventArgs e) => gridEditor.ShiftKeyDown = gridEditor.CtrlKeyDown = false;
+
+        protected override bool ProcessKeyPreview(ref Message m)
+        {
+            COLoggerImport.LogNormal((Keys) m.WParam);
+            switch ((Keys) m.WParam)
+            {
+                case Keys.ShiftKey:
+                    gridEditor.ShiftKeyDown = m.Msg == 0x0100;
+                    return true;
+
+                case Keys.ControlKey:
+                    gridEditor.ShiftKeyDown = m.Msg == 0x0100;
+                    return true;
+            }
+
+            return base.ProcessKeyPreview(ref m);
+        }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            switch (keyData)
+            Keys processedKeyData = keyData;
+            if ((processedKeyData & Keys.Shift) == Keys.Shift) processedKeyData ^= Keys.Shift;
+            if ((processedKeyData & Keys.Control) == Keys.Control) processedKeyData ^= Keys.Control;
+
+            switch (processedKeyData)
             {
                 case Keys.Add:
                     gridEditor.UpdateGridSize(1);

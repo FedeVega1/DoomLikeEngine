@@ -99,9 +99,12 @@ namespace LevelEditor
 
     internal class SectorDrawer
     {
-        List<Sector> sectors;
+        bool mouseOnGrid;
         Sector currentDrawnSector;
         Color currentDrawnWallsColor;
+        Point currentCursorPos;
+        List<Sector> sectors;
+        MapGridEditor editor;
 
         public Point DrawLineStart { get; set; }
         public Point DrawLineEnd { get; set; }
@@ -112,26 +115,48 @@ namespace LevelEditor
         public List<Sector> ActiveSectors => sectors;
         public Sector CurrentDrawnSector => currentDrawnSector;
 
-        readonly SolidBrush sectorBrush;//, displaytextBrush;
-        readonly Pen wallLine;
-        //readonly Font displayFont;
+        readonly SolidBrush sectorBrush, hoverSectorBrush, selectedSectorBrush;
+        readonly SolidBrush nodeBrush, hoverNodeBrush, selectedNodeBrush;
+        readonly Pen wallLine, hoverWallLine, selectedwallLine;
+        readonly Pen nodeLine, hoverNodeLine, selectedNodeLine;
 
-        public SectorDrawer()
+        public SectorDrawer(MapGridEditor gridEditor)
         {
+            editor = gridEditor;
             sectors = new List<Sector>();
             currentDrawnSector = new Sector();
 
             sectorBrush = new SolidBrush(Color.FromArgb(0x77, 0xFF, 0xFF, 0xED));
+            hoverSectorBrush = new SolidBrush(Color.FromArgb(0x77, 0xFC, 0xF2, 0xD9));
+            selectedSectorBrush = new SolidBrush(Color.FromArgb(0x77, 0xFC, 0xDD, 0xC0));
+
             wallLine = new Pen(Color.Yellow, 2);
-            //displayFont = new Font("Roboto", 24);
-            //displaytextBrush = new SolidBrush(Color.FromArgb(0xBB, 0x46, 0x9E, 0x94));
+            hoverWallLine = new Pen(Color.Orange, 3);
+            selectedwallLine = new Pen(Color.OrangeRed, 2);
+
+            nodeBrush = new SolidBrush(Color.AntiqueWhite);
+            hoverNodeBrush = new SolidBrush(Color.LightBlue);
+            selectedNodeBrush = new SolidBrush(Color.Blue);
+
+            nodeLine = new Pen(Color.AntiqueWhite, 1);
+            hoverNodeLine = new Pen(Color.LightBlue, 2);
+            selectedNodeLine = new Pen(Color.Blue, 1);
         }
 
         ~SectorDrawer()
         {
             sectorBrush.Dispose();
+            hoverSectorBrush.Dispose();
+            selectedSectorBrush.Dispose();
             wallLine.Dispose();
-            //displayFont.Dispose();
+            hoverWallLine.Dispose();
+            selectedwallLine.Dispose();
+            nodeBrush.Dispose();
+            hoverNodeBrush.Dispose();
+            selectedNodeBrush.Dispose();
+            nodeLine.Dispose();
+            hoverNodeLine.Dispose();
+            selectedNodeLine.Dispose();
         }
 
         public void OnLineModeDraw(ref Graphics graph)
@@ -154,11 +179,12 @@ namespace LevelEditor
             return false;
         }
 
-        public void OnMouseMove(Point cursorPos)
-        {
-            if (!DrawLineStart.IsEmpty) 
-                DrawLineEnd = cursorPos;
-        }
+        public void SetLineEnd(Point cursorPos) { if (!DrawLineStart.IsEmpty) DrawLineEnd = cursorPos; }
+
+        public void GetMousePos(Point mousePos) { if (mouseOnGrid) currentCursorPos = mousePos; }
+
+        public void OnMouseEnter() => mouseOnGrid = true;
+        public void OnMouseLeave() => mouseOnGrid = false;
 
         public void ShiftSectors(PointF delta)
         {
@@ -192,18 +218,20 @@ namespace LevelEditor
             graph.DrawRectangle(Pens.AntiqueWhite, new Rectangle(DrawLineStart.Subtract(3), new Size(6, 6)));
         }
 
-        void DrawWalls(ref Graphics graph, ref List<Wall> walls, bool showNodes)
+        void DrawWalls(ref Graphics graph, ref List<Wall> walls, bool showNodes, int sectorIndex = -1)
         {
             int size = walls.Count;
             for (int i = 0; i < size; i++)
             {
-                graph.DrawLine(wallLine, walls[i].leftPoint, walls[i].rightPoint);
-                graph.DrawLine(wallLine, walls[i].middle, walls[i].middle.Add(walls[i].normal.Multiply(5)));
+                Pen wallPen = GetCurrentWallPen(sectorIndex, i);
+                graph.DrawLine(wallPen, walls[i].leftPoint, walls[i].rightPoint);
+                graph.DrawLine(wallPen, walls[i].middle, walls[i].middle.Add(walls[i].normal.Multiply(5)));
 
                 if (showNodes)
                 {
-                    graph.FillRectangle(Brushes.AntiqueWhite, new Rectangle(walls[i].leftPoint.Subtract(3), new Size(6, 6)));
-                    graph.DrawRectangle(Pens.AntiqueWhite, new Rectangle(walls[i].leftPoint.Subtract(3), new Size(6, 6)));
+                    (SolidBrush, Pen) brushPen = GetCurrentNodeBrushAndPen(sectorIndex, i);
+                    graph.FillRectangle(brushPen.Item1, new Rectangle(walls[i].leftPoint.Subtract(3), new Size(6, 6)));
+                    graph.DrawRectangle(brushPen.Item2, new Rectangle(walls[i].leftPoint.Subtract(3), new Size(6, 6)));
                 }
             }
         }
@@ -214,14 +242,64 @@ namespace LevelEditor
             for (int i = 0; i < size; i++)
             {
                 List<Wall> walls = sectors[i].walls;
-                DrawWalls(ref graph, ref walls, data.showWallNodes);
+                DrawWalls(ref graph, ref walls, data.showWallNodes, i);
 
                 int wallsCount = walls.Count;
                 Point[] wallPoints = new Point[wallsCount * 2];
 
                 GetWallPoints(ref walls, ref wallPoints);
-                graph.FillPolygon(sectorBrush, wallPoints, System.Drawing.Drawing2D.FillMode.Winding);
+                graph.FillPolygon(GetSectorBrush(i), wallPoints, System.Drawing.Drawing2D.FillMode.Winding);
             }
+        }
+
+        (SolidBrush, Pen) GetCurrentNodeBrushAndPen(int sectorIndex, int wallIndex)
+        {
+            if (editor.GetCurrentSelectionType() != SelectionType.Node) return (nodeBrush, nodeLine);
+
+            SelectionData[] currentSelection = editor.GetCurrentSelection();
+            int size = currentSelection.Length;
+            for (int i = 0; i < size; i++)
+            {
+                if (currentSelection[i].sectorIndex != sectorIndex || currentSelection[i].wallIndex != wallIndex) continue;
+                return (selectedNodeBrush, selectedNodeLine);
+            }
+
+            if (CheckForNodesInPos(currentCursorPos, 5, out (int, int) indx) && indx.Item1 == sectorIndex && indx.Item2 == wallIndex)
+                return (hoverNodeBrush, hoverNodeLine);
+            return (nodeBrush, nodeLine);
+        }
+
+        Pen GetCurrentWallPen(int sectorIndex, int wallIndex)
+        {
+            if (editor.GetCurrentSelectionType() != SelectionType.Wall) return wallLine;
+
+            SelectionData[] currentSelection = editor.GetCurrentSelection();
+            int size = currentSelection.Length;
+            for (int i = 0; i < size; i++)
+            {
+                if (currentSelection[i].sectorIndex != sectorIndex || currentSelection[i].wallIndex != wallIndex) continue;
+                return selectedwallLine;
+            }
+
+            if (CheckForWallsInPos(currentCursorPos, 5, out (int, int) indx) && indx.Item1 == sectorIndex && indx.Item2 == wallIndex) 
+                return hoverWallLine;
+            return wallLine;
+        }
+
+        SolidBrush GetSectorBrush(int sectorIndex)
+        {
+            if (editor.GetCurrentSelectionType() != SelectionType.Sector) return sectorBrush;
+
+            SelectionData[] currentSelection = editor.GetCurrentSelection();
+            int size = currentSelection.Length;
+            for (int i = 0; i < size; i++)
+            {
+                if (currentSelection[i].sectorIndex != sectorIndex) continue;
+                return selectedSectorBrush;
+            }
+
+            if (CheckForSectorsInPos(currentCursorPos, out int indx) && indx == sectorIndex) return hoverSectorBrush;
+            return sectorBrush;
         }
 
         void MakeNewSector()
@@ -324,7 +402,7 @@ namespace LevelEditor
             return found;
         }
 
-        public bool CheckForSectorsInPos(Point mousePoint, float dist, out int indx)
+        public bool CheckForSectorsInPos(Point mousePoint, out int indx)
         {
             indx = -1;
 

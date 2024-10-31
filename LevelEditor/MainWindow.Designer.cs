@@ -565,6 +565,7 @@ namespace LevelEditor
             Controls.Add(LayoutPanel);
             Controls.Add(StatusBar);
             Controls.Add(MainToolbar);
+            KeyPreview = true;
             MainMenuStrip = MainToolbar;
             Name = "MainWindow";
             Text = "Level Editor";
