@@ -101,6 +101,7 @@ void Camera::Tick()
 		processedSectors[s].avrgDistanceToCamera /= walls;
 	}
 
+	OLOG_LF("Dir {0}", (currentPos - processedSectors[0].sectorWalls[0].leftBtmPoint).ToString());
 	OrderSectorsByDistance();
 }
 

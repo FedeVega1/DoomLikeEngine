@@ -141,7 +141,7 @@ void GDIRenderer::ProcessSector(const ProcessedSector& sector)
     for (int i = 0; i < size; i++)
         DrawWall(sector.sectorWalls[i * 2], sector.surface);
 
-    delete[] surfacePoints;
+    delete surfacePoints;
 }
 
 void GDIRenderer::DrawWall(const ProcessedWall& wall, SectorSurface surface)

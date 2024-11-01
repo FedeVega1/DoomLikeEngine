@@ -92,7 +92,6 @@
                         fileStream.Read(colorBuffer, 0, colorSize);
                         wall.color = ByteArrayToColor(colorBuffer);
 
-                        wall.UpdateMiddleAndNormal();
                         sector.walls.Add(wall);
                     }
 
@@ -176,6 +175,6 @@
         static int ByteArrayToInt(byte[] dataToConvert) => (int) dataToConvert[3] << 24 | (int) dataToConvert[2] << 16 | (int) dataToConvert[1] << 8 | (int) dataToConvert[0];
 
         static Point ByteArrayToPoint(byte[] dataToConvert) => new Point(ByteArrayToInt([dataToConvert[0], dataToConvert[1], dataToConvert[2], dataToConvert[3]]), ByteArrayToInt([dataToConvert[4], dataToConvert[5], dataToConvert[6], dataToConvert[7]]));
-        static Color ByteArrayToColor(byte[] dataToConvert) => Color.FromArgb(0, dataToConvert[0], dataToConvert[1], dataToConvert[2]);
+        static Color ByteArrayToColor(byte[] dataToConvert) => Color.FromArgb(0xFF, dataToConvert[0], dataToConvert[1], dataToConvert[2]);
     }
 }

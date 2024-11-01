@@ -45,6 +45,8 @@ namespace LevelEditor
         List<Sector> ActiveSectors => sectorDrawer.ActiveSectors;
         List<SelectionData> currentSelection;
 
+        public Action<SelectionData, bool> OnSelection;
+
         public SelectionManager(ref SectorDrawer sectDrawerRef, ref Grid mapGrid)
         {
             grid = mapGrid;
@@ -55,6 +57,7 @@ namespace LevelEditor
         public void OnMouseDown(Point mousePos, bool isShiftKeyDown, bool isCtrlKeyDown)
         {
             isMouseDown = true;
+            lastMousePos = mousePos;
             if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
 
             switch (CurrentSelectionType)
@@ -65,8 +68,11 @@ namespace LevelEditor
                         SelectionData data = new SelectionData(ref foundIndx);
 
                         if (isCtrlKeyDown) RemoveSelection(data);
-                        else if (!ContainsSelection(data)) currentSelection.Add(data);
-                        lastMousePos = mousePos;
+                        else if (!ContainsSelection(data))
+                        {
+                            currentSelection.Add(data);
+                            OnSelection?.Invoke(data, currentSelection.Count > 1);
+                        }
                     }
                     return;
 
@@ -76,8 +82,11 @@ namespace LevelEditor
                         SelectionData data = new SelectionData(ref foundIndx);
 
                         if (isCtrlKeyDown) RemoveSelection(data);
-                        else if (!ContainsSelection(data)) currentSelection.Add(data);
-                        lastMousePos = mousePos;
+                        else if (!ContainsSelection(data))
+                        {
+                            currentSelection.Add(data);
+                            OnSelection?.Invoke(data, currentSelection.Count > 1);
+                        }
                     }
                     return;
 
@@ -87,8 +96,11 @@ namespace LevelEditor
                         SelectionData data = new SelectionData(foundIndx, -1);
 
                         if (isCtrlKeyDown) RemoveSelection(data);
-                        else if (!ContainsSelection(data)) currentSelection.Add(data);
-                        lastMousePos = mousePos;
+                        else if (!ContainsSelection(data))
+                        {
+                            currentSelection.Add(data);
+                            OnSelection?.Invoke(data, currentSelection.Count > 1);
+                        }
                     }
                     return;
             }
@@ -117,8 +129,6 @@ namespace LevelEditor
                         ActiveSectors[i].walls[j] = wall;
                         ActiveSectors[i].walls[otherWallIndex] = otherWall;
                     });
-
-                    lastMousePos = mousePos;
                     break;
 
                 case SelectionType.Wall:
@@ -140,8 +150,6 @@ namespace LevelEditor
                         ActiveSectors[i].walls[j] = wall;
                         ActiveSectors[i].walls[nextWallIndex] = nextWall;
                     });
-
-                    lastMousePos = mousePos;
                     break;
 
                 case SelectionType.Sector:
@@ -162,10 +170,10 @@ namespace LevelEditor
 
                         ActiveSectors[i] = sector;
                     });
-
-                    lastMousePos = mousePos;
                     break;
             }
+
+            lastMousePos = mousePos;
         }
 
         int ClampWallIndex(int currentSector, int indx)
@@ -211,13 +219,31 @@ namespace LevelEditor
 
         public void UpdateWallColor(Color newColor)
         {
-            if (CurrentSelectionType != SelectionType.Wall) return;
-
-            LoopWalls((int i, int j, Wall wall) =>
+            switch (CurrentSelectionType)
             {
-                wall.color = newColor;
-                ActiveSectors[i].walls[j] = wall;
-            });
+                case SelectionType.Wall:
+                    LoopWalls((int i, int j, Wall wall) =>
+                    {
+                        wall.color = newColor;
+                        ActiveSectors[i].walls[j] = wall;
+                    });
+                    break;
+
+                case SelectionType.Sector:
+                    LoopSectors((int i, Sector sector) =>
+                    {
+                        int size = sector.walls.Count;
+                        for (int j = 0; j < size; j++)
+                        {
+                            Wall wall = sector.walls[j];
+                            wall.color = newColor;
+                            sector.walls[j] = wall;
+                        }
+
+                        ActiveSectors[i] = sector;
+                    });
+                    break;
+            }
         }
 
         public void UpdateSectorFloorColor(Color newColor)

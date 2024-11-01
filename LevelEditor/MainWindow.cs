@@ -35,7 +35,8 @@ namespace LevelEditor
             about = new AboutWindow();
             COLoggerImport.InitLogSys(true, false);
 
-            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw));
+            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw, ref BtnWallColor,
+                ref BtnCeillingColor, ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight));
             fileManager = new FileManager();
         }
 
@@ -143,7 +144,8 @@ namespace LevelEditor
         {
             if (fileManager.CurrentOpenedFile != "NULL")
             {
-                SaveFile();
+                using (Stream fileStream = File.OpenWrite(OpenFilePanel.FileName))
+                    SaveFile(OpenFilePanel.FileName, fileStream);
                 return;
             }
 
@@ -168,28 +170,26 @@ namespace LevelEditor
                 LoadFile(fileStream);
         }
 
-        void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e) => SaveFile();
+        void SaveFilePanel_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            using (Stream fileStream = SaveFilePanel.OpenFile())
+                SaveFile(SaveFilePanel.FileName, fileStream);
+        }
 
         void LoadFile(Stream fileStream)
         {
             gridEditor.ResetData();
-            fileManager.LoadFromFile(OpenFilePanel.FileName, fileStream, out List<Sector> sectors);
+            if (!fileManager.LoadFromFile(OpenFilePanel.FileName, fileStream, out List<Sector> sectors)) return;
             gridEditor.LoadSectors(sectors);
-            Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
+            Text = "Level Editor - " + Path.GetFileName(OpenFilePanel.FileName);
         }
 
-        void SaveFile()
+        void SaveFile(string fileName, Stream fileStream)
         {
-            bool error = false;
             gridEditor.GetSectors(out List<Sector> sectors);
-            using (Stream fileStream = SaveFilePanel.OpenFile())
-            {
-                error = !fileManager.SaveToFile(SaveFilePanel.FileName, fileStream, ref sectors);
-                Text = "Level Editor - " + Path.GetFileName(SaveFilePanel.FileName);
-            }
-
-            if (!error || fileManager.CurrentOpenedFile == SaveFilePanel.FileName) return;
-            File.Delete(SaveFilePanel.FileName);
+            Text = "Level Editor - " + Path.GetFileName(fileName);
+            if (fileManager.SaveToFile(fileName, fileStream, ref sectors) || fileManager.CurrentOpenedFile == fileName) return;
+            File.Delete(fileName);
         }
 
         void BtnHelpAbout_Click(object sender, EventArgs e) => about.ShowDialog();
@@ -223,6 +223,7 @@ namespace LevelEditor
             using (ColorDialog colorDialog = new ColorDialog())
             {
                 colorDialog.FullOpen = true;
+                colorDialog.Color = BtnWallColor.BackColor;
                 if (colorDialog.ShowDialog() != DialogResult.OK) return;
                 BtnWallColor.BackColor = colorDialog.Color;
                 BtnWallColor.ForeColor = colorDialog.Color;
@@ -270,6 +271,7 @@ namespace LevelEditor
             using (ColorDialog colorDialog = new ColorDialog())
             {
                 colorDialog.FullOpen = true;
+                colorDialog.Color = BtnCeillingColor.BackColor;
                 if (colorDialog.ShowDialog() != DialogResult.OK) return;
                 BtnCeillingColor.BackColor = colorDialog.Color;
                 BtnCeillingColor.ForeColor = colorDialog.Color;
@@ -282,6 +284,7 @@ namespace LevelEditor
             using (ColorDialog colorDialog = new ColorDialog())
             {
                 colorDialog.FullOpen = true;
+                colorDialog.Color = BtnFloorColor.BackColor;
                 if (colorDialog.ShowDialog() != DialogResult.OK) return;
                 BtnFloorColor.BackColor = colorDialog.Color;
                 BtnFloorColor.ForeColor = colorDialog.Color;

@@ -565,6 +565,7 @@ namespace LevelEditor
             Controls.Add(LayoutPanel);
             Controls.Add(StatusBar);
             Controls.Add(MainToolbar);
+            ForeColor = Color.Black;
             KeyPreview = true;
             MainMenuStrip = MainToolbar;
             Name = "MainWindow";

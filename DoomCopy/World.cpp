@@ -91,12 +91,12 @@ World::~World()
 	sectorData = nullptr;
 }
 
-int World::ByteArrayToInt(const char* const byteArray)
+int World::ByteArrayToInt(const char* byteArray)
 {
-	return (((int) byteArray[3]) << 24) | (((int) byteArray[2]) << 16) | (((int) byteArray[1]) << 8) | ((int) byteArray[0]);
+	return (static_cast<int>(byteArray[3]) << 24) | (static_cast<int>(byteArray[2]) << 16) | (static_cast<int>(byteArray[1]) << 8) | static_cast<int>(byteArray[0]);
 }
 
-Vector2Int World::ByteArrayToVector2Int(const char* const byteArray)
+Vector2Int World::ByteArrayToVector2Int(const char* byteArray)
 {
 	const int intSize = sizeof(int);
 	char x[intSize] { byteArray[0], byteArray[1], byteArray[2], byteArray[3] };
@@ -104,7 +104,7 @@ Vector2Int World::ByteArrayToVector2Int(const char* const byteArray)
 	return Vector2Int(ByteArrayToInt(x), ByteArrayToInt(y));
 }
 
-Color World::ByteArrayToColor(const char* const byteArray)
+Color World::ByteArrayToColor(const char* byteArray)
 {
 	return Color(byteArray[0], byteArray[1], byteArray[2]);
 }

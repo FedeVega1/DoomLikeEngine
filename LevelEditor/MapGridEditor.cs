@@ -3,14 +3,23 @@
     readonly internal struct GridEditorData
     {
         public readonly ToolStripStatusLabel lblCursor, lblOrigin, lblGridSize;
+        public readonly ToolStripButton btnWallColor, btnCeillingColor, btnFloorColor;
+        public readonly ToolStripNumberControl numbCeilling, numbFloor;
         public readonly PictureBox imgEditorDraw;
 
-        public GridEditorData(ref ToolStripStatusLabel cursor, ref ToolStripStatusLabel origin, ref ToolStripStatusLabel gridSize, ref PictureBox editorDraw)
+        public GridEditorData(ref ToolStripStatusLabel cursor, ref ToolStripStatusLabel origin, ref ToolStripStatusLabel gridSize, 
+            ref PictureBox editorDraw, ref ToolStripButton wallColor, ref ToolStripButton ceilColor, ref ToolStripButton floorColor,
+            ref ToolStripNumberControl ceilNumb, ref ToolStripNumberControl floorNumb)
         {
             lblCursor = cursor;
             lblOrigin = origin;
             lblGridSize = gridSize;
             imgEditorDraw = editorDraw;
+            btnWallColor = wallColor;
+            btnCeillingColor = ceilColor;
+            btnFloorColor = floorColor;
+            numbCeilling = ceilNumb;
+            numbFloor = floorNumb;
         }
     }
 
@@ -89,6 +98,7 @@
             cursor = new MapCursor(MoveMapTimer_Tick);
             sectorDrawer = new SectorDrawer(this);
             selectionManager = new SelectionManager(ref sectorDrawer, ref grid);
+            selectionManager.OnSelection += OnSelection;
 
             refData.lblCursor.Visible = false;
             UpdateOriginPosText();
@@ -338,19 +348,30 @@
 
         public void GetSectors(out List<Sector> sectors)
         {
-            sectors = new List<Sector>(sectorDrawer.ActiveSectors);
+            sectors = new List<Sector>();
 
-            int sectSize = sectors.Count;
+            int sectSize = sectorDrawer.ActiveSectors.Count;
             for (int i = 0; i < sectSize; i++)
             {
-                int size = sectors[i].walls.Count;
+                List<Wall> walls = new List<Wall>();
+
+                int size = sectorDrawer.ActiveSectors[i].walls.Count;
                 for (int j = 0; j < size; j++)
                 {
-                    Wall wall = sectors[i].walls[j];
+                    Wall wall = sectorDrawer.ActiveSectors[i].walls[j];
                     wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos);
                     wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos);
-                    sectors[i].walls[j] = wall;
+                    walls.Add(wall);
                 }
+
+                sectors.Add(new Sector
+                {
+                    walls = walls,
+                    ceillingHeight = sectorDrawer.ActiveSectors[i].ceillingHeight,
+                    floorHeight = sectorDrawer.ActiveSectors[i].floorHeight,
+                    ceillingColor = sectorDrawer.ActiveSectors[i].ceillingColor,
+                    floorColor = sectorDrawer.ActiveSectors[i].floorColor,
+                });
             }
         }
 
@@ -365,6 +386,7 @@
                     Wall wall = sectors[i].walls[j];
                     wall.leftPoint = wall.leftPoint.Add(Grid.InitialOriginPos);
                     wall.rightPoint = wall.rightPoint.Add(Grid.InitialOriginPos);
+                    wall.UpdateMiddleAndNormal();
                     sectors[i].walls[j] = wall;
                 }
             }
@@ -431,5 +453,43 @@
 
         public SelectionType GetCurrentSelectionType() => selectionManager.CurrentSelectionType;
         public SelectionData[] GetCurrentSelection() => selectionManager.GetCurrentSelection();
+
+        void OnSelection(SelectionData data, bool hasMultipleSelections)
+        {
+            switch (selectionManager.CurrentSelectionType)
+            {
+                case SelectionType.Wall:
+                    if (hasMultipleSelections) refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
+                    refData.btnWallColor.ForeColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex].color;
+                    refData.btnWallColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex].color;
+                    break;
+
+                case SelectionType.Sector:
+                    if (refData.numbFloor.NumericUpDownControl == null || refData.numbCeilling.NumericUpDownControl == null) return;
+                    if (hasMultipleSelections)
+                    {
+                        refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
+                        refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = Color.Black;
+                        refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = Color.Black;
+                        refData.numbFloor.NumericUpDownControl.Value = refData.numbCeilling.NumericUpDownControl.Value = 0;
+                    }
+
+                    Color wallsColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[0].color;
+                    int size = sectorDrawer.ActiveSectors[data.sectorIndex].walls.Count;
+                    for (int i = 1; i < size; i++)
+                    {
+                        if (sectorDrawer.ActiveSectors[data.sectorIndex].walls[i].color == wallsColor) continue;
+                        wallsColor = Color.Black;
+                        break;
+                    }
+
+                    refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = wallsColor;
+                    refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].floorColor;
+                    refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingColor;
+                    refData.numbFloor.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].floorHeight;
+                    refData.numbCeilling.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingHeight;
+                    break;
+            }
+        }
     }
 }
