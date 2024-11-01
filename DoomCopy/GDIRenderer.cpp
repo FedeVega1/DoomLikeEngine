@@ -141,7 +141,7 @@ void GDIRenderer::ProcessSector(const ProcessedSector& sector)
     for (int i = 0; i < size; i++)
         DrawWall(sector.sectorWalls[i * 2], sector.surface);
 
-    delete surfacePoints;
+    delete[] surfacePoints;
 }
 
 void GDIRenderer::DrawWall(const ProcessedWall& wall, SectorSurface surface)
@@ -190,8 +190,10 @@ void GDIRenderer::DrawBackWall(const ProcessedWall& wall, SectorSurface surface,
     sWall.leftBtmPoint.x = std::clamp(sWall.leftBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
     sWall.rightBtmPoint.x = std::clamp(sWall.rightBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
 
+    bool debugDraw = false;
     for (int x = sWall.leftBtmPoint.x; x < sWall.rightBtmPoint.x; x++)
     {
+        debugDraw = true;
         int diff = x - xStartPoint + .5f;
         int yBtm = ((dyBottom * diff) / dx) + sWall.leftBtmPoint.y;
         int yTop = ((dyTop * diff) / dx) + sWall.leftTopPoint.y;
@@ -208,6 +210,8 @@ void GDIRenderer::DrawBackWall(const ProcessedWall& wall, SectorSurface surface,
         for (int y = yBtm; y < yTop; y++) DrawPixel(x, y, sWall.color);
         if (debugStepDraw) Sleep(50);
     }
+
+    if (debugStepDraw && debugDraw) OLOG_L("BackWall");
 }
 
 void GDIRenderer::DrawSurfaces(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceilling, Color floor)

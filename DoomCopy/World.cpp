@@ -51,10 +51,10 @@ World::World(const std::string& mapFileName) : Entity()
 			}
 
 			mapFile.read(intBuffer, intSize);
-			sector.bottomPoint = ByteArrayToInt(intBuffer);
+			sector.topPoint = ByteArrayToInt(intBuffer);
 
 			mapFile.read(intBuffer, intSize);
-			sector.topPoint = ByteArrayToInt(intBuffer);
+			sector.bottomPoint = ByteArrayToInt(intBuffer);
 
 			mapFile.read(colorBuffer, colorSize);
 			sector.floorColor = ByteArrayToColor(colorBuffer);
