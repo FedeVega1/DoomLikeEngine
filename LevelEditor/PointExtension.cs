@@ -7,8 +7,10 @@
         public static Point Subtract(this Point left, Point right) => new Point(left.X - right.X, left.Y - right.Y);
         public static Point Subtract(this Point left, int right) => new Point(left.X - right, left.Y - right);
         public static Point Divide(this Point left, int right) => new Point(left.X / right, left.Y / right);
+        public static Point Divide(this Point left, float right, bool asd) => new Point((int) MathF.Round((float) left.X / right), (int) MathF.Round((float) left.Y / right));
         public static PointF Divide(this Point left, float right) => new PointF(left.X / right, left.Y / right);
         public static Point Multiply(this Point left, int right) => new Point(left.X * right, left.Y * right);
+        public static Point Multiply(this Point left, float right) => new Point((int) MathF.Round(left.X * right), (int) MathF.Round(left.Y * right));
         public static float Magnitude(this Point point) => MathF.Sqrt(point.X * point.X + point.Y * point.Y);
         public static Point Clamp(this Point point, int minX, int maxX, int minY, int maxY) => new Point(Math.Clamp(point.X, minX, maxX), Math.Clamp(point.Y, minY, maxY));
 

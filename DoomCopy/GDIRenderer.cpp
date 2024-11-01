@@ -20,7 +20,7 @@ HRESULT GDIRenderer::InitRenderer(HWND hwnd)
         { 
             sizeof(BITMAPINFOHEADER),
             DEFAULT_BUFFER_WIDTH,
-            -DEFAULT_BUFFER_HEIGHT,
+            DEFAULT_BUFFER_HEIGHT,
             1,
             32,
             BI_RGB,
@@ -42,9 +42,9 @@ void GDIRenderer::RenderScreen(HWND hwnd, Game* const game)
 
     // DEBUG
     PaintScreen(Color(0, 0, 0));
-
-    const ProcessedSector* sectors = nullptr;
-    int numbSectors = game->GetMainCamera()->GetProcessedSectors(&sectors);
+    
+    std::shared_ptr<ProcessedSector[]> sectors = nullptr;
+    int numbSectors = game->GetMainCamera()->GetProcessedSectors(sectors);
     if (!sectors) return;
     for (int i = 0; i < numbSectors; i++) ProcessSector(sectors[i]);
     // DEBUG
@@ -260,12 +260,13 @@ void GDIRenderer::DrawSurfaces(const ProcessedWall& wall, SectorSurface surface,
 
 ScreenSpaceWall GDIRenderer::GetScreenSpaceWall(const ProcessedWall& wall)
 {
+    float fov = 200;
     return ScreenSpaceWall
     {
-        Vector2Int((int) std::roundf(((wall.leftTopPoint.x * 90) / wall.leftTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftTopPoint.z * 90) / wall.leftTopPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.rightTopPoint.x * 90) / wall.rightTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightTopPoint.z  * 90) / wall.rightTopPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.leftBtmPoint.x * 90) / wall.leftBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftBtmPoint.z * 90) / wall.leftBtmPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.rightBtmPoint.x * 90) / wall.rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightBtmPoint.z * 90) / wall.rightBtmPoint.y) + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(((wall.leftTopPoint.x * fov) / wall.leftTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftTopPoint.z * fov) / wall.leftTopPoint.y) + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(((wall.rightTopPoint.x * fov) / wall.rightTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightTopPoint.z  * fov) / wall.rightTopPoint.y) + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(((wall.leftBtmPoint.x * fov) / wall.leftBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftBtmPoint.z * fov) / wall.leftBtmPoint.y) + HALF_HEIGHT)),
+        Vector2Int((int) std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT)),
         wall.color
     };
 }

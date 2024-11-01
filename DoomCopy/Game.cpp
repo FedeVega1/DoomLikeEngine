@@ -23,7 +23,7 @@ void Game::InitUpdate()
     entities.push_back(cameraObject);
 
     cameraObject->GetTransform()->SetPos(Vector3(0, 0, 0));
-    mainCamera->SetCameraZOffset(-25);
+    mainCamera->SetCameraZOffset(45);
 }
 
 void Game::MainUpdate()

@@ -96,10 +96,10 @@
                     }
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    sector.floorHeight = ByteArrayToInt(intBuffer);
+                    sector.ceillingHeight = ByteArrayToInt(intBuffer);
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    sector.ceillingHeight = ByteArrayToInt(intBuffer);
+                    sector.floorHeight = ByteArrayToInt(intBuffer);
 
                     fileStream.Read(colorBuffer, 0, colorSize);
                     sector.floorColor = ByteArrayToColor(colorBuffer);

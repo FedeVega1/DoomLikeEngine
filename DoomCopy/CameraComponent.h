@@ -48,15 +48,12 @@ public:
 	{
 		for (int i = 0; i < 5; i++)
 		{
-			delete[] processedSectors[i].sectorWalls;
-			processedSectors[i].sectorWalls = nullptr;
+			delete[] processedSectors.get()[i].sectorWalls;
+			processedSectors.get()[i].sectorWalls = nullptr;
 		}
-
-		delete[] processedSectors;
-		processedSectors = nullptr;
 	}
 
-	 int GetProcessedSectors(const ProcessedSector** outProcessedSectors);
+	 int GetProcessedSectors(std::shared_ptr<ProcessedSector[]> & outProcessedSectors);
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
 
 protected:
@@ -71,7 +68,7 @@ private:
 	int xRotation;
 	float cameraZOffset;
 	class World* world;
-	ProcessedSector* processedSectors;
+	std::shared_ptr<ProcessedSector[]> processedSectors;
 
 	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
 	int GetSectorsToProcess();

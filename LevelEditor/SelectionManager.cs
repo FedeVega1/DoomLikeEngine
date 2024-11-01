@@ -308,5 +308,11 @@ namespace LevelEditor
         }
 
         public SelectionData[] GetCurrentSelection() => currentSelection.ToArray();
+
+        public void ResetData()
+        {
+            currentSelection.Clear();
+            isMouseDown = false;
+        }
     }
 }

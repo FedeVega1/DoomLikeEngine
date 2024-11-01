@@ -359,8 +359,8 @@
                 for (int j = 0; j < size; j++)
                 {
                     Wall wall = sectorDrawer.ActiveSectors[i].walls[j];
-                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos);
-                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos);
+                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos).Divide(1.25f, true);
+                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos).Divide(1.25f, true);
                     walls.Add(wall);
                 }
 
@@ -384,8 +384,8 @@
                 for (int j = 0; j < size; j++)
                 {
                     Wall wall = sectors[i].walls[j];
-                    wall.leftPoint = wall.leftPoint.Add(Grid.InitialOriginPos);
-                    wall.rightPoint = wall.rightPoint.Add(Grid.InitialOriginPos);
+                    wall.leftPoint = wall.leftPoint.Multiply(1.25f).Add(Grid.InitialOriginPos);
+                    wall.rightPoint = wall.rightPoint.Multiply(1.25f).Add(Grid.InitialOriginPos);
                     wall.UpdateMiddleAndNormal();
                     sectors[i].walls[j] = wall;
                 }
@@ -400,6 +400,7 @@
             sectorDrawer.ActiveSectors.Clear();
             currentMode = EditorMode.None;
             grid.ResetData();
+            selectionManager.ResetData();
 
             UpdateOriginPosText();
             refData.imgEditorDraw.Invalidate();

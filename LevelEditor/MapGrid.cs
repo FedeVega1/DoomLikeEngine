@@ -2,7 +2,8 @@
 {
     internal class Grid
     {
-        const int DefaultUnitSize = 10, MinGridSize = 1, MaxGridSize = 8;
+        public const int DefaultUnitSize = 10;
+        const int MinGridSize = 1, MaxGridSize = 8;
         public static readonly Point MaxMapSize = new Point(2000, 2000);
         public static Point InitialOriginPos = new Point(330, 210);
 

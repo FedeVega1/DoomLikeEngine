@@ -12,7 +12,7 @@ void Camera::Start()
 {
 	BaseComponent::Start();
 
-	processedSectors = new ProcessedSector[Camera::numberOfSectorsToProcess];
+	processedSectors = std::make_shared<ProcessedSector[]>(Camera::numberOfSectorsToProcess);
 	for (int i = 0; i < Camera::numberOfSectorsToProcess; i++) processedSectors[i] = ProcessedSector();
 
 	Input::INS.RegisterAxis("CameraForwardBack", KeyCode::W, KeyCode::S, &Camera::DebugForwardBack, this);
@@ -24,9 +24,9 @@ void Camera::Start()
 const float Camera::movSpeed = 15.0f;
 const float Camera::rotSpeed = 10.0f;
 
-int Camera::GetProcessedSectors(const ProcessedSector** outProcessedSectors) 
+int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessedSectors)
 { 
-	*outProcessedSectors = processedSectors;
+	outProcessedSectors = processedSectors;
 	return numbProcessedSectors;
 }
 
@@ -38,6 +38,7 @@ void Camera::Tick()
 
 	Vector3 currentPos = GetTransform()->GetPos();
 	currentPos.z += cameraZOffset;
+	currentPos.z *= -1;
 
 	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
 	float cos = (float) SCTABLE.cos[currentRotation];
@@ -51,7 +52,7 @@ void Camera::Tick()
 		else if ((currentPos.z + processedSectors[s].topPoint) > processedSectors[s].topPoint) processedSectors[s].surface = SectorSurface::Above;
 		else processedSectors[s].surface = SectorSurface::SurfNone;
 
-		int walls = processedSectors->numberOfWalls;
+		int walls = processedSectors[s].numberOfWalls;
 		for (int w = 0; w < walls; w++)
 		{
 			int cycles = processedSectors[s].surface != SectorSurface::SurfNone ? 2 : 1;
@@ -113,9 +114,9 @@ int Camera::GetSectorsToProcess()
 		if (processedSectors[s].sectorWalls != nullptr) delete[] processedSectors[s].sectorWalls;
 
 		processedSectors[s].sectorWalls = new ProcessedWall[walls * 2];
-		for (int w = 0, i = 0; w < walls; i++)
+		for (int w = 0, i = 0; w < walls; w++)
 		{
-			processedSectors[s].sectorWalls[i] = ProcessedWall
+			processedSectors[s].sectorWalls[i++] = ProcessedWall
 			{
 				V3_ZERO, V3_ZERO,
 				world->sectorData[s].sectorWalls[w].leftPoint, 
@@ -123,7 +124,15 @@ int Camera::GetSectorsToProcess()
 				world->sectorData[s].sectorWalls[w].color
 			};
 
-			if (i != 0 && i % 2 != 0) w++;
+			if (i >= walls * 2) break;
+
+			processedSectors[s].sectorWalls[i++] = ProcessedWall
+			{
+				V3_ZERO, V3_ZERO,
+				world->sectorData[s].sectorWalls[w].leftPoint,
+				world->sectorData[s].sectorWalls[w].rightPoint,
+				world->sectorData[s].sectorWalls[w].color
+			};
 		}
 
 		processedSectors[s].numberOfWalls = world->sectorData[s].numberOfWalls;

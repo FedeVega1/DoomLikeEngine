@@ -104,7 +104,4 @@ Vector2Int World::ByteArrayToVector2Int(const char* byteArray)
 	return Vector2Int(ByteArrayToInt(x), ByteArrayToInt(y));
 }
 
-Color World::ByteArrayToColor(const char* byteArray)
-{
-	return Color(byteArray[0], byteArray[1], byteArray[2]);
-}
+Color World::ByteArrayToColor(const char* byteArray) { return Color(byteArray[0], byteArray[1], byteArray[2]); }
