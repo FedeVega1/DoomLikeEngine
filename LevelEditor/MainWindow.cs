@@ -1,3 +1,6 @@
+using System.IO;
+using System.IO.Pipes;
+
 namespace LevelEditor
 {
     public partial class MainWindow : Form
@@ -36,7 +39,7 @@ namespace LevelEditor
             COLoggerImport.InitLogSys(true, false);
 
             gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw, ref BtnWallColor,
-                ref BtnCeillingColor, ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight));
+                ref BtnCeillingColor, ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight, ref LblSelectionData));
             fileManager = new FileManager();
         }
 
@@ -186,7 +189,7 @@ namespace LevelEditor
 
         void SaveFile(string fileName, Stream fileStream)
         {
-            gridEditor.GetSectors(out List<Sector> sectors);
+            gridEditor.GetSectors(out List<Sector> sectors, false);
             Text = "Level Editor - " + Path.GetFileName(fileName);
             if (fileManager.SaveToFile(fileName, fileStream, ref sectors) || fileManager.CurrentOpenedFile == fileName) return;
             File.Delete(fileName);
@@ -300,6 +303,23 @@ namespace LevelEditor
         void BtnFloorTexture_Click(object sender, EventArgs e)
         {
 
+        }
+
+        void BtnCompileMap_Click(object sender, EventArgs e)
+        {
+            if (fileManager.CurrentOpenedFile == "NULL")
+            {
+                if (SaveFilePanel.ShowDialog() != DialogResult.OK)
+                    return;
+            }
+
+            string fileName = Path.ChangeExtension(fileManager.CurrentOpenedFile, ".bsp");
+            using (Stream fileStream = File.Create(fileName))
+            {
+                gridEditor.GetSectors(out List<Sector> sectors, true);
+                if (fileManager.CompileMap(fileName, fileStream, ref sectors)) return;
+                File.Delete(fileName);
+            }
         }
     }
 }

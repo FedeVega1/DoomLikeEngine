@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "GameObjects.h"
 #include "Component.h"
-#include "pch.h"
 #include "TransformComponent.h"
 #include "CameraComponent.h"
 #include "World.h"
@@ -21,8 +20,8 @@ void Camera::Start()
 	Input::INS.RegisterAxis("CameraRotUpDown", KeyCode::R, KeyCode::F, &Camera::DebugRotUpDown, this);
 }
 
-const float Camera::movSpeed = 15.0f;
-const float Camera::rotSpeed = 10.0f;
+const float Camera::movSpeed = 2.0f;
+const float Camera::rotSpeed = 1.0f;
 
 int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessedSectors)
 { 
@@ -33,7 +32,10 @@ int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessed
 void Camera::Tick()
 {
 	GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
+}
 
+void Camera::AfterTick()
+{
 	numbProcessedSectors = GetSectorsToProcess();
 
 	Vector3 currentPos = GetTransform()->GetPos();

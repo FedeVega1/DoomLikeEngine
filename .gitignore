@@ -9,6 +9,7 @@
 
 .vs
 *.map
+*.bsp
 
 # Prerequisites
 *.d

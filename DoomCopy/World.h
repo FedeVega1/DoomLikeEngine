@@ -50,7 +50,7 @@ protected:
 	virtual void Hack() override {}
 
 private:
-	int ByteArrayToInt(const char* byteArray);
-	Vector2Int ByteArrayToVector2Int(const char* byteArray);
-	Color ByteArrayToColor(const char* byteArray);
+	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
+	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;
+	Color ByteArrayToColor(const unsigned char* const byteArray) const;
 };

@@ -40,6 +40,7 @@ class Camera : public BaseComponent
 public:
 	virtual void Start() override;
 	virtual void Tick() override;
+	virtual void AfterTick() override;
 
 	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0), cameraZOffset(0)
 	{ }

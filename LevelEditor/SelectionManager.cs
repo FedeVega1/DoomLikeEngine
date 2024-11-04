@@ -30,6 +30,9 @@ namespace LevelEditor
         {
             return left.sectorIndex != right.sectorIndex || left.wallIndex != right.wallIndex;
         }
+
+        public override bool Equals([NotNullWhen(true)] object obj) => base.Equals(obj);
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     internal class SelectionManager
@@ -46,6 +49,7 @@ namespace LevelEditor
         List<SelectionData> currentSelection;
 
         public Action<SelectionData, bool> OnSelection;
+        public Action OnDeselect;
 
         public SelectionManager(ref SectorDrawer sectDrawerRef, ref Grid mapGrid)
         {
@@ -58,8 +62,7 @@ namespace LevelEditor
         {
             isMouseDown = true;
             lastMousePos = mousePos;
-            if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
-
+            
             switch (CurrentSelectionType)
             {
                 case SelectionType.Node:
@@ -67,11 +70,17 @@ namespace LevelEditor
                         if (!sectorDrawer.CheckForNodesInPos(mousePos, 5, out (int, int) foundIndx)) break;
                         SelectionData data = new SelectionData(ref foundIndx);
 
-                        if (isCtrlKeyDown) RemoveSelection(data);
+                        if (isCtrlKeyDown)
+                        {
+                            RemoveSelection(data);
+                            isMouseDown = false;
+                        }
                         else if (!ContainsSelection(data))
                         {
+                            if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
                             currentSelection.Add(data);
                             OnSelection?.Invoke(data, currentSelection.Count > 1);
+                            isMouseDown = false;
                         }
                     }
                     return;
@@ -81,11 +90,17 @@ namespace LevelEditor
                         if (!sectorDrawer.CheckForWallsInPos(mousePos, 5, out (int, int) foundIndx)) break;
                         SelectionData data = new SelectionData(ref foundIndx);
 
-                        if (isCtrlKeyDown) RemoveSelection(data);
+                        if (isCtrlKeyDown)
+                        {
+                            RemoveSelection(data);
+                            isMouseDown = false;
+                        }
                         else if (!ContainsSelection(data))
                         {
+                            if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
                             currentSelection.Add(data);
                             OnSelection?.Invoke(data, currentSelection.Count > 1);
+                            isMouseDown = false;
                         }
                     }
                     return;
@@ -95,18 +110,30 @@ namespace LevelEditor
                         if (!sectorDrawer.CheckForSectorsInPos(mousePos, out int foundIndx)) break;
                         SelectionData data = new SelectionData(foundIndx, -1);
 
-                        if (isCtrlKeyDown) RemoveSelection(data);
+                        if (isCtrlKeyDown)
+                        {
+                            RemoveSelection(data);
+                            isMouseDown = false;
+                        }
                         else if (!ContainsSelection(data))
                         {
+                            if (!isShiftKeyDown && currentSelection.Count == 1) currentSelection.Clear();
                             currentSelection.Add(data);
                             OnSelection?.Invoke(data, currentSelection.Count > 1);
+                            isMouseDown = false;
                         }
                     }
                     return;
             }
 
+            ClearSelection();
+        }
+
+        public void ClearSelection()
+        {
             if (currentSelection.Count == 0) return;
             currentSelection.Clear();
+            OnDeselect?.Invoke();
         }
 
         public void OnMouseMove(Point mousePos)

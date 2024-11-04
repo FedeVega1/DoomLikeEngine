@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     internal struct Wall
     {
@@ -242,13 +240,27 @@ namespace LevelEditor
             for (int i = 0; i < size; i++)
             {
                 List<Wall> walls = sectors[i].walls;
-                DrawWalls(ref graph, ref walls, data.showWallNodes, i);
+                DrawWalls(ref graph, ref walls, false, i);
 
                 int wallsCount = walls.Count;
                 Point[] wallPoints = new Point[wallsCount * 2];
 
                 GetWallPoints(ref walls, ref wallPoints);
                 graph.FillPolygon(GetSectorBrush(i), wallPoints, System.Drawing.Drawing2D.FillMode.Winding);
+            }
+
+            if (data.showWallNodes)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    int wallsCount = sectors[i].walls.Count;
+                    for (int j = 0; j < wallsCount; j++)
+                    {
+                        (SolidBrush, Pen) brushPen = GetCurrentNodeBrushAndPen(i, j);
+                        graph.FillRectangle(brushPen.Item1, new Rectangle(sectors[i].walls[j].leftPoint.Subtract(3), new Size(6, 6)));
+                        graph.DrawRectangle(brushPen.Item2, new Rectangle(sectors[i].walls[j].leftPoint.Subtract(3), new Size(6, 6)));
+                    }
+                }
             }
         }
 
@@ -271,18 +283,25 @@ namespace LevelEditor
 
         Pen GetCurrentWallPen(int sectorIndex, int wallIndex)
         {
-            if (editor.GetCurrentSelectionType() != SelectionType.Wall) return wallLine;
+            if (editor.GetCurrentSelectionType() != SelectionType.Wall && editor.GetCurrentSelectionType() != SelectionType.Sector) return wallLine;
 
             SelectionData[] currentSelection = editor.GetCurrentSelection();
             int size = currentSelection.Length;
             for (int i = 0; i < size; i++)
             {
-                if (currentSelection[i].sectorIndex != sectorIndex || currentSelection[i].wallIndex != wallIndex) continue;
+                if (currentSelection[i].sectorIndex != sectorIndex) continue;
+                if (editor.GetCurrentSelectionType() == SelectionType.Wall && currentSelection[i].wallIndex != wallIndex) continue;
                 return selectedwallLine;
             }
 
-            if (CheckForWallsInPos(currentCursorPos, 5, out (int, int) indx) && indx.Item1 == sectorIndex && indx.Item2 == wallIndex) 
+            if (editor.GetCurrentSelectionType() == SelectionType.Wall && CheckForWallsInPos(currentCursorPos, 5, out (int, int) indxs) 
+                && indxs.Item1 == sectorIndex && indxs.Item2 == wallIndex) 
                 return hoverWallLine;
+
+            if (editor.GetCurrentSelectionType() == SelectionType.Sector && CheckForSectorsInPos(currentCursorPos, out int indx)
+                && indx == sectorIndex)
+                return hoverWallLine;
+
             return wallLine;
         }
 

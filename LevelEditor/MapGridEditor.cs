@@ -6,10 +6,11 @@
         public readonly ToolStripButton btnWallColor, btnCeillingColor, btnFloorColor;
         public readonly ToolStripNumberControl numbCeilling, numbFloor;
         public readonly PictureBox imgEditorDraw;
+        public readonly ToolStripLabel lblSelectionData;
 
         public GridEditorData(ref ToolStripStatusLabel cursor, ref ToolStripStatusLabel origin, ref ToolStripStatusLabel gridSize, 
             ref PictureBox editorDraw, ref ToolStripButton wallColor, ref ToolStripButton ceilColor, ref ToolStripButton floorColor,
-            ref ToolStripNumberControl ceilNumb, ref ToolStripNumberControl floorNumb)
+            ref ToolStripNumberControl ceilNumb, ref ToolStripNumberControl floorNumb, ref ToolStripLabel selectData)
         {
             lblCursor = cursor;
             lblOrigin = origin;
@@ -20,6 +21,7 @@
             btnFloorColor = floorColor;
             numbCeilling = ceilNumb;
             numbFloor = floorNumb;
+            lblSelectionData = selectData;
         }
     }
 
@@ -99,6 +101,7 @@
             sectorDrawer = new SectorDrawer(this);
             selectionManager = new SelectionManager(ref sectorDrawer, ref grid);
             selectionManager.OnSelection += OnSelection;
+            selectionManager.OnDeselect += OnDeselect;
 
             refData.lblCursor.Visible = false;
             UpdateOriginPosText();
@@ -296,6 +299,7 @@
             if (currentMode == EditorMode.None) return;
             currentMode = EditorMode.None;
             cursor.ToggleCursor(false);
+            selectionManager.ClearSelection();
             refData.imgEditorDraw.Invalidate();
             sectorDrawer.DrawLineEnd = sectorDrawer.DrawLineStart = Point.Empty;
         }
@@ -346,7 +350,7 @@
             Cursor.Position = cursorPos;
         }
 
-        public void GetSectors(out List<Sector> sectors)
+        public void GetSectors(out List<Sector> sectors, bool dividePoints)
         {
             sectors = new List<Sector>();
 
@@ -359,8 +363,15 @@
                 for (int j = 0; j < size; j++)
                 {
                     Wall wall = sectorDrawer.ActiveSectors[i].walls[j];
-                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos).Divide(1.25f, true);
-                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos).Divide(1.25f, true);
+                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos);
+                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos);
+
+                    //if (dividePoints)
+                    //{
+                    //    wall.leftPoint = wall.leftPoint.Divide(1.25f, true);
+                    //    wall.rightPoint = wall.rightPoint.Divide(1.25f, true);
+                    //}
+
                     walls.Add(wall);
                 }
 
@@ -384,8 +395,8 @@
                 for (int j = 0; j < size; j++)
                 {
                     Wall wall = sectors[i].walls[j];
-                    wall.leftPoint = wall.leftPoint.Multiply(1.25f).Add(Grid.InitialOriginPos);
-                    wall.rightPoint = wall.rightPoint.Multiply(1.25f).Add(Grid.InitialOriginPos);
+                    wall.leftPoint = wall.leftPoint.Add(Grid.InitialOriginPos);
+                    wall.rightPoint = wall.rightPoint.Add(Grid.InitialOriginPos);
                     wall.UpdateMiddleAndNormal();
                     sectors[i].walls[j] = wall;
                 }
@@ -460,9 +471,21 @@
             switch (selectionManager.CurrentSelectionType)
             {
                 case SelectionType.Wall:
-                    if (hasMultipleSelections) refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
-                    refData.btnWallColor.ForeColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex].color;
-                    refData.btnWallColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex].color;
+                    if (hasMultipleSelections)
+                    {
+                        refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
+                        refData.lblSelectionData.Enabled = false;
+                    }
+
+                    Wall selectedWall = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex];
+
+                    refData.btnWallColor.ForeColor = selectedWall.color;
+                    refData.btnWallColor.BackColor = selectedWall.color;
+                    refData.lblSelectionData.Enabled = true;
+
+                    Point nodeA = selectedWall.leftPoint.Subtract(Grid.InitialOriginPos);
+                    Point nodeB = selectedWall.rightPoint.Subtract(Grid.InitialOriginPos);
+                    refData.lblSelectionData.Text = string.Format("Wall NodeA: {0} | NodeB: {1}", nodeA, nodeB);
                     break;
 
                 case SelectionType.Sector:
@@ -473,6 +496,7 @@
                         refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = Color.Black;
                         refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = Color.Black;
                         refData.numbFloor.NumericUpDownControl.Value = refData.numbCeilling.NumericUpDownControl.Value = 0;
+                        refData.lblSelectionData.Enabled = false;
                     }
 
                     Color wallsColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[0].color;
@@ -489,8 +513,18 @@
                     refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingColor;
                     refData.numbFloor.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].floorHeight;
                     refData.numbCeilling.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingHeight;
+                    //refData.lblSelectionData.Enabled = true;
+                    break;
+
+                case SelectionType.Node:
+                    if (hasMultipleSelections) refData.lblSelectionData.Enabled = false;
+                    refData.lblSelectionData.Enabled = true;
+                    Point node = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex].leftPoint.Subtract(Grid.InitialOriginPos);
+                    refData.lblSelectionData.Text = string.Format("Node: {0}", node);
                     break;
             }
         }
+
+        void OnDeselect() => refData.lblSelectionData.Enabled = false;
     }
 }

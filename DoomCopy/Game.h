@@ -35,5 +35,5 @@ private:
 	class World* world;
 	int loops;
 
-	std::string mapToOpen = "asd.map";
+	std::string mapToOpen = "asd.bsp";
 };

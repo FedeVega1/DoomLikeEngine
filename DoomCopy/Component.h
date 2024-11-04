@@ -6,7 +6,10 @@ class BaseComponent
 
 public:
 	virtual void Start() { firstTick = true; };
+
+	virtual void PreTick() { }
 	virtual void Tick() = 0;
+	virtual void AfterTick() { }
 
 	BaseComponent() : baseEntity(nullptr), firstTick(false), baseGameObject(nullptr)
 	{ }

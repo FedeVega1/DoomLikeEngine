@@ -28,7 +28,9 @@ protected:
 private:
 	std::vector<BaseComponent*> components;
 
+	void PreTickComponents();
 	void TickComponents();
+	void AfterTickComponents();
 };
 
 class GameObject : public Entity

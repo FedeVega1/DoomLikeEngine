@@ -60,6 +60,7 @@ namespace LevelEditor
             BtnFloorColor = new ToolStripButton();
             BtnCeillingtexture = new ToolStripButton();
             BtnFloorTexture = new ToolStripButton();
+            LblSelectionData = new ToolStripLabel();
             MainToolbar = new MenuStrip();
             BtnFile = new ToolStripMenuItem();
             BtnFileNew = new ToolStripMenuItem();
@@ -74,6 +75,7 @@ namespace LevelEditor
             BtnEditSettings = new ToolStripMenuItem();
             BtnHelp = new ToolStripMenuItem();
             BtnHelpAbout = new ToolStripMenuItem();
+            BtnCompileMap = new ToolStripMenuItem();
             OpenFilePanel = new OpenFileDialog();
             SaveFilePanel = new SaveFileDialog();
             StatusBar = new StatusStrip();
@@ -277,7 +279,7 @@ namespace LevelEditor
             toolStrip2.BackColor = SystemColors.Control;
             toolStrip2.Dock = DockStyle.Fill;
             toolStrip2.GripStyle = ToolStripGripStyle.Hidden;
-            toolStrip2.Items.AddRange(new ToolStripItem[] { LblCeillingHeight, NumbCeillingHeight, LblFloorHeight, NumbFloorHeight, toolStripSeparator4, LblCeillingColor, BtnCeillingColor, LblFloorColor, BtnFloorColor, toolStripSeparator5, LblCeillingTexture, BtnCeillingtexture, LblFloorTexture, BtnFloorTexture });
+            toolStrip2.Items.AddRange(new ToolStripItem[] { LblCeillingHeight, NumbCeillingHeight, LblFloorHeight, NumbFloorHeight, toolStripSeparator4, LblCeillingColor, BtnCeillingColor, LblFloorColor, BtnFloorColor, toolStripSeparator5, LblCeillingTexture, BtnCeillingtexture, LblFloorTexture, BtnFloorTexture, LblSelectionData });
             toolStrip2.Location = new Point(0, 0);
             toolStrip2.Name = "toolStrip2";
             toolStrip2.RenderMode = ToolStripRenderMode.System;
@@ -400,10 +402,17 @@ namespace LevelEditor
             BtnFloorTexture.Text = ".......................";
             BtnFloorTexture.Click += BtnFloorTexture_Click;
             // 
+            // LblSelectionData
+            // 
+            LblSelectionData.Enabled = false;
+            LblSelectionData.Name = "LblSelectionData";
+            LblSelectionData.Size = new Size(82, 52);
+            LblSelectionData.Text = "Selection Data";
+            // 
             // MainToolbar
             // 
             MainToolbar.BackColor = Color.White;
-            MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit, BtnHelp });
+            MainToolbar.Items.AddRange(new ToolStripItem[] { BtnFile, BtnEdit, BtnHelp, BtnCompileMap });
             MainToolbar.Location = new Point(0, 0);
             MainToolbar.Name = "MainToolbar";
             MainToolbar.RenderMode = ToolStripRenderMode.System;
@@ -501,6 +510,13 @@ namespace LevelEditor
             BtnHelpAbout.Size = new Size(107, 22);
             BtnHelpAbout.Text = "About";
             BtnHelpAbout.Click += BtnHelpAbout_Click;
+            // 
+            // BtnCompileMap
+            // 
+            BtnCompileMap.Name = "BtnCompileMap";
+            BtnCompileMap.Size = new Size(64, 20);
+            BtnCompileMap.Text = "Compile";
+            BtnCompileMap.Click += BtnCompileMap_Click;
             // 
             // OpenFilePanel
             // 
@@ -641,5 +657,7 @@ namespace LevelEditor
         private ToolStripNumberControl NumbFloorHeight;
         private ToolStripNumberControl NumbCeillingHeight;
         private ColorDialog ColorPanel;
+        private ToolStripMenuItem BtnCompileMap;
+        private ToolStripLabel LblSelectionData;
     }
 }

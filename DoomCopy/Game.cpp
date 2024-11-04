@@ -31,17 +31,22 @@ void Game::MainUpdate()
     loops = 0;
 
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+    size_t count = entities.size();
+    for (size_t i = 0; i < count; i++) entities[i]->PreTickComponents();
+
     while (Time::INS.GetGameTickCount() > Time::INS.nextGameTick && loops < MAX_FRAMESKIP)
     {
         // GameLoop
         Input::INS.ProcessInputs();
 
-        size_t count = entities.size();
         for (size_t i = 0; i < count; i++) entities[i]->TickComponents();
 
         Time::INS.nextGameTick += SKIP_TICKS;
         loops++;
     }
+
+    for (size_t i = 0; i < count; i++) entities[i]->AfterTickComponents();
 
     std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
     Time::INS.deltaTime = std::chrono::duration<double, std::micro>(now - start).count();

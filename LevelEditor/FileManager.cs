@@ -124,6 +124,51 @@
             return true;
         }
 
+        public bool CompileMap(string fileName, Stream fileStream, ref List<Sector> sectors)
+        {
+            COLoggerImport.LogNormal("Compiling to {0}", fileName);
+
+            int size = sectors.Count;
+            COLoggerImport.LogNormal("Number of sectors {0}", size);
+
+            try
+            {
+                fileStream.Write(ToByteArray(0x1, out int arrSize), 0, arrSize); // endianessCheck
+
+                fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
+
+                for (int i = 0; i < size; i++)
+                {
+                    int count = sectors[i].walls.Count;
+                    fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
+
+                    for (int j = 0; j < count; j++)
+                    {
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                    }
+
+                    fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
+
+                    COLoggerImport.LogNormal("Compiled sector {0} correct", i);
+                }
+            }
+            catch (Exception e)
+            {
+                COLoggerImport.LogError("Error while trying to save to file {0}", fileName);
+                COLoggerImport.LogError(e.Message);
+                if (e.StackTrace != null) COLoggerImport.LogError(e.StackTrace);
+                return false;
+            }
+
+            COLoggerImport.LogNormal("Compile Correct!");
+            return true;
+        }
+
         public void ResetCurrentFile() => CurrentOpenedFile = "NULL";
 
         static byte[] ToByteArray(int dataToConvert, out int size)
@@ -131,8 +176,16 @@
             size = sizeof(int);
             byte[] array = new byte[size];
 
-            for (int i = 0; i < size; i++)
-                array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            if (BitConverter.IsLittleEndian)
+            {
+                for (int i = 0; i < size; i++)
+                    array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
+            else
+            {
+                for (int i = size - 1, n = 0; i >= 0; i--, n++)
+                    array[n] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
 
             return array;
         }
