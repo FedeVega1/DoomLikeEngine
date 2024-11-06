@@ -1,7 +1,11 @@
-﻿namespace LevelEditor
+﻿using System.Data;
+
+namespace LevelEditor
 {
     internal class FileManager
     {
+        const string MAPVersion = "v00.01", BSPVersion = "v00.01";
+
         public string CurrentOpenedFile { get; private set; }
 
         public FileManager()
@@ -18,7 +22,16 @@
 
             try
             {
-                fileStream.Write(ToByteArray(size, out int arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(0x1, out int arrSize), 0, arrSize); // endianessCheck
+
+                string[] versionSplit = MAPVersion.Remove(0, 1).Split(".");
+
+                int versionSize = versionSplit.Length;
+                fileStream.WriteByte((byte) versionSize);
+
+                for (int i = 0; i < versionSize; i++) fileStream.WriteByte(Convert.ToByte(versionSplit[i]));
+
+                fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
 
                 for (int i = 0; i < size; i++)
                 {
@@ -63,12 +76,36 @@
             byte[] pointBuffer = new byte[pointSize];
             byte[] colorBuffer = new byte[colorSize];
 
-            COLoggerImport.LogNormal("loading File {0}", fileName);
+            COLoggerImport.LogNormal("Loading File {0}", fileName);
 
             try
             {
                 fileStream.Read(intBuffer, 0, intSize);
-                int size = ByteArrayToInt(intBuffer);
+                bool isLittleEndian = intBuffer[0] == 0x1;
+
+                string[] split = MAPVersion.Remove(0, 1).Split('.');
+
+                int versionSize = fileStream.ReadByte();
+                if (versionSize != split.Length)
+                {
+                    COLoggerImport.LogError("Bad MAP version size. Expected {0}, got {1}", split.Length, versionSize);
+                    return false;
+                }
+
+                byte[] versionBuffer = new byte[versionSize];
+                fileStream.Read(versionBuffer, 0, versionSize);
+
+                for (int i = 0; i < versionSize; i++)
+                {
+                    if (versionBuffer[i] == Convert.ToByte(split[i])) continue;
+                    COLoggerImport.LogError("Bad MAP version number!");
+                    return false;
+                }
+
+                COLoggerImport.LogNormal("MAP version Correct!");
+
+                fileStream.Read(intBuffer, 0, intSize);
+                int size = ByteArrayToInt(intBuffer, isLittleEndian);
                 COLoggerImport.LogNormal("Number of sectors {0} in file", size);
 
                 for (int i = 0; i < size; i++)
@@ -77,17 +114,17 @@
                     sector.walls = new List<Wall>();
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    int count = ByteArrayToInt(intBuffer);
+                    int count = ByteArrayToInt(intBuffer, isLittleEndian);
 
                     for (int j = 0; j < count; j++)
                     {
                         Wall wall = new Wall();
 
                         fileStream.Read(pointBuffer, 0, pointSize);
-                        wall.leftPoint = ByteArrayToPoint(pointBuffer);
+                        wall.leftPoint = ByteArrayToPoint(pointBuffer, isLittleEndian);
 
                         fileStream.Read(pointBuffer, 0, pointSize);
-                        wall.rightPoint = ByteArrayToPoint(pointBuffer);
+                        wall.rightPoint = ByteArrayToPoint(pointBuffer, isLittleEndian);
 
                         fileStream.Read(colorBuffer, 0, colorSize);
                         wall.color = ByteArrayToColor(colorBuffer);
@@ -96,10 +133,10 @@
                     }
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    sector.ceillingHeight = ByteArrayToInt(intBuffer);
+                    sector.ceillingHeight = ByteArrayToInt(intBuffer, isLittleEndian);
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    sector.floorHeight = ByteArrayToInt(intBuffer);
+                    sector.floorHeight = ByteArrayToInt(intBuffer, isLittleEndian);
 
                     fileStream.Read(colorBuffer, 0, colorSize);
                     sector.floorColor = ByteArrayToColor(colorBuffer);
@@ -135,8 +172,14 @@
             {
                 fileStream.Write(ToByteArray(0x1, out int arrSize), 0, arrSize); // endianessCheck
 
-                fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
+                string[] versionSplit = BSPVersion.Remove(0, 1).Split(".");
 
+                int versionSize = versionSplit.Length;
+                fileStream.WriteByte((byte) versionSize);
+
+                for (int i = 0; i < versionSize; i++) fileStream.WriteByte(Convert.ToByte(versionSplit[i]));
+
+                fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
                 for (int i = 0; i < size; i++)
                 {
                     int count = sectors[i].walls.Count;
@@ -195,8 +238,16 @@
             int size = sizeof(int);
             byte[] array = new byte[size];
 
-            for (int i = 0; i < size; i++)
-                array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            if (BitConverter.IsLittleEndian)
+            {
+                for (int i = 0; i < size; i++)
+                    array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
+            else
+            {
+                for (int i = size - 1, n = 0; i >= 0; i--, n++)
+                    array[n] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
 
             return array;
         }
@@ -225,9 +276,18 @@
             return [dataToConvert.R, dataToConvert.G, dataToConvert.B];
         }
 
-        static int ByteArrayToInt(byte[] dataToConvert) => (int) dataToConvert[3] << 24 | (int) dataToConvert[2] << 16 | (int) dataToConvert[1] << 8 | (int) dataToConvert[0];
+        static int ByteArrayToInt(byte[] dataToConvert, bool isLittleEndian)
+        {
+            if (isLittleEndian) return ((int) dataToConvert[3] << 24) | ((int) dataToConvert[2] << 16) | ((int) dataToConvert[1] << 8) | ((int) dataToConvert[0]);
+            return ((int) dataToConvert[0] << 24) | ((int) dataToConvert[1] << 16) | ((int) dataToConvert[2] << 8) | ((int) dataToConvert[3]);
+        }
 
-        static Point ByteArrayToPoint(byte[] dataToConvert) => new Point(ByteArrayToInt([dataToConvert[0], dataToConvert[1], dataToConvert[2], dataToConvert[3]]), ByteArrayToInt([dataToConvert[4], dataToConvert[5], dataToConvert[6], dataToConvert[7]]));
+        static Point ByteArrayToPoint(byte[] dataToConvert, bool isLittleEndian)
+        {
+            int x = ByteArrayToInt([dataToConvert[0], dataToConvert[1], dataToConvert[2], dataToConvert[3]], isLittleEndian);
+            int y = ByteArrayToInt([dataToConvert[4], dataToConvert[5], dataToConvert[6], dataToConvert[7]], isLittleEndian);
+            return new Point(x, y);
+        }
         static Color ByteArrayToColor(byte[] dataToConvert) => Color.FromArgb(0xFF, dataToConvert[0], dataToConvert[1], dataToConvert[2]);
     }
 }

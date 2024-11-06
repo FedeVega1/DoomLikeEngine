@@ -50,6 +50,9 @@ protected:
 	virtual void Hack() override {}
 
 private:
+	const char BSPVersionSize = 2;
+	char const BSPVersion[2]{ 00, 01 };
+
 	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Color ByteArrayToColor(const unsigned char* const byteArray) const;

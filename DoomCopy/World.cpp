@@ -25,6 +25,28 @@ World::World(const std::string& mapFileName) : Entity()
 		mapFile.read((char*) intBuffer, intSize);
 		bool isLittleEndian = intBuffer[0] == 0x1;
 
+		unsigned char versionSize;
+		mapFile.read((char*) &versionSize, 1);
+
+		if (versionSize != BSPVersionSize)
+		{
+			OLOG_EF("Bad BSP version size. Expected {0}, got {1}", BSPVersionSize, versionSize);
+			return;
+		}
+
+		unsigned char* versionArray = new unsigned char[versionSize];
+		mapFile.read((char*) versionArray, versionSize);
+
+		for (int i = 0; i < versionSize; i++)
+		{
+			if (BSPVersion[i] == versionArray[i]) continue;
+			OLOG_E("Bad BSP version number!");
+			return;
+		}
+
+		delete[] versionArray;
+		OLOG_L("BSP version Correct!");
+
 		mapFile.read((char*) intBuffer, intSize);
 		numberOfSectors = ByteArrayToInt(intBuffer, isLittleEndian);
 		OLOG_LF("Number of Sectors: {0}", numberOfSectors);
@@ -32,6 +54,8 @@ World::World(const std::string& mapFileName) : Entity()
 		sectorData = new Sector[numberOfSectors];
 		for (int i = 0; i < numberOfSectors; i++)
 		{
+			OLOG_LF("Loading Sector: {0}", i);
+
 			Sector sector = Sector();
 			mapFile.read((char*) intBuffer, intSize);
 

@@ -192,6 +192,7 @@ namespace LevelEditor
             gridEditor.GetSectors(out List<Sector> sectors, false);
             Text = "Level Editor - " + Path.GetFileName(fileName);
             if (fileManager.SaveToFile(fileName, fileStream, ref sectors) || fileManager.CurrentOpenedFile == fileName) return;
+            fileStream.Close();
             File.Delete(fileName);
         }
 
@@ -318,6 +319,7 @@ namespace LevelEditor
             {
                 gridEditor.GetSectors(out List<Sector> sectors, true);
                 if (fileManager.CompileMap(fileName, fileStream, ref sectors)) return;
+                fileStream.Close();
                 File.Delete(fileName);
             }
         }
