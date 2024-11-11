@@ -20,8 +20,8 @@ void Camera::Start()
 	Input::INS.RegisterAxis("CameraRotUpDown", KeyCode::R, KeyCode::F, &Camera::DebugRotUpDown, this);
 }
 
-const float Camera::movSpeed = 2.0f;
-const float Camera::rotSpeed = 1.0f;
+const float Camera::movSpeed = 400;
+const float Camera::rotSpeed = 350;
 
 int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessedSectors)
 { 
@@ -31,7 +31,7 @@ int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessed
 
 void Camera::Tick()
 {
-	GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::INS.GetFDeltaTime());
+	GetTransform()->Rotate(rotSpeed * Input::INS.GetMouseAxis().x * Time::TimeSlice);
 }
 
 void Camera::AfterTick()
@@ -50,22 +50,17 @@ void Camera::AfterTick()
 	{
 		processedSectors[s].avrgDistanceToCamera = 0;
 
-		if ((currentPos.z - processedSectors[s].bottomPoint) < processedSectors[s].bottomPoint) processedSectors[s].surface = SectorSurface::Below;
-		else if ((currentPos.z + processedSectors[s].topPoint) > processedSectors[s].topPoint) processedSectors[s].surface = SectorSurface::Above;
-		else processedSectors[s].surface = SectorSurface::SurfNone;
-
 		int walls = processedSectors[s].numberOfWalls;
 		for (int w = 0; w < walls; w++)
 		{
-			int cycles = processedSectors[s].surface != SectorSurface::SurfNone ? 2 : 1;
-			for (int i = 0; i < cycles; i++)
+			for (int i = 0; i < 2; i++)
 			{
 				ProcessedWall& wall = processedSectors[s].sectorWalls[(w * 2) + i];
 
 				wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 				wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 
-				if (i == 0)
+				if (i == 1)
 				{
 					Vector3 swp = wall.leftBtmPoint;
 					wall.leftBtmPoint = wall.rightBtmPoint;
@@ -163,7 +158,9 @@ void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
 	pointA.x += s * (pointB.x - pointA.x);
 	pointA.y += s * (pointB.y - pointA.y);
 	pointA.z += s * (pointB.z - pointA.z);
-	if (pointA.y == 0) pointA.y = 1;
+
+	if (pointA.y < 1) pointA.y = 1;
+	else if (pointA.y > 1) pointA.y = -1;
 }
 
 void Camera::OrderSectorsByDistance()
@@ -184,21 +181,21 @@ void Camera::OrderSectorsByDistance()
 void Camera::DebugForwardBack(float axis)
 {
 	Vector3 fwd = GetTransform()->GetForwardVector();
-	GetTransform()->TeleportTo(fwd * axis * movSpeed * Time::INS.GetFDeltaTime());
+	GetTransform()->TeleportTo(fwd * axis * movSpeed * Time::TimeSlice);
 }
 
 void Camera::DebugLeftRight(float axis)
 {
 	Vector3 left = GetTransform()->GetLeftVector();
-	GetTransform()->TeleportTo(left * axis * movSpeed * Time::INS.GetFDeltaTime());
+	GetTransform()->TeleportTo(left * axis * movSpeed * Time::TimeSlice);
 }
 
 void Camera::DebugUpDown(float axis)
 {
-	GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::INS.GetFDeltaTime());
+	GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::TimeSlice);
 }
 
 void Camera::DebugRotUpDown(float axis)
 {
-	xRotation -= (int) std::roundf(rotSpeed * axis * Time::INS.GetFDeltaTime());
+	xRotation -= (int) std::roundf(rotSpeed * axis * Time::TimeSlice);
 }

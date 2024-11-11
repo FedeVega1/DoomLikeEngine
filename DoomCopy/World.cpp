@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <bit>
 
-World::World(const std::string& mapFileName) : Entity()
+World::World(const std::string& mapFileName) : Entity(), numberOfSectors(0), sectorData(nullptr)
 {
 	const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3;
 

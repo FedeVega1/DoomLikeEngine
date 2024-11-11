@@ -9,11 +9,10 @@
 Time Time::INS = Time();
 Input Input::INS = Input();
 
+const double Time::TimeSlice = .016;
+
 void Game::InitUpdate()
 {
-    Time::INS.nextGameTick = Time::INS.GetGameTickCount();
-	loops = 0;
-
     world = new World(mapToOpen);
     entities.push_back(world);
 
@@ -22,37 +21,28 @@ void Game::InitUpdate()
     mainCamera->world = world;
     entities.push_back(cameraObject);
 
-    cameraObject->GetTransform()->SetPos(Vector3(0, 0, 0));
+    //cameraObject->GetTransform()->SetPos(Vector3(0, 0, 0));
     mainCamera->SetCameraZOffset(45);
 }
 
 void Game::MainUpdate()
 {
-    loops = 0;
-
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-
     size_t count = entities.size();
     for (size_t i = 0; i < count; i++) entities[i]->PreTickComponents();
 
-    while (Time::INS.GetGameTickCount() > Time::INS.nextGameTick && loops < MAX_FRAMESKIP)
+    while (Time::INS.simulationTime < Time::INS.GetGameTickCount())
     {
         // GameLoop
         Input::INS.ProcessInputs();
 
         for (size_t i = 0; i < count; i++) entities[i]->TickComponents();
-
-        Time::INS.nextGameTick += SKIP_TICKS;
-        loops++;
+        Time::INS.simulationTime += Time::INS.fixedTimeSlice;
     }
 
     for (size_t i = 0; i < count; i++) entities[i]->AfterTickComponents();
-
-    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-    Time::INS.deltaTime = std::chrono::duration<double, std::micro>(now - start).count();
 }
 
-Game::Game() : loops(0), mainCamera(nullptr), world(nullptr)
+Game::Game() : mainCamera(nullptr), world(nullptr)
 {
 	Time::INS.startTime = std::chrono::high_resolution_clock::now();
     entities = std::vector<Entity*>();

@@ -71,10 +71,7 @@ namespace LevelEditor
             sectors = new List<Sector>();
 
             int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(byte) * 3;
-
-            byte[] intBuffer = new byte[intSize];
-            byte[] pointBuffer = new byte[pointSize];
-            byte[] colorBuffer = new byte[colorSize];
+            byte[] intBuffer = new byte[intSize], pointBuffer = new byte[pointSize], colorBuffer = new byte[colorSize];
 
             COLoggerImport.LogNormal("Loading File {0}", fileName);
 

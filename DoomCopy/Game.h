@@ -33,7 +33,6 @@ private:
 	std::vector<Entity*> entities;
 	class Camera* mainCamera;
 	class World* world;
-	int loops;
 
 	std::string mapToOpen = "asd.bsp";
 };

@@ -7,11 +7,11 @@ class Time
 public:
 	static Time INS;
 
-	Time() : startTime(), deltaTime(0.0), nextGameTick(0LL)
+	Time() : startTime(), simulationTime(0LL), fixedTimeSlice((long long) (TimeSlice * 1000))
 	{ }
 
-	double GetDeltaTime() const { return deltaTime; }
-	float GetFDeltaTime() const { return (float) deltaTime; }
+	static const double TimeSlice;
+
 	long long GetTime() const
 	{
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
@@ -21,8 +21,8 @@ public:
 private:
 	std::chrono::high_resolution_clock::time_point startTime;
 
-	double deltaTime;
-	long long nextGameTick;
+	long long simulationTime;
+	long long fixedTimeSlice;
 
 	long long GetGameTickCount() const
 	{

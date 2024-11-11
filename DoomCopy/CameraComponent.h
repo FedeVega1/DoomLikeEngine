@@ -1,8 +1,6 @@
 #pragma once
 class BaseComponent;
 
-enum SectorSurface { SurfNone, Above, Below };
-
 struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
@@ -27,9 +25,8 @@ struct ProcessedSector
 	int numberOfWalls;
 	float bottomPoint, topPoint, avrgDistanceToCamera;
 	Color floorColor, ceillingColor;
-	SectorSurface surface;
 
-	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), surface(SectorSurface::SurfNone)
+	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0)
 	{ }
 };
 
