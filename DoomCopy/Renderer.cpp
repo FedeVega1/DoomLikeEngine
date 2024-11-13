@@ -38,7 +38,12 @@ void Renderer::ProcessSector(const ProcessedSector& sector)
 
     for (int i = 0; i < size; i++)
     {
-        if (sector.sectorWalls[i].leftBtmPoint.y < 1 && sector.sectorWalls[i].rightBtmPoint.y < 1) continue;
+        if ((sector.sectorWalls[i].leftBtmPoint.y < 1 && sector.sectorWalls[i].rightBtmPoint.y < 1)) continue;
+
+        if (sector.sectorWalls[i].isPortal) 
+        {
+
+        }
 
         ScreenSpaceWall sWall = GetScreenSpaceWall(sector.sectorWalls[i]);
         int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
@@ -67,7 +72,7 @@ void Renderer::ProcessSector(const ProcessedSector& sector)
 
             for (int y = surfacePoints[0][x]; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
             for (int y = yPoint.y; y < surfacePoints[1][x]; y++) DrawPixel(x, y, sector.ceillingColor);
-            for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
+            if (!sector.sectorWalls[i].isConnection) for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
             if (debugStepDraw) Sleep(50);
         }
     }
@@ -84,4 +89,11 @@ ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
         Vector2Int((int) std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT)),
         wall.color
     };
+}
+
+Vector3 Renderer::GetWallNormal(Vector3 pointA, Vector3 pointB) 
+{
+    Vector3 dir1 = Vector3::Normalize(pointB - pointA);
+    Vector3 dir2 = Vector3::Normalize(pointA - pointB);
+    return Vector3::Cross(dir1, dir2);
 }

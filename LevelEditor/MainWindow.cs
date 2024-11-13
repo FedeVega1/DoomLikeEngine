@@ -71,6 +71,9 @@ namespace LevelEditor
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            if (NumbCeillingHeight.Focused || NumbFloorHeight.Focused) 
+                return base.ProcessCmdKey(ref msg, keyData);
+
             Keys processedKeyData = keyData;
             if ((processedKeyData & Keys.Shift) == Keys.Shift) processedKeyData ^= Keys.Shift;
             if ((processedKeyData & Keys.Control) == Keys.Control) processedKeyData ^= Keys.Control;
@@ -101,6 +104,10 @@ namespace LevelEditor
                 case Keys.ControlKey:
                     gridEditor.CtrlKeyDown = msg.Msg == 0x0100;
                     return true;
+
+                case Keys.Delete:
+                    gridEditor.DeleteCurrentSelection();
+                    break;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -203,7 +210,7 @@ namespace LevelEditor
             if (e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             string[]? data = (string[]?) e.Data.GetData(DataFormats.FileDrop);
 
-            if (data == null || !File.Exists(data[0])) return;
+            if (data == null || !File.Exists(data[0]) || Path.GetExtension(data[0]) != ".map") return;
 
             using (FileStream stream = File.Open(data[0], FileMode.Open))
                 LoadFile(stream);

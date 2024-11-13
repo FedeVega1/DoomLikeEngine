@@ -5,17 +5,24 @@ struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
 	Color color;
+	bool isPortal, isConnection;
+	int portalTargetSector, portalTargetWall;
 
-	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), color(0, 0, 0)
+	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), color(0, 0, 0), isPortal(false), 
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1)
 	{ }
 
-	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color c)
+	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color c, bool portal, bool connection, int sector, int wall)
 	{ 
 		leftTopPoint = ltPoint;
 		rightTopPoint = rtPoint;
 		leftBtmPoint = lbPoint;
 		rightBtmPoint = rbPoint;
 		color = c;
+		isPortal = portal;
+		isConnection = connection;
+		portalTargetSector = sector;
+		portalTargetWall = wall;
 	}
 };
 

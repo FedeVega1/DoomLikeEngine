@@ -77,6 +77,18 @@ World::World(const std::string& mapFileName) : Entity(), numberOfSectors(0), sec
 				mapFile.read((char*) colorBuffer, colorSize);
 				wall.color = ByteArrayToColor(colorBuffer);
 
+				unsigned char portalFlags;
+				mapFile.read((char*) & portalFlags, 1);
+
+				wall.isPortal = (portalFlags & 0b1) == 0b1;
+				wall.isConnection = (portalFlags & 0b10) == 0b10;
+
+				mapFile.read((char*) intBuffer, intSize);
+				wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
+
+				mapFile.read((char*) intBuffer, intSize);
+				wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+
 				sector.sectorWalls[j] = wall;
 			}
 

@@ -2,7 +2,7 @@
 
 namespace LevelEditor
 {
-    internal enum SelectionType { Node, Wall, Sector }
+    internal enum SelectionType { None, Node, Wall, Sector }
 
     readonly internal struct SelectionData
     {
@@ -142,38 +142,47 @@ namespace LevelEditor
             switch (CurrentSelectionType)
             {
                 case SelectionType.Node:
-                    LoopWalls((int i, int j, Wall wall) =>
-                    {
-                        int otherWallIndex = ClampWallIndex(i, j - 1);
-                        Wall otherWall = ActiveSectors[i].walls[otherWallIndex];
-
-                        Point diff = mousePos.Subtract(lastMousePos);
-                        otherWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
-
-                        wall.UpdateMiddleAndNormal();
-                        otherWall.UpdateMiddleAndNormal();
-
-                        ActiveSectors[i].walls[j] = wall;
-                        ActiveSectors[i].walls[otherWallIndex] = otherWall;
-                    });
+                    LoopWalls((int i, int j, Wall wall) => HandleNodeMovement(mousePos, i, j, wall));
                     break;
 
                 case SelectionType.Wall:
                     LoopWalls((int i, int j, Wall wall) =>
                     {
                         int laterWallIndex = ClampWallIndex(i, j - 1), nextWallIndex = ClampWallIndex(i, j + 1);
-                        Wall laterWall = ActiveSectors[i].walls[laterWallIndex], nextWall = ActiveSectors[i].walls[nextWallIndex];
+                        Wall prevWall = ActiveSectors[i].walls[laterWallIndex], nextWall = ActiveSectors[i].walls[nextWallIndex];
 
                         Point diff = mousePos.Subtract(lastMousePos);
 
-                        laterWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
+                        prevWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
                         nextWall.leftPoint = wall.rightPoint = grid.ParseMousePosToGridPos(wall.rightPoint.Add(diff));
 
-                        laterWall.UpdateMiddleAndNormal();
+                        prevWall.UpdateMiddleAndNormal();
                         wall.UpdateMiddleAndNormal();
                         nextWall.UpdateMiddleAndNormal();
 
-                        ActiveSectors[i].walls[laterWallIndex] = laterWall;
+                        if (wall.isPortal && wall.isConnection)
+                        {
+                            int connPrevIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall - 1);
+                            int connNextIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall + 1);
+                            Wall connectedWall = ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall];
+                            Wall prevConnWall = ActiveSectors[wall.portalTargetSector].walls[connPrevIndex];
+                            Wall nextConnWall = ActiveSectors[wall.portalTargetSector].walls[connNextIndex];
+
+                            connectedWall.rightPoint = wall.leftPoint;
+                            connectedWall.leftPoint = wall.rightPoint;
+                            prevConnWall.rightPoint = connectedWall.leftPoint;
+                            nextConnWall.leftPoint = connectedWall.rightPoint;
+                            
+                            connectedWall.UpdateMiddleAndNormal();
+                            prevConnWall.UpdateMiddleAndNormal();
+                            nextConnWall.UpdateMiddleAndNormal();
+
+                            ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall] = connectedWall;
+                            ActiveSectors[wall.portalTargetSector].walls[connPrevIndex] = prevConnWall;
+                            ActiveSectors[wall.portalTargetSector].walls[connNextIndex] = nextConnWall;
+                        }
+
+                        ActiveSectors[i].walls[laterWallIndex] = prevWall;
                         ActiveSectors[i].walls[j] = wall;
                         ActiveSectors[i].walls[nextWallIndex] = nextWall;
                     });
@@ -201,6 +210,39 @@ namespace LevelEditor
             }
 
             lastMousePos = mousePos;
+        }
+
+        void HandleNodeMovement(Point mousePos, int i, int j, Wall wall)
+        {
+            int otherWallIndex = ClampWallIndex(i, j - 1);
+            Wall otherWall = ActiveSectors[i].walls[otherWallIndex];
+
+            Point diff = mousePos.Subtract(lastMousePos);
+            otherWall.rightPoint = wall.leftPoint = grid.ParseMousePosToGridPos(wall.leftPoint.Add(diff));
+
+            wall.UpdateMiddleAndNormal();
+            otherWall.UpdateMiddleAndNormal();
+
+            if (wall.isPortal && wall.isConnection)
+            {
+                int otherConnIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall + 1);
+                Wall connectedWall = ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall];
+                Wall otherConnWall = ActiveSectors[wall.portalTargetSector].walls[otherConnIndex];
+
+                otherConnWall.leftPoint = connectedWall.rightPoint = wall.leftPoint;
+
+                connectedWall.UpdateMiddleAndNormal();
+                otherConnWall.UpdateMiddleAndNormal();
+
+                ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall] = connectedWall;
+                ActiveSectors[wall.portalTargetSector].walls[otherConnIndex] = otherConnWall;
+            }
+
+            if (otherWall.isPortal && otherWall.isConnection)
+                HandleNodeMovement(mousePos, i, otherWallIndex, otherWall);
+
+            ActiveSectors[i].walls[j] = wall;
+            ActiveSectors[i].walls[otherWallIndex] = otherWall;
         }
 
         int ClampWallIndex(int currentSector, int indx)
@@ -338,8 +380,44 @@ namespace LevelEditor
 
         public void ResetData()
         {
+            OnDeselect?.Invoke();
             currentSelection.Clear();
+            CurrentSelectionType = SelectionType.None;
             isMouseDown = false;
+        }
+
+        public void DeleteCurrentSelection()
+        {
+            switch (CurrentSelectionType)
+            {
+                case SelectionType.Node:
+
+                    break;
+
+                case SelectionType.Wall:
+                    LoopWalls((int i, int w, Wall wall) =>
+                    {
+                        int prevWallIndx = ClampWallIndex(i, w - 1), nextWallIndx = ClampWallIndex(i, w + 1);
+                        Wall prevWall = ActiveSectors[i].walls[prevWallIndx];
+                        Wall nextWall = ActiveSectors[i].walls[nextWallIndx];
+
+                        prevWall.rightPoint = nextWall.leftPoint;
+                        ActiveSectors[i].walls[prevWallIndx] = prevWall;
+                        ActiveSectors[i].walls.RemoveAt(w);
+
+                        if (ActiveSectors[i].walls.Count < 3) ActiveSectors.RemoveAt(i);
+                    });
+                    break;
+
+                case SelectionType.Sector:
+                    LoopSectors((int i, Sector sector) =>
+                    {
+                        ActiveSectors.RemoveAt(i);
+                    });
+                    break;
+            }
+
+            currentSelection.Clear();
         }
     }
 }

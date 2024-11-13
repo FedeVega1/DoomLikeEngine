@@ -30,7 +30,8 @@ void Game::MainUpdate()
     size_t count = entities.size();
     for (size_t i = 0; i < count; i++) entities[i]->PreTickComponents();
 
-    while (Time::INS.simulationTime < Time::INS.GetGameTickCount())
+    long long currentTime = Time::INS.GetGameTickCount();
+    while (Time::INS.simulationTime < currentTime)
     {
         // GameLoop
         Input::INS.ProcessInputs();

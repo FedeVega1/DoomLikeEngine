@@ -4,7 +4,7 @@ namespace LevelEditor
 {
     internal class FileManager
     {
-        const string MAPVersion = "v00.01", BSPVersion = "v00.01";
+        const string MAPVersion = "v00.02", BSPVersion = "v00.02";
 
         public string CurrentOpenedFile { get; private set; }
 
@@ -43,6 +43,10 @@ namespace LevelEditor
                         fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                        byte portalFlags = (byte) ((sectors[i].walls[j].isPortal ? 0b1 : 0) << 1 | (sectors[i].walls[j].isConnection ? 0b1 : 0));
+                        fileStream.WriteByte(portalFlags);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetSector, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetWall, out arrSize), 0, arrSize);
                     }
 
                     fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
@@ -126,6 +130,16 @@ namespace LevelEditor
                         fileStream.Read(colorBuffer, 0, colorSize);
                         wall.color = ByteArrayToColor(colorBuffer);
 
+                        int portalFlag = fileStream.ReadByte();
+                        wall.isPortal = (portalFlag & 0b1) == 0b1;
+                        wall.isConnection = (portalFlag & 0b10) == 0b10;
+
+                        fileStream.Read(intBuffer, 0, intSize);
+                        wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
+
+                        fileStream.Read(intBuffer, 0, intSize);
+                        wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+
                         sector.walls.Add(wall);
                     }
 
@@ -187,6 +201,10 @@ namespace LevelEditor
                         fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                        byte portalFlags = (byte) ((sectors[i].walls[j].isPortal ? 0x1 : 0) << 1 | (sectors[i].walls[j].isConnection ? 0x1 : 0));
+                        fileStream.WriteByte(portalFlags);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetSector, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetWall, out arrSize), 0, arrSize);
                     }
 
                     fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);

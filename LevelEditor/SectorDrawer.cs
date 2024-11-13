@@ -5,12 +5,18 @@
         public Point leftPoint, rightPoint;
         public Color color;
         public PointF middle, normal;
+        public bool isPortal, isConnection;
+        public int portalTargetSector, portalTargetWall;
 
         public Wall(Point left, Point right, Color c)
         {
             leftPoint = left;
             rightPoint = right;
             color = c;
+
+            isPortal = false;
+            portalTargetSector = -1;
+            portalTargetWall = -1;
 
             UpdateMiddleAndNormal();
         }
@@ -19,6 +25,15 @@
         {
             middle = leftPoint.Add(rightPoint.Subtract(leftPoint).Divide(2));
             normal = GetNormalFromPoints(leftPoint, rightPoint);
+        }
+
+        public Wall MakePortal(int sector, int wall, bool isConnection = false)
+        {
+            portalTargetSector = sector;
+            portalTargetWall = wall;
+            isPortal = true;
+            this.isConnection = isConnection;
+            return this;
         }
 
         static PointF GetNormalFromPoints(Point a, Point b)
@@ -115,7 +130,9 @@
 
         readonly SolidBrush sectorBrush, hoverSectorBrush, selectedSectorBrush;
         readonly SolidBrush nodeBrush, hoverNodeBrush, selectedNodeBrush;
-        readonly Pen wallLine, hoverWallLine, selectedwallLine;
+        readonly Pen wallLine, hoverWallLine, selectedWallLine;
+        readonly Pen portalConnectionLine, hoverPortalConnectionLine, selectedPortalConnectionLine;
+        readonly Pen portalLine, hoverPortalLine, selectedPortalLine;
         readonly Pen nodeLine, hoverNodeLine, selectedNodeLine;
 
         public SectorDrawer(MapGridEditor gridEditor)
@@ -130,7 +147,15 @@
 
             wallLine = new Pen(Color.Yellow, 2);
             hoverWallLine = new Pen(Color.Orange, 3);
-            selectedwallLine = new Pen(Color.OrangeRed, 2);
+            selectedWallLine = new Pen(Color.OrangeRed, 2);
+
+            portalConnectionLine = new Pen(Color.LightGray, 1.5f);
+            hoverPortalConnectionLine = new Pen(Color.FromArgb(0xFF, 0xFF, 0xC2, 0x66), 2);
+            selectedPortalConnectionLine = new Pen(Color.FromArgb(0xFF, 0xFF, 0xA3, 0x66), 1.5f);
+
+            portalLine = new Pen(Color.FromArgb(0xFF, 0xFF, 0x66, 0xCC), 2);
+            hoverPortalLine = new Pen(Color.FromArgb(0xFF, 0xFF, 0x33, 0xBB), 3);
+            selectedPortalLine = new Pen(Color.FromArgb(0xFF, 0xFF, 0, 0xAA), 2);
 
             nodeBrush = new SolidBrush(Color.AntiqueWhite);
             hoverNodeBrush = new SolidBrush(Color.LightBlue);
@@ -148,7 +173,13 @@
             selectedSectorBrush.Dispose();
             wallLine.Dispose();
             hoverWallLine.Dispose();
-            selectedwallLine.Dispose();
+            selectedWallLine.Dispose();
+            portalConnectionLine.Dispose();
+            hoverPortalConnectionLine.Dispose();
+            selectedPortalConnectionLine.Dispose();
+            portalLine.Dispose();
+            hoverPortalLine.Dispose();
+            selectedPortalLine.Dispose();
             nodeBrush.Dispose();
             hoverNodeBrush.Dispose();
             selectedNodeBrush.Dispose();
@@ -283,7 +314,16 @@
 
         Pen GetCurrentWallPen(int sectorIndex, int wallIndex)
         {
-            if (editor.GetCurrentSelectionType() != SelectionType.Wall && editor.GetCurrentSelectionType() != SelectionType.Sector) return wallLine;
+            if (editor.GetCurrentSelectionType() != SelectionType.Wall && editor.GetCurrentSelectionType() != SelectionType.Sector)
+            {
+                if (sectorIndex != -1 && wallIndex != -1)
+                {
+                    if (!sectors[sectorIndex].walls[wallIndex].isPortal) return wallLine;
+                    return sectors[sectorIndex].walls[wallIndex].isConnection ? portalConnectionLine : portalLine;
+                }
+
+                return wallLine;
+            }
 
             SelectionData[] currentSelection = editor.GetCurrentSelection();
             int size = currentSelection.Length;
@@ -291,18 +331,26 @@
             {
                 if (currentSelection[i].sectorIndex != sectorIndex) continue;
                 if (editor.GetCurrentSelectionType() == SelectionType.Wall && currentSelection[i].wallIndex != wallIndex) continue;
-                return selectedwallLine;
+                if (!sectors[sectorIndex].walls[wallIndex].isPortal) return selectedWallLine;
+                return sectors[sectorIndex].walls[wallIndex].isConnection ? selectedPortalConnectionLine : selectedPortalLine;
             }
 
             if (editor.GetCurrentSelectionType() == SelectionType.Wall && CheckForWallsInPos(currentCursorPos, 5, out (int, int) indxs) 
-                && indxs.Item1 == sectorIndex && indxs.Item2 == wallIndex) 
-                return hoverWallLine;
+                && indxs.Item1 == sectorIndex && indxs.Item2 == wallIndex)
+            {
+                if (!sectors[sectorIndex].walls[wallIndex].isPortal) return hoverWallLine;
+                return sectors[sectorIndex].walls[wallIndex].isConnection ? hoverPortalConnectionLine : hoverPortalLine;
+            }
 
             if (editor.GetCurrentSelectionType() == SelectionType.Sector && CheckForSectorsInPos(currentCursorPos, out int indx)
                 && indx == sectorIndex)
-                return hoverWallLine;
+            {
+                if (!sectors[sectorIndex].walls[wallIndex].isPortal) return hoverWallLine;
+                return sectors[sectorIndex].walls[wallIndex].isConnection ? hoverPortalConnectionLine : hoverPortalLine;
+            }
 
-            return wallLine;
+            if (!sectors[sectorIndex].walls[wallIndex].isPortal) return wallLine;
+            return sectors[sectorIndex].walls[wallIndex].isConnection ? portalConnectionLine : portalLine;
         }
 
         SolidBrush GetSectorBrush(int sectorIndex)
@@ -325,12 +373,44 @@
         {
             Sector newSector = new Sector(currentDrawnSector);
             if (!newSector.CheckWallsOrientation()) newSector.FlipWalls();
-
             sectors.Add(newSector);
+
+            int size = newSector.walls.Count, ignoreSector = sectors.Count - 1;
+            for (int w = 0; w < size; w++)
+            {
+                bool haslftConnection = CheckPointInsideWall(newSector.walls[w].leftPoint, newSector.walls[w].normal, out (int, int) lftIndx, ignoreSector);
+                bool hasRgtConnection = CheckPointInsideWall(newSector.walls[w].rightPoint, newSector.walls[w].normal, out (int, int) rgtIndx, ignoreSector);
+
+                if (haslftConnection && hasRgtConnection && lftIndx.Item1 == rgtIndx.Item1 && lftIndx.Item2 == rgtIndx.Item2) 
+                {
+                    ConnectWalls(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
+                }
+            }
 
             DrawLineEnd = DrawLineStart = Point.Empty;
             currentDrawnSector.ResetDrawSector();
+        }
 
+        void ConnectWalls(Wall newWall, (int, int) w1, (int, int) w2)
+        {
+            COLoggerImport.LogNormal("CONNECT!");
+
+            Wall splicedWall = sectors[w1.Item1].walls[w1.Item2];
+            if ((newWall.leftPoint == splicedWall.leftPoint || newWall.leftPoint == splicedWall.rightPoint) && 
+                (newWall.rightPoint == splicedWall.leftPoint || newWall.rightPoint == splicedWall.rightPoint))
+            {
+                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(w2.Item1, w2.Item2, true);
+                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2, true);
+                return;
+            }
+
+            sectors[w1.Item1].walls.RemoveAt(w1.Item2);
+            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.color).MakePortal(w2.Item1, w2.Item2, true);
+
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.color));
         }
 
         public void ToggleLineDrawMode(bool toggle, Point CursorPos)
@@ -373,10 +453,11 @@
         public bool CheckForNodesInPos(Point mousePoint, float dist, out (int, int) indx)
         {
             (int, int) foundIndx = (-1, -1);
-            bool found = false;
+            bool found = false, foundConnection = false;
 
             LoopSectorWalls((int i, int j, Wall wall) =>
             {
+                if (foundConnection) return false;
                 float lftDist = wall.leftPoint.Distance(mousePoint);
 
                 if (lftDist <= dist)
@@ -384,11 +465,12 @@
                     foundIndx.Item1 = i;
                     foundIndx.Item2 = j;
                     found = true;
+                    if (wall.isPortal && wall.isConnection) foundConnection = true;
                     return true;
                 }
 
                 return false;
-            }, true);
+            }, false);
 
             indx = foundIndx;
             return found;
@@ -453,6 +535,43 @@
             return false;
         }
 
+        public bool CheckPointInsideWall(Point pointToCheck, PointF normal, out (int, int) indx, int sectorToIgnore = -1)
+        {
+            (int, int) foundIndx = (-1, -1);
+            bool found = false;
+
+            LoopSectorWalls((int i, int j, Wall wall) =>
+            {
+                if (sectorToIgnore == i || wall.normal.Dot(normal) != -1) return false;
+
+                if (wall.leftPoint == pointToCheck || wall.rightPoint == pointToCheck)
+                {
+                    foundIndx.Item1 = i;
+                    foundIndx.Item2 = j;
+                    found = true;
+                    return true;
+                }
+
+                float lftDist = wall.leftPoint.Distance(pointToCheck);
+                float rgtDist = wall.rightPoint.Distance(pointToCheck);
+                float totalDist = wall.leftPoint.Distance(wall.rightPoint);
+                float sum = lftDist + rgtDist;
+
+                if (sum - totalDist <= .0001f)
+                {
+                    foundIndx.Item1 = i;
+                    foundIndx.Item2 = j;
+                    found = true;
+                    return true;
+                }
+
+                return false;
+            }, true);
+
+            indx = foundIndx;
+            return found;
+        }
+
         public void LoopSectorWalls(Func<int, int, Wall, bool> callback, bool breakOrReturn = false)
         {
             if (callback == null) return;
@@ -465,11 +584,19 @@
                 {
                     if (callback(i, j, sectors[i].walls[j]))
                     {
-                        if (breakOrReturn) break;
+                        if (!breakOrReturn) break;
                         else return;
                     }
                 }
             }
+        }
+
+        public void ResetData()
+        {
+            currentCursorPos = Point.Empty;
+            currentDrawnSector = new Sector();
+            currentDrawnWallsColor = Color.Black;
+            sectors.Clear();
         }
     }
 }

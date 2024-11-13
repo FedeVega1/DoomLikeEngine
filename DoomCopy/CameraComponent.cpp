@@ -118,7 +118,11 @@ int Camera::GetSectorsToProcess()
 				V3_ZERO, V3_ZERO,
 				world->sectorData[s].sectorWalls[w].leftPoint, 
 				world->sectorData[s].sectorWalls[w].rightPoint, 
-				world->sectorData[s].sectorWalls[w].color
+				world->sectorData[s].sectorWalls[w].color,
+				world->sectorData[s].sectorWalls[w].isPortal,
+				world->sectorData[s].sectorWalls[w].isConnection,
+				world->sectorData[s].sectorWalls[w].portalTargetSector,
+				world->sectorData[s].sectorWalls[w].portalTargetWall
 			};
 
 			if (i >= walls * 2) break;
@@ -128,7 +132,11 @@ int Camera::GetSectorsToProcess()
 				V3_ZERO, V3_ZERO,
 				world->sectorData[s].sectorWalls[w].leftPoint,
 				world->sectorData[s].sectorWalls[w].rightPoint,
-				world->sectorData[s].sectorWalls[w].color
+				world->sectorData[s].sectorWalls[w].color,
+				world->sectorData[s].sectorWalls[w].isPortal,
+				world->sectorData[s].sectorWalls[w].isConnection,
+				world->sectorData[s].sectorWalls[w].portalTargetSector,
+				world->sectorData[s].sectorWalls[w].portalTargetWall
 			};
 		}
 

@@ -299,7 +299,7 @@
             if (currentMode == EditorMode.None) return;
             currentMode = EditorMode.None;
             cursor.ToggleCursor(false);
-            selectionManager.ClearSelection();
+            selectionManager.ResetData();
             refData.imgEditorDraw.Invalidate();
             sectorDrawer.DrawLineEnd = sectorDrawer.DrawLineStart = Point.Empty;
         }
@@ -408,10 +408,10 @@
 
         public void ResetData()
         {
-            sectorDrawer.ActiveSectors.Clear();
             currentMode = EditorMode.None;
             grid.ResetData();
             selectionManager.ResetData();
+            sectorDrawer.ResetData();
 
             UpdateOriginPosText();
             refData.imgEditorDraw.Invalidate();
@@ -439,7 +439,6 @@
         {
             sectorDrawer.UpdateDrawnSectorCeillingHeight(newHeight);
             selectionManager.UpdateSectorCeillingHeight(newHeight);
-
         }
 
         public void ChangedSectorFloorColor(Color newColor)
@@ -526,5 +525,12 @@
         }
 
         void OnDeselect() => refData.lblSelectionData.Enabled = false;
+
+        public void DeleteCurrentSelection()
+        {
+            selectionManager.DeleteCurrentSelection();
+            refData.imgEditorDraw.Invalidate();
+            refData.lblSelectionData.Enabled = false;
+        }
     }
 }

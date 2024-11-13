@@ -31,6 +31,7 @@ public:
 protected:
 	bool debugStepDraw;
 
+	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);
 	virtual void ProcessSector(const ProcessedSector& sector);
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
 };

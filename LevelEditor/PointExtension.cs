@@ -27,7 +27,7 @@
             return MathF.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
         }
 
-        public static float Dot(this PointF left, PointF right) => left.X * right.Y - left.Y * right.X;
+        public static float Dot(this PointF left, PointF right) => left.X * right.X + left.Y * right.Y;
 
         public static PointF Add(this PointF left, PointF right) => new PointF(left.X + right.X, left.Y + right.Y);
         public static PointF Add(this PointF left, float right) => new PointF(left.X + right, left.Y + right);
