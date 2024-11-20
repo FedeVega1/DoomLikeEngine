@@ -32,8 +32,10 @@ struct ProcessedSector
 	int numberOfWalls;
 	float bottomPoint, topPoint, avrgDistanceToCamera;
 	Color floorColor, ceillingColor;
+	int worldSectorIndex;
 
-	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0)
+	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), 
+		avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), worldSectorIndex(-1)
 	{ }
 };
 
@@ -67,7 +69,6 @@ protected:
 private:
 	static const float movSpeed;
 	static const float rotSpeed;
-	static const int numberOfSectorsToProcess = 5;
 
 	int numbProcessedSectors;
 	int xRotation;
@@ -76,8 +77,12 @@ private:
 	std::shared_ptr<ProcessedSector[]> processedSectors;
 
 	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
-	int GetSectorsToProcess();
+	void GetSectorsToProcess();
 	void OrderSectorsByDistance();
+	void CopyWorldSectorData(int& sector, int worldSector);
+	void ProcessWorldSector(int& sector, int worldSector, int portalIndx);
+	bool CheckIfSectorIsProcessed(int sector);
+	int GetClosestWorldSector();
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

@@ -9,7 +9,7 @@
 Time Time::INS = Time();
 Input Input::INS = Input();
 
-const double Time::TimeSlice = .016;
+const float Time::TimeSlice = .016f;
 
 void Game::InitUpdate()
 {

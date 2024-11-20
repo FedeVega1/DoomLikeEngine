@@ -10,7 +10,7 @@ public:
 	Time() : startTime(), simulationTime(0LL), fixedTimeSlice((long long) (TimeSlice * 1000))
 	{ }
 
-	static const double TimeSlice;
+	static const float TimeSlice;
 
 	long long GetTime() const
 	{

@@ -27,23 +27,11 @@ void Renderer::ProcessGame(HWND hwnd, Game* const game)
 
 void Renderer::ProcessSector(const ProcessedSector& sector)
 {
-    int size = sector.numberOfWalls * 2;
-    int surfacePoints[2][DEFAULT_BUFFER_WIDTH];
-
-    for (int s = 0; s < DEFAULT_BUFFER_WIDTH; s++)
-    {
-        surfacePoints[0][s] = 0;
-        surfacePoints[1][s] = DEFAULT_BUFFER_HEIGHT;
-    }
-
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < sector.numberOfWalls; i++)
     {
         if ((sector.sectorWalls[i].leftBtmPoint.y < 1 && sector.sectorWalls[i].rightBtmPoint.y < 1)) continue;
 
-        if (sector.sectorWalls[i].isPortal) 
-        {
-
-        }
+        if (sector.sectorWalls[i].isPortal) { }
 
         ScreenSpaceWall sWall = GetScreenSpaceWall(sector.sectorWalls[i]);
         int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
@@ -63,15 +51,8 @@ void Renderer::ProcessSector(const ProcessedSector& sector)
             yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
             yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
-            if (i % 2 == 0)
-            {
-                surfacePoints[0][x] = yPoint.y;
-                surfacePoints[1][x] = yPoint.x;
-                continue;
-            }
-
-            for (int y = surfacePoints[0][x]; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
-            for (int y = yPoint.y; y < surfacePoints[1][x]; y++) DrawPixel(x, y, sector.ceillingColor);
+            for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
+            for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, sector.ceillingColor);
             if (!sector.sectorWalls[i].isConnection) for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
             if (debugStepDraw) Sleep(50);
         }

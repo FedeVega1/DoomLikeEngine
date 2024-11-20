@@ -182,6 +182,10 @@ struct Vector3
 
 	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")"; }
 
+	Vector2 XY() { return Vector2(x, y); }
+	Vector2 XZ() { return Vector2(x, z); }
+	Vector2 YZ() { return Vector2(y, z); }
+
 	void SetXY(float x, float y) { this->x = x; this->y = y; }
 	void SetXY(Vector2 xy) { x = xy.x; y = xy.y; }
 

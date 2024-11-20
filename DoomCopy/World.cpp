@@ -93,10 +93,10 @@ World::World(const std::string& mapFileName) : Entity(), numberOfSectors(0), sec
 			}
 
 			mapFile.read((char*) intBuffer, intSize);
-			sector.topPoint = ByteArrayToInt(intBuffer, isLittleEndian);
+			sector.topPoint = static_cast<float>(ByteArrayToInt(intBuffer, isLittleEndian));
 
 			mapFile.read((char*) intBuffer, intSize);
-			sector.bottomPoint = ByteArrayToInt(intBuffer, isLittleEndian);
+			sector.bottomPoint = static_cast<float>(ByteArrayToInt(intBuffer, isLittleEndian));
 
 			mapFile.read((char*) colorBuffer, colorSize);
 			sector.floorColor = ByteArrayToColor(colorBuffer);
