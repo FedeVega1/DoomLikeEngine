@@ -22,7 +22,7 @@ void Camera::Start()
 const float Camera::movSpeed = 400;
 const float Camera::rotSpeed = 350;
 
-int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]> &outProcessedSectors)
+int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]>& outProcessedSectors)
 { 
 	outProcessedSectors = processedSectors;
 	return numbProcessedSectors;
@@ -47,16 +47,10 @@ void Camera::AfterTick()
 
 	for (int s = 0; s < numbProcessedSectors; s++)
 	{
-		processedSectors[s].avrgDistanceToCamera = 0;
-
 		int walls = processedSectors[s].numberOfWalls;
 		for (int w = 0; w < walls; w++)
 		{
 			ProcessedWall& wall = processedSectors[s].sectorWalls[w];
-
-			//Vector3 swp = wall.leftBtmPoint;
-			//wall.leftBtmPoint = wall.rightBtmPoint;
-			//wall.rightBtmPoint = swp;
 
 			wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 			wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
@@ -87,8 +81,6 @@ void Camera::AfterTick()
 				ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
 			}
 		}
-
-		processedSectors[s].avrgDistanceToCamera /= walls;
 	}
 }
 
@@ -168,6 +160,7 @@ void Camera::CopyWorldSectorData(int& sector, int worldSector)
 	processedSectors[sector].topPoint = world->sectorData[worldSector].topPoint;
 	processedSectors[sector].floorColor = world->sectorData[worldSector].floorColor;
 	processedSectors[sector].ceillingColor = world->sectorData[worldSector].ceillingColor;
+	processedSectors[sector].sectorID = world->sectorData[worldSector].sectorID;
 	processedSectors[sector++].worldSectorIndex = worldSector;
 }
 

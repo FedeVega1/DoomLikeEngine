@@ -13,10 +13,10 @@ const float Time::TimeSlice = .016f;
 
 void Game::InitUpdate()
 {
-    world = new World(mapToOpen);
+    world = new World(this, mapToOpen);
     entities.push_back(world);
 
-    GameObject* cameraObject = new GameObject();
+    GameObject* cameraObject = new GameObject(this);
     mainCamera = cameraObject->AddComponent<Camera>();
     mainCamera->world = world;
     entities.push_back(cameraObject);
@@ -94,3 +94,7 @@ void Game::CaptureMouseMovement(const POINTS* const mousePos, bool isClipped)
     Input::INS.mousePosition = Vector2Int(mousePos->x, mousePos->y); 
     Input::INS.clippedCursor = isClipped;
 }
+
+Sector* Game::GetSector(int sectorIndx) const { return &world->sectorData[sectorIndx]; }
+Vector2 Game::GetSectorCenter(int sectorIndx) const { return GetSector(sectorIndx)->sectorCenter; }
+float Game::GetSectorFloorHeight(int sectorIndx) const { return GetSector(sectorIndx)->bottomPoint; }

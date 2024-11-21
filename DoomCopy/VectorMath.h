@@ -80,8 +80,23 @@ struct Vector2
 	}
 
 	Vector2 operator-() const { return Vector2(-x, -y); }
+
 	Vector2 operator*(float s) const { return ScalarMult(s); }
+	void operator*=(float s)
+	{
+		Vector2 res = ScalarMult(s);
+		x = res.x;
+		y = res.y;
+	}
+
 	Vector2 operator/(float s) const { return ScalarDiv(s); }
+	void operator/=(float s)
+	{ 
+		Vector2 res = ScalarDiv(s);
+		x = res.x;
+		y = res.y;
+	}
+
 	bool operator==(Vector2 other) const { return Equals(other); }
 
 	static float Distance(Vector2 a, Vector2 b)
@@ -148,8 +163,24 @@ struct Vector3
 	}
 
 	Vector3 operator-() const { return Vector3(-x, -y, -z); }
+
 	Vector3 operator*(float s) const { return ScalarMult(s); }
+	void operator*=(float s)
+	{
+		Vector3 res = ScalarMult(s);
+		x = res.x;
+		y = res.y;
+		z = res.z;
+	}
+
 	Vector3 operator/(float s) const { return ScalarDiv(s); }
+	void operator/=(float s)
+	{
+		Vector3 res = ScalarDiv(s);
+		x = res.x;
+		y = res.y;
+		z = res.z;
+	}
 	bool operator==(Vector3 other) const { return Equals(other); }
 
 	static Vector3 Cross(Vector3 a, Vector3 b)
@@ -182,9 +213,9 @@ struct Vector3
 
 	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")"; }
 
-	Vector2 XY() { return Vector2(x, y); }
-	Vector2 XZ() { return Vector2(x, z); }
-	Vector2 YZ() { return Vector2(y, z); }
+	Vector2 XY() const { return Vector2(x, y); }
+	Vector2 XZ() const { return Vector2(x, z); }
+	Vector2 YZ() const { return Vector2(y, z); }
 
 	void SetXY(float x, float y) { this->x = x; this->y = y; }
 	void SetXY(Vector2 xy) { x = xy.x; y = xy.y; }

@@ -46,7 +46,7 @@ void GDIRenderer::RenderScreen(HWND hwnd, Game* const game)
     std::shared_ptr<ProcessedSector[]> sectors = nullptr;
     int numbSectors = game->GetMainCamera()->GetProcessedSectors(sectors);
     if (!sectors) return;
-    for (int i = 0; i < numbSectors; i++) ProcessSector(sectors[i]);
+    for (int i = 0; i < numbSectors; i++) ProcessSector(i, sectors, numbSectors);
     // DEBUG
 
     int scanlines = StretchDIBits(debugHDC, 0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, 0, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT, buffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);

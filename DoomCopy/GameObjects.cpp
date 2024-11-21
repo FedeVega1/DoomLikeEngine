@@ -43,9 +43,10 @@ void Entity::AfterTickComponents()
 	}
 }
 
-Entity::Entity()
+Entity::Entity(Game* const gameRef)
 {
 	components = std::vector<BaseComponent*>();
+	mainGame = gameRef;
 }
 
 Entity::~Entity()
@@ -60,7 +61,7 @@ Entity::~Entity()
 	components.clear();
 }
 
-GameObject::GameObject() : Entity()
+GameObject::GameObject(Game* const gameRef) : Entity(gameRef)
 {
 	transform = AddComponent<Transform>();
 }

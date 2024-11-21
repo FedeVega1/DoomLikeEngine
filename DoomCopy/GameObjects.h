@@ -18,11 +18,14 @@ public:
 
 	void RemoveComponent();
 	void GetComponent();
+	Game* GetGameRef() const { return mainGame; }
 
-	Entity();
+	Entity(Game* const gameRef);
 	~Entity();
 
 protected:
+	Game* mainGame;
+
 	virtual void Hack() = 0;
 
 private:
@@ -36,7 +39,7 @@ private:
 class GameObject : public Entity
 {
 public:
-	GameObject();
+	GameObject(Game* const gameRef);
 	Transform* GetTransform() const { return transform; }
 
 protected:

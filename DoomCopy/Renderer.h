@@ -32,6 +32,7 @@ protected:
 	bool debugStepDraw;
 
 	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);
-	virtual void ProcessSector(const ProcessedSector& sector);
+	virtual void ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors);
+	int GetSectorIndexFromID(int id, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors) const;
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
 };

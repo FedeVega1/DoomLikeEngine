@@ -22,11 +22,11 @@ namespace OutLog
 			OutputLogger(bool useConsole, bool logToFile);
 			~OutputLogger();
 
-			void LogMessage(OLoggerLevel logLevel, std::string message);
+			void LogMessage(OLoggerLevel logLevel, const std::string& message);
 			void ClearOutput();
 
-			template<typename T, typename ... TArgs>
-			std::string FormatMsg(std::string message, T firstArg, TArgs&&... args)
+			template<typename T, typename... TArgs>
+			std::string FormatMsg(const std::string& message, T firstArg, TArgs&&... args)
 			{
 				std::string oldMessage = std::string(message);
 				std::string newMessage;
@@ -92,13 +92,13 @@ namespace OutLog
 			template<typename T>
 			std::string ToHex(T value) const;
 
-			std::string FormatMsg(std::string message) { return message; }
+			std::string FormatMsg(const std::string& message) { return message; }
 	};
 }
 
 #define InitLogSystem(...) OutLog::OutputLogger::InitLog(__VA_ARGS__)
 #define OLOG(...) OutLog::OutputLogger::GetLoggerInstance()->LogMessage(__VA_ARGS__)
-#define OLOG_CLEAR() OutLog::OutputLogger::GetLoggerInstance()->ClearOutput();
+#define OLOG_CLEAR() OutLog::OutputLogger::GetLoggerInstance()->ClearOutput()
 
 #define OLOG_V(x) OLOG(OutLog::OLoggerLevel::Verbose, x)
 #define OLOG_L(x) OLOG(OutLog::OLoggerLevel::Log, x)
@@ -108,11 +108,19 @@ namespace OutLog
 
 #define OFORMAT(...) OutLog::OutputLogger::GetLoggerInstance()->FormatMsg(__VA_ARGS__)
 
-#define OLOG_VF(...) OLOG(OutLog::OLoggerLevel::Verbose, OFORMAT(__VA_ARGS__));
-#define OLOG_LF(...) OLOG(OutLog::OLoggerLevel::Log, OFORMAT(__VA_ARGS__));
-#define OLOG_WF(...) OLOG(OutLog::OLoggerLevel::Warning, OFORMAT(__VA_ARGS__));
-#define OLOG_EF(...) OLOG(OutLog::OLoggerLevel::Error, OFORMAT(__VA_ARGS__));
-#define OLOG_CF(...) OLOG(OutLog::OLoggerLevel::Critical, OFORMAT(__VA_ARGS__));
+#define OLOG_VF(...) OLOG(OutLog::OLoggerLevel::Verbose, OFORMAT(__VA_ARGS__))
+#define OLOG_LF(...) OLOG(OutLog::OLoggerLevel::Log, OFORMAT(__VA_ARGS__))
+#define OLOG_WF(...) OLOG(OutLog::OLoggerLevel::Warning, OFORMAT(__VA_ARGS__))
+#define OLOG_EF(...) OLOG(OutLog::OLoggerLevel::Error, OFORMAT(__VA_ARGS__))
+#define OLOG_CF(...) OLOG(OutLog::OLoggerLevel::Critical, OFORMAT(__VA_ARGS__))
+
+#ifdef DLL
+extern "C" _declspec(dllexport) void InitLogSys(bool useConsole, bool logToFile) { InitLogSystem(useConsole, logToFile); }
+extern "C" _declspec(dllexport) void Log(int logLevel, char* message) { OLOG((OutLog::OLoggerLevel) logLevel, message); }
+extern "C" _declspec(dllexport) void ClearConsole() { OLOG_CLEAR(); }
+
+// Don't think you can export a generic method like FormatMsg :(
+#endif
 
 #ifdef ODIS_V
 #define OLOG_V(x)

@@ -29,13 +29,13 @@ struct ProcessedWall
 struct ProcessedSector
 {
 	ProcessedWall* sectorWalls;
-	int numberOfWalls;
-	float bottomPoint, topPoint, avrgDistanceToCamera;
+	int numberOfWalls, sectorID;
+	float bottomPoint, topPoint;
 	Color floorColor, ceillingColor;
 	int worldSectorIndex;
 
 	ProcessedSector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), 
-		avrgDistanceToCamera(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), worldSectorIndex(-1)
+		floorColor(0, 0, 0), ceillingColor(0, 0, 0), worldSectorIndex(-1), sectorID(-1)
 	{ }
 };
 

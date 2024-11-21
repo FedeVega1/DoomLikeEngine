@@ -4,6 +4,9 @@
 class Transform : public BaseComponent
 {
 public:
+	friend class Game;
+	friend class World;
+
 	virtual void Start() override;
 	virtual void Tick() override;
 
@@ -29,12 +32,18 @@ public:
 		return Vector3((float) -SCTABLE.cos[currentRot], (float) SCTABLE.sin[currentRot], 0);
 	}
 
+	int GetCurrentSector() const { return currentSector; }
+
 	Transform();
 
 protected:
 	virtual void OnDestroy() override;
 
 private:
-	Vector3 pos;
+	int currentSector;
 	float rot;
+	Vector3 pos;
+	Vector3 lastPos;
+
+	void SetCurrentSector(int sectorNumber) { currentSector = sectorNumber; }
 };

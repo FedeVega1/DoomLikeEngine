@@ -25,8 +25,10 @@ void Renderer::ProcessGame(HWND hwnd, Game* const game)
     InvalidateRect(hwnd, NULL, false);
 }
 
-void Renderer::ProcessSector(const ProcessedSector& sector)
+void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors)
 {
+    const ProcessedSector& sector = sectorPtr[sectorIndx];
+
     for (int i = 0; i < sector.numberOfWalls; i++)
     {
         if ((sector.sectorWalls[i].leftBtmPoint.y < 1 && sector.sectorWalls[i].rightBtmPoint.y < 1)) continue;
@@ -53,10 +55,46 @@ void Renderer::ProcessSector(const ProcessedSector& sector)
 
             for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
             for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, sector.ceillingColor);
-            if (!sector.sectorWalls[i].isConnection) for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
+
+            if (sector.sectorWalls[i].isConnection)
+            {
+                int sectIndx = GetSectorIndexFromID(sector.sectorWalls[i].portalTargetSector, sectorPtr, numbSectors);
+                if (sectIndx == -1) continue;
+                const ProcessedSector& prevSector = sectorPtr[sectIndx];
+
+                if (sector.bottomPoint < prevSector.bottomPoint)
+                {
+                    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
+                    int prevDYBtm = prevSWall.leftBtmPoint.y - prevSWall.rightBtmPoint.y;
+                    int prevYPoint = ((prevDYBtm * diff) / dX) + prevSWall.rightBtmPoint.y;
+                    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, COLOR_WHITE);
+                }
+
+                if (sector.topPoint > prevSector.topPoint)
+                {
+                    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
+                    int prevDYTop = prevSWall.leftTopPoint.y - prevSWall.rightTopPoint.y;
+                    int prevYPoint = ((prevDYTop * diff) / dX) + prevSWall.rightTopPoint.y;
+                    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, COLOR_WHITE);
+                }
+            }
+            else
+                for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
+
             if (debugStepDraw) Sleep(50);
         }
     }
+}
+
+int Renderer::GetSectorIndexFromID(int id, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors) const
+{
+    for (int i = 0; i < numbSectors; i++)
+    {
+        if (sectorPtr[i].sectorID != id) continue;
+        return i;
+    }
+
+    return -1;
 }
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)

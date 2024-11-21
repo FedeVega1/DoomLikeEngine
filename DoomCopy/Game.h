@@ -24,6 +24,28 @@ public:
 	void CaptureMouseRelease(UINT btn);
 	void CaptureMouseMovement(const POINTS* const mousePos, bool isClipped);
 
+	template<class T>
+	T* CreateGameObjectAtSector(int sector, Vector3 relativePos)
+	{
+		T* newGB = new T(this);
+		newGB->GetTransform()->SetCurrentSector(sector);
+		Vector2 xy = GetSectorCenter(sector) + relativePos.XY();
+		newGB->GetTransform()->SetPos(Vector3(xy.x, xy.y, GetSectorFloorHeight(sector) + relativePos.z));
+		entities.push_back(newGB);
+		return newGB;
+	}
+
+	template<class T, typename ... TArgs>
+	T* CreateGameObjectAtSector(int sector, Vector3 relativePos, TArgs&&... gameObjectArgs)
+	{
+		T* newGB = new T(this, gameObjectArgs);
+		newGB->GetTransform()->SetCurrentSector(sector);
+		Vector2 xy = GetSectorCenter(sector) + relativePos.XY();
+		newGB->GetTransform()->SetPos(Vector3(xy.x, xy.y, GetSectorFloorHeight(sector) + relativePos.z));
+		entities.push_back(newGB);
+		return newGB;
+	}
+
 	size_t GetEntityCount() const { return entities.size(); }
 	GameObject* GetGameObject(size_t indx) const { return dynamic_cast<GameObject*>(entities[indx]); }
 	class Camera* GetMainCamera() const { return mainCamera; }
@@ -35,4 +57,8 @@ private:
 	class World* world;
 
 	std::string mapToOpen = "asd.bsp";
+
+	struct Sector* GetSector(int sectorIndx) const;
+	Vector2 GetSectorCenter(int sectorIndx) const;
+	float GetSectorFloorHeight(int sectorIndx) const;
 };

@@ -381,19 +381,30 @@
                 bool haslftConnection = CheckPointInsideWall(newSector.walls[w].leftPoint, newSector.walls[w].normal, out (int, int) lftIndx, ignoreSector);
                 bool hasRgtConnection = CheckPointInsideWall(newSector.walls[w].rightPoint, newSector.walls[w].normal, out (int, int) rgtIndx, ignoreSector);
 
-                if (haslftConnection && hasRgtConnection && lftIndx.Item1 == rgtIndx.Item1 && lftIndx.Item2 == rgtIndx.Item2) 
+                if (haslftConnection && hasRgtConnection) 
                 {
-                    ConnectWalls(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
+                    if (lftIndx.Item1 == rgtIndx.Item1)
+                    {
+                        if (lftIndx.Item2 == rgtIndx.Item2)
+                            ConnectWall_SameS_SameW(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
+                        else ConnectWall_SameS_DiffW(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
+                        continue;
+                    }
+
+                    ConnectWall_DiffS(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
                 }
+
+                if (haslftConnection || hasRgtConnection)
+                 ConnectWall_MissingConn(newSector.walls[w], (lftIndx.Item1, lftIndx.Item2), (ignoreSector, w));
             }
 
             DrawLineEnd = DrawLineStart = Point.Empty;
             currentDrawnSector.ResetDrawSector();
         }
 
-        void ConnectWalls(Wall newWall, (int, int) w1, (int, int) w2)
+        void ConnectWall_SameS_SameW(Wall newWall, (int, int) w1, (int, int) w2)
         {
-            COLoggerImport.LogNormal("CONNECT!");
+            COLoggerImport.LogNormal("CONNECT! - Same Sector & wall");
 
             Wall splicedWall = sectors[w1.Item1].walls[w1.Item2];
             if ((newWall.leftPoint == splicedWall.leftPoint || newWall.leftPoint == splicedWall.rightPoint) && 
@@ -411,6 +422,40 @@
             sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.color));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
             sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.color));
+        }
+
+        void ConnectWall_SameS_DiffW(Wall newWall, (int, int) w1, (int, int) w2)
+        {
+            COLoggerImport.LogNormal("CONNECT! - Same Sector, Different Wall");
+
+            Wall splicedWall = sectors[w1.Item1].walls[w1.Item2];
+            if ((newWall.leftPoint == splicedWall.leftPoint || newWall.leftPoint == splicedWall.rightPoint) &&
+                (newWall.rightPoint == splicedWall.leftPoint || newWall.rightPoint == splicedWall.rightPoint))
+            {
+                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(w2.Item1, w2.Item2, true);
+                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2, true);
+                return;
+            }
+
+            sectors[w1.Item1].walls.RemoveAt(w1.Item2);
+            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.color).MakePortal(w2.Item1, w2.Item2, true);
+
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.color));
+        }
+
+        void ConnectWall_DiffS(Wall newWall, (int, int) w1, (int, int) w2)
+        {
+            COLoggerImport.LogNormal("CONNECT! - Different Sectors, Different Wall");
+            COLoggerImport.LogWarning("Not Implemented... Skiping");
+        }
+
+        void ConnectWall_MissingConn(Wall newWall, (int, int) w1, (int, int) w2)
+        {
+            COLoggerImport.LogNormal("CONNECT! - Missing Connection");
+            COLoggerImport.LogWarning("Not Implemented... Skiping");
         }
 
         public void ToggleLineDrawMode(bool toggle, Point CursorPos)
