@@ -5,7 +5,8 @@
         public const int DefaultUnitSize = 10;
         const int MinGridSize = 1, MaxGridSize = 8;
         public static readonly Point MaxMapSize = new Point(2000, 2000);
-        public static Point InitialOriginPos = new Point(330, 210);
+        public static readonly Point RefOriginPos = new Point(330, 210);
+        public static Point InitialOriginPos = RefOriginPos;
 
         int gridSize = 3;
         Point originPosition;
@@ -143,5 +144,7 @@
             originPosition.X += (int) MathF.Round(diff.X);
             originPosition.Y += (int) MathF.Round(diff.Y);
         }
+
+        public Point GetCurrentOriginPos() => originPosition;
     }
 }

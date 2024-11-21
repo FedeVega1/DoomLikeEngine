@@ -40,7 +40,7 @@
         {
             Point diff = b.Subtract(a);
             PointF dir = diff.Normalize();
-            return new PointF(-dir.Y, dir.X);
+            return new PointF(dir.Y, -dir.X);
         }
     }
 
@@ -77,7 +77,7 @@
                 sum += (walls[i].leftPoint.Y + walls[n].leftPoint.Y) * (walls[n].leftPoint.X - walls[i].leftPoint.X);
             }
 
-            return sum < 0;
+            return sum >= 0;
         }
 
         public void FlipWalls()
@@ -98,9 +98,9 @@
         public void ResetDrawSector()
         {
             walls.Clear();
-            floorHeight = 0;
-            ceillingHeight = 10;
-            ceillingColor = floorColor = Color.Black;
+            //floorHeight = 0;
+            //ceillingHeight = 10;
+            //ceillingColor = floorColor = Color.Black;
         }
     }
 
@@ -439,7 +439,7 @@
         static PointF GetNormalFromPoints(Point diff)
         {
             PointF dir = diff.Normalize();
-            return new PointF(-dir.Y, dir.X);
+            return new PointF(dir.Y, -dir.X);
         }
 
         public void LoadSectors(ref List<Sector> sectors) => this.sectors = sectors;

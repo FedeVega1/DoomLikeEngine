@@ -78,7 +78,6 @@ private:
 
 	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
 	void GetSectorsToProcess();
-	void OrderSectorsByDistance();
 	void CopyWorldSectorData(int& sector, int worldSector);
 	void ProcessWorldSector(int& sector, int worldSector, int portalIndx);
 	bool CheckIfSectorIsProcessed(int sector);

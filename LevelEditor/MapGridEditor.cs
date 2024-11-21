@@ -350,7 +350,7 @@
             Cursor.Position = cursorPos;
         }
 
-        public void GetSectors(out List<Sector> sectors, bool dividePoints)
+        public void GetSectors(out List<Sector> sectors)
         {
             sectors = new List<Sector>();
 
@@ -363,14 +363,8 @@
                 for (int j = 0; j < size; j++)
                 {
                     Wall wall = sectorDrawer.ActiveSectors[i].walls[j];
-                    wall.leftPoint = wall.leftPoint.Subtract(Grid.InitialOriginPos);
-                    wall.rightPoint = wall.rightPoint.Subtract(Grid.InitialOriginPos);
-
-                    //if (dividePoints)
-                    //{
-                    //    wall.leftPoint = wall.leftPoint.Divide(1.25f, true);
-                    //    wall.rightPoint = wall.rightPoint.Divide(1.25f, true);
-                    //}
+                    wall.leftPoint = wall.leftPoint.Subtract(grid.GetCurrentOriginPos());
+                    wall.rightPoint = wall.rightPoint.Subtract(grid.GetCurrentOriginPos());
 
                     walls.Add(wall);
                 }

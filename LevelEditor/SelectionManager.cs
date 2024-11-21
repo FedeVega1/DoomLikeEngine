@@ -321,7 +321,7 @@ namespace LevelEditor
 
             LoopSectors((int i, Sector sector) =>
             {
-                sector.ceillingColor = newColor;
+                sector.floorColor = newColor;
                 ActiveSectors[i] = sector;
             });
         }

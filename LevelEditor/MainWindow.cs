@@ -196,7 +196,7 @@ namespace LevelEditor
 
         void SaveFile(string fileName, Stream fileStream)
         {
-            gridEditor.GetSectors(out List<Sector> sectors, false);
+            gridEditor.GetSectors(out List<Sector> sectors);
             Text = "Level Editor - " + Path.GetFileName(fileName);
             if (fileManager.SaveToFile(fileName, fileStream, ref sectors) || fileManager.CurrentOpenedFile == fileName) return;
             fileStream.Close();
@@ -324,7 +324,7 @@ namespace LevelEditor
             string fileName = Path.ChangeExtension(fileManager.CurrentOpenedFile, ".bsp");
             using (Stream fileStream = File.Create(fileName))
             {
-                gridEditor.GetSectors(out List<Sector> sectors, true);
+                gridEditor.GetSectors(out List<Sector> sectors);
                 if (fileManager.CompileMap(fileName, fileStream, ref sectors)) return;
                 fileStream.Close();
                 File.Delete(fileName);

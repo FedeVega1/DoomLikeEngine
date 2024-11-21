@@ -54,9 +54,9 @@ void Camera::AfterTick()
 		{
 			ProcessedWall& wall = processedSectors[s].sectorWalls[w];
 
-			Vector3 swp = wall.leftBtmPoint;
-			wall.leftBtmPoint = wall.rightBtmPoint;
-			wall.rightBtmPoint = swp;
+			//Vector3 swp = wall.leftBtmPoint;
+			//wall.leftBtmPoint = wall.rightBtmPoint;
+			//wall.rightBtmPoint = swp;
 
 			wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 			wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
@@ -73,7 +73,6 @@ void Camera::AfterTick()
 			wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 			wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-			//processedSectors[s].avrgDistanceToCamera += Vector2::Distance(currentPos.XY(), Vector2((wall.leftBtmPoint.x + wall.rightBtmPoint.x) / 2.0f, (wall.leftBtmPoint.y + wall.rightBtmPoint.y) / 2.0f));
 			if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
 
 			if (wall.leftBtmPoint.y < 1)
@@ -91,8 +90,6 @@ void Camera::AfterTick()
 
 		processedSectors[s].avrgDistanceToCamera /= walls;
 	}
-
-	//OrderSectorsByDistance();
 }
 
 void Camera::GetSectorsToProcess()
@@ -225,21 +222,6 @@ void Camera::ClipBehindCamera(Vector3& pointA, const Vector3& pointB)
 
 	if (pointA.y < 1) pointA.y = 1;
 	else if (pointA.y > 1) pointA.y = -1;
-}
-
-void Camera::OrderSectorsByDistance()
-{
-	int sectors = numbProcessedSectors - 1;
-	for (int i = 0; i < sectors; i++)
-	{
-		for (int j = 0; j < sectors - i; j++)
-		{
-			if (processedSectors[j].avrgDistanceToCamera <= processedSectors[j + 1].avrgDistanceToCamera) continue;
-			const ProcessedSector sector = processedSectors[j];
-			processedSectors[j] = processedSectors[j + 1];
-			processedSectors[j + 1] = sector;
-		}
-	}
 }
 
 void Camera::DebugForwardBack(float axis)

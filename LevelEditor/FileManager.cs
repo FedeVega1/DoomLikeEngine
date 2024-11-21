@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     internal class FileManager
     {
@@ -32,7 +30,6 @@ namespace LevelEditor
                 for (int i = 0; i < versionSize; i++) fileStream.WriteByte(Convert.ToByte(versionSplit[i]));
 
                 fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
-
                 for (int i = 0; i < size; i++)
                 {
                     int count = sectors[i].walls.Count;
