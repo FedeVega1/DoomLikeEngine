@@ -4,21 +4,25 @@ class BaseComponent;
 struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
-	Color color;
+	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
 	int portalTargetSector, portalTargetWall;
 
-	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), color(0, 0, 0), isPortal(false), 
-		isConnection(false), portalTargetSector(-1), portalTargetWall(-1)
+	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), topColor(0, 0, 0), 
+		inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(-1), 
+		portalTargetWall(-1)
 	{ }
 
-	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color c, bool portal, bool connection, int sector, int wall)
+	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color tc, Color ic, Color bc,
+		bool portal, bool connection, int sector, int wall)
 	{ 
 		leftTopPoint = ltPoint;
 		rightTopPoint = rtPoint;
 		leftBtmPoint = lbPoint;
 		rightBtmPoint = rbPoint;
-		color = c;
+		topColor = tc;
+		inColor = ic;
+		btmColor = bc;
 		isPortal = portal;
 		isConnection = connection;
 		portalTargetSector = sector;

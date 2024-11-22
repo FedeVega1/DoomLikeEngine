@@ -3,18 +3,22 @@
 struct Wall
 {
 	Vector2 leftPoint, rightPoint;
-	Color color;
+	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
 	int portalTargetSector, portalTargetWall;
 
-	Wall() : leftPoint(), rightPoint(), color(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(-1), portalTargetWall(-1)
+	Wall() : leftPoint(), rightPoint(), topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), 
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1)
 	{ }
 
-	Wall(Vector2 lPoint, Vector2 rPoint, Color c, bool portal, bool connection, int sector, int wall)
+	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int sector, 
+		int wall)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
-		color = c;
+		topColor = tc;
+		inColor = ic;
+		btmColor = bc;
 		isPortal = portal;
 		isConnection = connection;
 		portalTargetSector = sector;
@@ -75,7 +79,7 @@ private:
 	int numberOfSectors;
 
 	const char BSPVersionSize = 2;
-	char const BSPVersion[2]{ 00, 02 };
+	char const BSPVersion[2]{ 00, 03 };
 
 	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;

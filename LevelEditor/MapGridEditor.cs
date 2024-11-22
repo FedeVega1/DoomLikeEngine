@@ -1,22 +1,28 @@
-﻿namespace LevelEditor
+﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace LevelEditor
 {
     readonly internal struct GridEditorData
     {
         public readonly ToolStripStatusLabel lblCursor, lblOrigin, lblGridSize;
-        public readonly ToolStripButton btnWallColor, btnCeillingColor, btnFloorColor;
+        public readonly ToolStripButton btnWallTopColor, btnWallInColor, btnWallBtmColor;
+        public readonly ToolStripButton btnCeillingColor, btnFloorColor;
         public readonly ToolStripNumberControl numbCeilling, numbFloor;
         public readonly PictureBox imgEditorDraw;
         public readonly ToolStripLabel lblSelectionData;
 
         public GridEditorData(ref ToolStripStatusLabel cursor, ref ToolStripStatusLabel origin, ref ToolStripStatusLabel gridSize, 
-            ref PictureBox editorDraw, ref ToolStripButton wallColor, ref ToolStripButton ceilColor, ref ToolStripButton floorColor,
-            ref ToolStripNumberControl ceilNumb, ref ToolStripNumberControl floorNumb, ref ToolStripLabel selectData)
+            ref PictureBox editorDraw, ref ToolStripButton wallTopColor, ref ToolStripButton wallInColor, ref ToolStripButton wallBtmColor, 
+            ref ToolStripButton ceilColor, ref ToolStripButton floorColor, ref ToolStripNumberControl ceilNumb, 
+            ref ToolStripNumberControl floorNumb, ref ToolStripLabel selectData)
         {
             lblCursor = cursor;
             lblOrigin = origin;
             lblGridSize = gridSize;
             imgEditorDraw = editorDraw;
-            btnWallColor = wallColor;
+            btnWallTopColor = wallTopColor;
+            btnWallInColor = wallInColor;
+            btnWallBtmColor = wallBtmColor;
             btnCeillingColor = ceilColor;
             btnFloorColor = floorColor;
             numbCeilling = ceilNumb;
@@ -28,12 +34,12 @@
     internal class MapCursor
     {
         System.Windows.Forms.Timer moveMapTimer;
-        Action<object?, EventArgs> timerTick;
+        Action<object, EventArgs> timerTick;
 
         public bool CursorIsActive { get; private set; }
         public Point MouseCurrentPos { get; set; }
 
-        public MapCursor(Action<object?, EventArgs> tick)
+        public MapCursor(Action<object, EventArgs> tick)
         {
             moveMapTimer = new System.Windows.Forms.Timer();
             timerTick = tick;
@@ -63,7 +69,7 @@
             CursorIsActive = false;
         }
 
-        void MoveMapTimer_Tick(object? sender, EventArgs e) => timerTick?.Invoke(sender, e);
+        void MoveMapTimer_Tick(object sender, EventArgs e) => timerTick?.Invoke(sender, e);
 
         public void DrawCursor(ref Graphics graph)
         {
@@ -318,7 +324,7 @@
             }
         }
 
-        void MoveMapTimer_Tick(object? sender, EventArgs e)
+        void MoveMapTimer_Tick(object sender, EventArgs e)
         {
             Point cursorPos = Cursor.Position;
             Point clientCursorPos = refData.imgEditorDraw.PointToClient(cursorPos);
@@ -417,10 +423,22 @@
             refData.imgEditorDraw.Invalidate();
         }
 
-        public void ChangedWallColor(Color newColor)
+        public void ChangedWallTopColor(Color newColor)
         {
-            sectorDrawer.UpdateDrawnWallColor(newColor);
-            selectionManager.UpdateWallColor(newColor);
+            sectorDrawer.UpdateDrawnWallTopColor(newColor);
+            selectionManager.UpdateWallColor(newColor, 0);
+        }
+
+        public void ChangedWallInnerColor(Color newColor)
+        {
+            sectorDrawer.UpdateDrawnWallInnerColor(newColor);
+            selectionManager.UpdateWallColor(newColor, 1);
+        }
+
+        public void ChangedWallBottomColor(Color newColor)
+        {
+            sectorDrawer.UpdateDrawnWallBottomColor(newColor);
+            selectionManager.UpdateWallColor(newColor, 2);
         }
 
         public void ChangedSectorFloorHeight(int newHeight)
@@ -466,14 +484,17 @@
                 case SelectionType.Wall:
                     if (hasMultipleSelections)
                     {
-                        refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
+                        refData.btnWallTopColor.ForeColor = refData.btnWallTopColor.BackColor = Color.Black;
+                        refData.btnWallInColor.ForeColor = refData.btnWallInColor.BackColor = Color.Black;
+                        refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = Color.Black;
                         refData.lblSelectionData.Enabled = false;
                     }
 
                     Wall selectedWall = sectorDrawer.ActiveSectors[data.sectorIndex].walls[data.wallIndex];
 
-                    refData.btnWallColor.ForeColor = selectedWall.color;
-                    refData.btnWallColor.BackColor = selectedWall.color;
+                    refData.btnWallTopColor.ForeColor = refData.btnWallTopColor.BackColor = selectedWall.colors[0];
+                    refData.btnWallInColor.ForeColor = refData.btnWallInColor.BackColor = selectedWall.colors[1];
+                    refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = selectedWall.colors[2];
                     refData.lblSelectionData.Enabled = true;
 
                     Point nodeA = selectedWall.leftPoint.Subtract(Grid.InitialOriginPos);
@@ -485,23 +506,19 @@
                     if (refData.numbFloor.NumericUpDownControl == null || refData.numbCeilling.NumericUpDownControl == null) return;
                     if (hasMultipleSelections)
                     {
-                        refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = Color.Black;
+                        refData.btnWallTopColor.ForeColor = refData.btnWallTopColor.BackColor = Color.Black;
+                        refData.btnWallInColor.ForeColor = refData.btnWallInColor.BackColor = Color.Black;
+                        refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = Color.Black;
                         refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = Color.Black;
                         refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = Color.Black;
                         refData.numbFloor.NumericUpDownControl.Value = refData.numbCeilling.NumericUpDownControl.Value = 0;
                         refData.lblSelectionData.Enabled = false;
                     }
 
-                    Color wallsColor = sectorDrawer.ActiveSectors[data.sectorIndex].walls[0].color;
-                    int size = sectorDrawer.ActiveSectors[data.sectorIndex].walls.Count;
-                    for (int i = 1; i < size; i++)
-                    {
-                        if (sectorDrawer.ActiveSectors[data.sectorIndex].walls[i].color == wallsColor) continue;
-                        wallsColor = Color.Black;
-                        break;
-                    }
+                    refData.btnWallTopColor.ForeColor = refData.btnWallTopColor.BackColor = CheckSectorWallsColor(sectorDrawer.ActiveSectors[data.sectorIndex].walls, 0);
+                    refData.btnWallInColor.ForeColor = refData.btnWallInColor.BackColor = CheckSectorWallsColor(sectorDrawer.ActiveSectors[data.sectorIndex].walls, 1);
+                    refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = CheckSectorWallsColor(sectorDrawer.ActiveSectors[data.sectorIndex].walls, 2);
 
-                    refData.btnWallColor.ForeColor = refData.btnWallColor.BackColor = wallsColor;
                     refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].floorColor;
                     refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingColor;
                     refData.numbFloor.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].floorHeight;
@@ -516,6 +533,19 @@
                     refData.lblSelectionData.Text = string.Format("Node: {0}", node);
                     break;
             }
+        }
+
+        Color CheckSectorWallsColor(List<Wall> walls, int colorIndx)
+        {
+            Color wallsColor = walls[0].colors[colorIndx];
+            int size = walls.Count;
+            for (int i = 1; i < size; i++)
+            {
+                if (walls[i].colors[colorIndx] == wallsColor) continue;
+                return Color.Black;
+            }
+
+            return wallsColor;
         }
 
         void OnDeselect() => refData.lblSelectionData.Enabled = false;

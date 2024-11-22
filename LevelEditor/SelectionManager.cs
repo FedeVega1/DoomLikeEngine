@@ -286,14 +286,14 @@ namespace LevelEditor
             return false;
         }
 
-        public void UpdateWallColor(Color newColor)
+        public void UpdateWallColor(Color newColor, int colorIndx)
         {
             switch (CurrentSelectionType)
             {
                 case SelectionType.Wall:
                     LoopWalls((int i, int j, Wall wall) =>
                     {
-                        wall.color = newColor;
+                        wall.colors[colorIndx] = newColor;
                         ActiveSectors[i].walls[j] = wall;
                     });
                     break;
@@ -305,7 +305,7 @@ namespace LevelEditor
                         for (int j = 0; j < size; j++)
                         {
                             Wall wall = sector.walls[j];
-                            wall.color = newColor;
+                            wall.colors[colorIndx] = newColor;
                             sector.walls[j] = wall;
                         }
 

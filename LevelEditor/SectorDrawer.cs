@@ -2,17 +2,47 @@
 {
     internal struct Wall
     {
+        public struct WallColors
+        {
+            public Color topColor, inColor, btmColor;
+
+            public Color this[int indx]
+            {
+                get => indx switch
+                {
+                    0 => topColor,
+                    1 => inColor,
+                    _ => btmColor,
+                };
+
+                set
+                {
+                    switch (indx)
+                    {
+                        case 0: topColor = value; break;
+                        case 1: inColor = value; break;
+                        default: btmColor = value; break;
+                    }
+                }
+            }
+
+            public Color[] ToArray() { return new Color[3] { topColor, inColor, btmColor }; }
+        }
+
         public Point leftPoint, rightPoint;
-        public Color color;
+        public WallColors colors;
         public PointF middle, normal;
         public bool isPortal, isConnection;
         public int portalTargetSector, portalTargetWall;
 
-        public Wall(Point left, Point right, Color c)
+        public Wall(Point left, Point right, Color[] c)
         {
             leftPoint = left;
             rightPoint = right;
-            color = c;
+
+            colors[0] = c[0];
+            colors[1] = c[1];
+            colors[2] = c[2];
 
             isPortal = false;
             portalTargetSector = -1;
@@ -42,6 +72,8 @@
             PointF dir = diff.Normalize();
             return new PointF(dir.Y, -dir.X);
         }
+
+        public Color[] GetColors() { return colors.ToArray(); }
     }
 
     internal struct Sector
@@ -114,7 +146,7 @@
     {
         bool mouseOnGrid;
         Sector currentDrawnSector;
-        Color currentDrawnWallsColor;
+        Color[] currentDrawnWallsColor;
         Point currentCursorPos;
         List<Sector> sectors;
         MapGridEditor editor;
@@ -138,6 +170,8 @@
         public SectorDrawer(MapGridEditor gridEditor)
         {
             editor = gridEditor;
+
+            currentDrawnWallsColor = new Color[3];
             sectors = new List<Sector>();
             currentDrawnSector = new Sector();
 
@@ -417,11 +451,11 @@
 
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
             sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.color).MakePortal(w2.Item1, w2.Item2, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors()).MakePortal(w2.Item1, w2.Item2, true);
 
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors()));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors()));
         }
 
         void ConnectWall_SameS_DiffW(Wall newWall, (int, int) w1, (int, int) w2)
@@ -439,11 +473,11 @@
 
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
             sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.color).MakePortal(w2.Item1, w2.Item2, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors()).MakePortal(w2.Item1, w2.Item2, true);
 
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors()));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.color));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors()));
         }
 
         void ConnectWall_DiffS(Wall newWall, (int, int) w1, (int, int) w2)
@@ -491,7 +525,9 @@
 
         public void UpdateDrawnSectorFloorHeight(int newHeight) => currentDrawnSector.floorHeight = newHeight;
         public void UpdateDrawnSectorCeillingHeight(int newHeight) => currentDrawnSector.ceillingHeight = newHeight;
-        public void UpdateDrawnWallColor(Color color) => currentDrawnWallsColor = color;
+        public void UpdateDrawnWallTopColor(Color color) => currentDrawnWallsColor[0] = color;
+        public void UpdateDrawnWallInnerColor(Color color) => currentDrawnWallsColor[1] = color;
+        public void UpdateDrawnWallBottomColor(Color color) => currentDrawnWallsColor[2] = color;
         public void UpdateDrawnSectorFloorColor(Color color) => currentDrawnSector.floorColor = color;
         public void UpdateDrawnSectorCeillingColor(Color color) => currentDrawnSector.ceillingColor = color;
 
@@ -640,7 +676,7 @@
         {
             currentCursorPos = Point.Empty;
             currentDrawnSector = new Sector();
-            currentDrawnWallsColor = Color.Black;
+            currentDrawnWallsColor[0] = currentDrawnWallsColor[1] = currentDrawnWallsColor[2] = Color.Black;
             sectors.Clear();
         }
     }

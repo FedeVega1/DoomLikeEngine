@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "Game.h"
 #include "GameObjects.h"
 #include "VectorMath.h"
@@ -36,10 +36,13 @@ void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSect
         if (sector.sectorWalls[i].isPortal) { }
 
         ScreenSpaceWall sWall = GetScreenSpaceWall(sector.sectorWalls[i]);
+
+        // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
         int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
         int dYTop = sWall.rightTopPoint.y - sWall.leftTopPoint.y;
         int dX = sWall.rightBtmPoint.x - sWall.leftBtmPoint.x;
-        if (dX == 0) dX = 1;
+        if (dX == 0) dX = 1; // Avoid division by 0
+
         int startX = sWall.leftTopPoint.x;
 
         sWall.leftTopPoint.x = std::clamp(sWall.leftTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
@@ -47,17 +50,25 @@ void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSect
 
         for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
         {
+            // Get the Y position of each pixel across their ΔY
+
             int diff = x - startX + .5f;
             Vector2Int yPoint = Vector2Int(((dYBtm * diff) / dX) + sWall.leftBtmPoint.y, ((dYTop * diff) / dX) + sWall.leftTopPoint.y);
 
             yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
             yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
+            // Draw the Ceilling and Floor from their respective line into the Screen limits
+
             for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
             for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, sector.ceillingColor);
 
             if (sector.sectorWalls[i].isConnection)
             {
+                // If a connection is found, don't draw the wall and find it's neighbour wall.
+                // Render the bottom and top walls from the difference in height between our
+                // current sector and its neighbour
+
                 int sectIndx = GetSectorIndexFromID(sector.sectorWalls[i].portalTargetSector, sectorPtr, numbSectors);
                 if (sectIndx == -1) continue;
                 const ProcessedSector& prevSector = sectorPtr[sectIndx];
@@ -67,7 +78,7 @@ void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSect
                     ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
                     int prevDYBtm = prevSWall.leftBtmPoint.y - prevSWall.rightBtmPoint.y;
                     int prevYPoint = ((prevDYBtm * diff) / dX) + prevSWall.rightBtmPoint.y;
-                    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, COLOR_WHITE);
+                    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, sWall.btmColor);
                 }
 
                 if (sector.topPoint > prevSector.topPoint)
@@ -75,11 +86,14 @@ void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSect
                     ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
                     int prevDYTop = prevSWall.leftTopPoint.y - prevSWall.rightTopPoint.y;
                     int prevYPoint = ((prevDYTop * diff) / dX) + prevSWall.rightTopPoint.y;
-                    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, COLOR_WHITE);
+                    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, sWall.topColor);
                 }
             }
             else
-                for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sector.sectorWalls[i].color);
+            {
+                // Render the actual wall
+                for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sWall.inColor);
+            }
 
             if (debugStepDraw) Sleep(50);
         }
@@ -106,7 +120,7 @@ ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
         Vector2Int((int) std::roundf(((wall.rightTopPoint.x * fov) / wall.rightTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightTopPoint.z * fov) / wall.rightTopPoint.y) + HALF_HEIGHT)),
         Vector2Int((int) std::roundf(((wall.leftBtmPoint.x * fov) / wall.leftBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftBtmPoint.z * fov) / wall.leftBtmPoint.y) + HALF_HEIGHT)),
         Vector2Int((int) std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT)),
-        wall.color
+        wall.topColor, wall.inColor, wall.btmColor,
     };
 }
 

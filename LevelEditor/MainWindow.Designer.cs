@@ -30,9 +30,13 @@ namespace LevelEditor
         private void InitializeComponent()
         {
             Panel panel1;
-            ToolStripLabel LblWallColor;
+            ToolStripLabel LblTopWallColor;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            ToolStripLabel LblWallTexture;
+            ToolStripLabel LblWallTopTexture;
+            ToolStripLabel LblWallInColor;
+            ToolStripLabel LblWallInTexture;
+            ToolStripLabel LblBtmWallColor;
+            ToolStripLabel LblBtmWallTexture;
             ToolStripSeparator toolStripSeparator3;
             ToolStripLabel LblEditModes;
             TableLayoutPanel LayoutPanel;
@@ -46,8 +50,12 @@ namespace LevelEditor
             ToolStripLabel LblCeillingTexture;
             ToolStripLabel LblFloorTexture;
             toolStrip1 = new ToolStrip();
-            BtnWallColor = new ToolStripButton();
-            BtnWallTexture = new ToolStripButton();
+            BtnWallTopColor = new ToolStripButton();
+            BtnWallTopTexture = new ToolStripButton();
+            BtnWallInColor = new ToolStripButton();
+            BtnWallInTexture = new ToolStripButton();
+            BtnWallBtmColor = new ToolStripButton();
+            BtnWallBtmTexture = new ToolStripButton();
             BtnLinesMode = new ToolStripButton();
             BtnEditNodes = new ToolStripButton();
             BtnEditWalls = new ToolStripButton();
@@ -84,8 +92,12 @@ namespace LevelEditor
             LblCursor = new ToolStripStatusLabel();
             ColorPanel = new ColorDialog();
             panel1 = new Panel();
-            LblWallColor = new ToolStripLabel();
-            LblWallTexture = new ToolStripLabel();
+            LblTopWallColor = new ToolStripLabel();
+            LblWallTopTexture = new ToolStripLabel();
+            LblWallInColor = new ToolStripLabel();
+            LblWallInTexture = new ToolStripLabel();
+            LblBtmWallColor = new ToolStripLabel();
+            LblBtmWallTexture = new ToolStripLabel();
             toolStripSeparator3 = new ToolStripSeparator();
             LblEditModes = new ToolStripLabel();
             LayoutPanel = new TableLayoutPanel();
@@ -126,7 +138,7 @@ namespace LevelEditor
             toolStrip1.CanOverflow = false;
             toolStrip1.Dock = DockStyle.Fill;
             toolStrip1.GripStyle = ToolStripGripStyle.Hidden;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { LblWallColor, BtnWallColor, LblWallTexture, BtnWallTexture, BtnLinesMode, toolStripSeparator3, LblEditModes, BtnEditNodes, BtnEditWalls, LblEditSectors });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { LblTopWallColor, BtnWallTopColor, LblWallTopTexture, BtnWallTopTexture, LblWallInColor, BtnWallInColor, LblWallInTexture, BtnWallInTexture, LblBtmWallColor, BtnWallBtmColor, LblBtmWallTexture, BtnWallBtmTexture, BtnLinesMode, toolStripSeparator3, LblEditModes, BtnEditNodes, BtnEditWalls, LblEditSectors });
             toolStrip1.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
@@ -136,41 +148,110 @@ namespace LevelEditor
             toolStrip1.TabIndex = 0;
             toolStrip1.Text = "toolStrip1";
             // 
-            // LblWallColor
+            // LblTopWallColor
             // 
-            LblWallColor.Name = "LblWallColor";
-            LblWallColor.Size = new Size(191, 15);
-            LblWallColor.Text = "Wall Color";
+            LblTopWallColor.Name = "LblTopWallColor";
+            LblTopWallColor.Size = new Size(191, 15);
+            LblTopWallColor.Text = "Top Wall Color";
             // 
-            // BtnWallColor
+            // BtnWallTopColor
             // 
-            BtnWallColor.AutoToolTip = false;
-            BtnWallColor.BackColor = Color.Black;
-            BtnWallColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallColor.Image = (Image) resources.GetObject("BtnWallColor.Image");
-            BtnWallColor.ImageTransparentColor = Color.Magenta;
-            BtnWallColor.Name = "BtnWallColor";
-            BtnWallColor.Size = new Size(191, 19);
-            BtnWallColor.Text = ".";
-            BtnWallColor.Click += BtnWallColor_Click;
+            BtnWallTopColor.AutoToolTip = false;
+            BtnWallTopColor.BackColor = Color.Black;
+            BtnWallTopColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallTopColor.Image = (Image) resources.GetObject("BtnWallTopColor.Image");
+            BtnWallTopColor.ImageTransparentColor = Color.Magenta;
+            BtnWallTopColor.Name = "BtnWallTopColor";
+            BtnWallTopColor.Size = new Size(191, 19);
+            BtnWallTopColor.Text = ".";
+            BtnWallTopColor.Click += BtnWallTopColor_Click;
             // 
-            // LblWallTexture
+            // LblWallTopTexture
             // 
-            LblWallTexture.Name = "LblWallTexture";
-            LblWallTexture.Size = new Size(191, 15);
-            LblWallTexture.Text = "Wall Texture";
+            LblWallTopTexture.Name = "LblWallTopTexture";
+            LblWallTopTexture.Size = new Size(191, 15);
+            LblWallTopTexture.Text = "Top Wall Texture";
             // 
-            // BtnWallTexture
+            // BtnWallTopTexture
             // 
-            BtnWallTexture.AutoToolTip = false;
-            BtnWallTexture.BackColor = Color.Black;
-            BtnWallTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallTexture.Image = (Image) resources.GetObject("BtnWallTexture.Image");
-            BtnWallTexture.ImageTransparentColor = Color.Magenta;
-            BtnWallTexture.Name = "BtnWallTexture";
-            BtnWallTexture.Size = new Size(191, 19);
-            BtnWallTexture.Text = ".";
-            BtnWallTexture.Click += BtnWallTexture_Click;
+            BtnWallTopTexture.AutoToolTip = false;
+            BtnWallTopTexture.BackColor = Color.Black;
+            BtnWallTopTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallTopTexture.Image = (Image) resources.GetObject("BtnWallTopTexture.Image");
+            BtnWallTopTexture.ImageTransparentColor = Color.Magenta;
+            BtnWallTopTexture.Name = "BtnWallTopTexture";
+            BtnWallTopTexture.Size = new Size(191, 19);
+            BtnWallTopTexture.Text = ".";
+            // 
+            // LblWallInColor
+            // 
+            LblWallInColor.Name = "LblWallInColor";
+            LblWallInColor.Size = new Size(191, 15);
+            LblWallInColor.Text = "Inner Wall Color";
+            // 
+            // BtnWallInColor
+            // 
+            BtnWallInColor.AutoToolTip = false;
+            BtnWallInColor.BackColor = Color.Black;
+            BtnWallInColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallInColor.Image = (Image) resources.GetObject("BtnWallInColor.Image");
+            BtnWallInColor.ImageTransparentColor = Color.Magenta;
+            BtnWallInColor.Name = "BtnWallInColor";
+            BtnWallInColor.Size = new Size(191, 19);
+            BtnWallInColor.Text = ".";
+            BtnWallInColor.Click += BtnWallInColor_Click;
+            // 
+            // LblWallInTexture
+            // 
+            LblWallInTexture.Name = "LblWallInTexture";
+            LblWallInTexture.Size = new Size(191, 15);
+            LblWallInTexture.Text = "Inner Wall Texture";
+            // 
+            // BtnWallInTexture
+            // 
+            BtnWallInTexture.AutoToolTip = false;
+            BtnWallInTexture.BackColor = Color.Black;
+            BtnWallInTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallInTexture.Image = (Image) resources.GetObject("BtnWallInTexture.Image");
+            BtnWallInTexture.ImageTransparentColor = Color.Magenta;
+            BtnWallInTexture.Name = "BtnWallInTexture";
+            BtnWallInTexture.Size = new Size(191, 19);
+            BtnWallInTexture.Text = ".";
+            // 
+            // LblBtmWallColor
+            // 
+            LblBtmWallColor.Name = "LblBtmWallColor";
+            LblBtmWallColor.Size = new Size(191, 15);
+            LblBtmWallColor.Text = "Bottom Wall Color";
+            // 
+            // BtnWallBtmColor
+            // 
+            BtnWallBtmColor.AutoToolTip = false;
+            BtnWallBtmColor.BackColor = Color.Black;
+            BtnWallBtmColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallBtmColor.Image = (Image) resources.GetObject("BtnWallBtmColor.Image");
+            BtnWallBtmColor.ImageTransparentColor = Color.Magenta;
+            BtnWallBtmColor.Name = "BtnWallBtmColor";
+            BtnWallBtmColor.Size = new Size(191, 19);
+            BtnWallBtmColor.Text = ".";
+            BtnWallBtmColor.Click += BtnWallBtmColor_Click;
+            // 
+            // LblBtmWallTexture
+            // 
+            LblBtmWallTexture.Name = "LblBtmWallTexture";
+            LblBtmWallTexture.Size = new Size(191, 15);
+            LblBtmWallTexture.Text = "Bottom Wall Texture";
+            // 
+            // BtnWallBtmTexture
+            // 
+            BtnWallBtmTexture.AutoToolTip = false;
+            BtnWallBtmTexture.BackColor = Color.Black;
+            BtnWallBtmTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnWallBtmTexture.Image = (Image) resources.GetObject("BtnWallBtmTexture.Image");
+            BtnWallBtmTexture.ImageTransparentColor = Color.Magenta;
+            BtnWallBtmTexture.Name = "BtnWallBtmTexture";
+            BtnWallBtmTexture.Size = new Size(191, 19);
+            BtnWallBtmTexture.Text = ".";
             // 
             // BtnLinesMode
             // 
@@ -648,8 +729,8 @@ namespace LevelEditor
         private ToolStripLabel LblFloorTexture;
         private ToolStripLabel LblCeillingTexture;
         private ToolStripLabel LblWallColor;
-        private ToolStripButton BtnWallTexture;
-        private ToolStripButton BtnWallColor;
+        private ToolStripButton BtnWallBtmTexture;
+        private ToolStripButton BtnWallBtmColor;
         private ToolStripButton BtnCeillingColor;
         private ToolStripButton BtnFloorColor;
         private ToolStripButton BtnCeillingtexture;
@@ -659,5 +740,9 @@ namespace LevelEditor
         private ColorDialog ColorPanel;
         private ToolStripMenuItem BtnCompileMap;
         private ToolStripLabel LblSelectionData;
+        private ToolStripButton BtnWallTopColor;
+        private ToolStripButton BtnWallTopTexture;
+        private ToolStripButton BtnWallInColor;
+        private ToolStripButton BtnWallInTexture;
     }
 }

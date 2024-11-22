@@ -14,7 +14,7 @@ static inline int PixelPos(int x, int y) { return x + (DEFAULT_BUFFER_WIDTH * y)
 struct ScreenSpaceWall
 {
 	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
-	Color color;
+	Color topColor, inColor, btmColor;
 };
 
 class Renderer
@@ -33,6 +33,7 @@ protected:
 
 	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);
 	virtual void ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors);
-	int GetSectorIndexFromID(int id, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors) const;
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
+
+	int GetSectorIndexFromID(int id, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors) const;
 };

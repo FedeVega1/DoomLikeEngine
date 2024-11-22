@@ -75,7 +75,13 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 				OLOG_LF("Sector: {0} - Wall: {1} - LeftPoint {2} | RightPoint {3}", i, j, wall.leftPoint.ToString(), wall.rightPoint.ToString());
 
 				mapFile.read((char*) colorBuffer, colorSize);
-				wall.color = ByteArrayToColor(colorBuffer);
+				wall.topColor = ByteArrayToColor(colorBuffer);
+
+				mapFile.read((char*) colorBuffer, colorSize);
+				wall.inColor = ByteArrayToColor(colorBuffer);
+
+				mapFile.read((char*) colorBuffer, colorSize);
+				wall.btmColor = ByteArrayToColor(colorBuffer);
 
 				unsigned char portalFlags;
 				mapFile.read((char*) & portalFlags, 1);

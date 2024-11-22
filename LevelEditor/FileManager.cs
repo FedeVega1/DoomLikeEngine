@@ -2,7 +2,7 @@
 {
     internal class FileManager
     {
-        const string MAPVersion = "v00.02", BSPVersion = "v00.02";
+        const string MAPVersion = "v00.03", BSPVersion = "v00.03";
 
         public string CurrentOpenedFile { get; private set; }
 
@@ -39,7 +39,9 @@
                     {
                         fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
-                        fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[0], out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[1], out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[2], out arrSize), 0, arrSize);
                         byte portalFlags = (byte) ((sectors[i].walls[j].isPortal ? 0b1 : 0) << 1 | (sectors[i].walls[j].isConnection ? 0b1 : 0));
                         fileStream.WriteByte(portalFlags);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetSector, out arrSize), 0, arrSize);
@@ -125,7 +127,13 @@
                         wall.rightPoint = ByteArrayToPoint(pointBuffer, isLittleEndian);
 
                         fileStream.Read(colorBuffer, 0, colorSize);
-                        wall.color = ByteArrayToColor(colorBuffer);
+                        wall.colors[0] = ByteArrayToColor(colorBuffer);
+
+                        fileStream.Read(colorBuffer, 0, colorSize);
+                        wall.colors[1] = ByteArrayToColor(colorBuffer);
+
+                        fileStream.Read(colorBuffer, 0, colorSize);
+                        wall.colors[2] = ByteArrayToColor(colorBuffer);
 
                         int portalFlag = fileStream.ReadByte();
                         wall.isPortal = (portalFlag & 0b1) == 0b1;
@@ -197,7 +205,9 @@
                     {
                         fileStream.Write(ToByteArray(sectors[i].walls[j].leftPoint, out arrSize), 0, arrSize);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].rightPoint, out arrSize), 0, arrSize);
-                        fileStream.Write(ToByteArray(sectors[i].walls[j].color, out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[0], out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[1], out arrSize), 0, arrSize);
+                        fileStream.Write(ToByteArray(sectors[i].walls[j].colors[2], out arrSize), 0, arrSize);
                         byte portalFlags = (byte) ((sectors[i].walls[j].isPortal ? 0x1 : 0) << 1 | (sectors[i].walls[j].isConnection ? 0x1 : 0));
                         fileStream.WriteByte(portalFlags);
                         fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetSector, out arrSize), 0, arrSize);

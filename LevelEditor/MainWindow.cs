@@ -38,19 +38,20 @@ namespace LevelEditor
             about = new AboutWindow();
             COLoggerImport.InitLogSys(true, false);
 
-            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, ref ImgEditorDraw, ref BtnWallColor,
-                ref BtnCeillingColor, ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight, ref LblSelectionData));
+            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, 
+                ref ImgEditorDraw, ref BtnWallTopColor, ref BtnWallInColor, ref BtnWallBtmColor, ref BtnCeillingColor, 
+                ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight, ref LblSelectionData));
             fileManager = new FileManager();
         }
 
-        void OnFormClosed(object? sender, FormClosedEventArgs e)
+        void OnFormClosed(object sender, FormClosedEventArgs e)
         {
             shiftCtrlTimer.Tick -= CheckShiftCtrlKey;
             shiftCtrlTimer.Stop();
             shiftCtrlTimer.Dispose();
         }
 
-        void CheckShiftCtrlKey(object? sender, EventArgs e) => gridEditor.ShiftKeyDown = gridEditor.CtrlKeyDown = false;
+        void CheckShiftCtrlKey(object sender, EventArgs e) => gridEditor.ShiftKeyDown = gridEditor.CtrlKeyDown = false;
 
         protected override bool ProcessKeyPreview(ref Message m)
         {
@@ -71,7 +72,7 @@ namespace LevelEditor
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (NumbCeillingHeight.Focused || NumbFloorHeight.Focused) 
+            if (NumbCeillingHeight.Focused || NumbFloorHeight.Focused)
                 return base.ProcessCmdKey(ref msg, keyData);
 
             Keys processedKeyData = keyData;
@@ -138,8 +139,8 @@ namespace LevelEditor
             if (NumbCeillingHeight.NumericUpDownControl != null) NumbCeillingHeight.NumericUpDownControl.Value = 10;
             if (NumbFloorHeight.NumericUpDownControl != null) NumbFloorHeight.NumericUpDownControl.Value = 0;
 
-            BtnWallColor.BackColor = Color.Black;
-            BtnWallColor.ForeColor = Color.Black;
+            BtnWallBtmColor.BackColor = Color.Black;
+            BtnWallBtmColor.ForeColor = Color.Black;
             BtnCeillingColor.BackColor = Color.Black;
             BtnCeillingColor.ForeColor = Color.Black;
             BtnFloorColor.BackColor = Color.Black;
@@ -208,7 +209,7 @@ namespace LevelEditor
         void MainWindow_DragDrop(object sender, DragEventArgs e)
         {
             if (e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            string[]? data = (string[]?) e.Data.GetData(DataFormats.FileDrop);
+            string[] data = (string[]) e.Data.GetData(DataFormats.FileDrop);
 
             if (data == null || !File.Exists(data[0]) || Path.GetExtension(data[0]) != ".map") return;
 
@@ -229,16 +230,42 @@ namespace LevelEditor
             gridEditor.OnResize();
         }
 
-        void BtnWallColor_Click(object sender, EventArgs e)
+        void BtnWallTopColor_Click(object sender, EventArgs e)
         {
             using (ColorDialog colorDialog = new ColorDialog())
             {
                 colorDialog.FullOpen = true;
-                colorDialog.Color = BtnWallColor.BackColor;
+                colorDialog.Color = BtnWallTopColor.BackColor;
                 if (colorDialog.ShowDialog() != DialogResult.OK) return;
-                BtnWallColor.BackColor = colorDialog.Color;
-                BtnWallColor.ForeColor = colorDialog.Color;
-                gridEditor.ChangedWallColor(colorDialog.Color);
+                BtnWallTopColor.BackColor = colorDialog.Color;
+                BtnWallTopColor.ForeColor = colorDialog.Color;
+                gridEditor.ChangedWallTopColor(colorDialog.Color);
+            }
+        }
+
+        void BtnWallInColor_Click(object sender, EventArgs e)
+        {
+            using (ColorDialog colorDialog = new ColorDialog())
+            {
+                colorDialog.FullOpen = true;
+                colorDialog.Color = BtnWallInColor.BackColor;
+                if (colorDialog.ShowDialog() != DialogResult.OK) return;
+                BtnWallInColor.BackColor = colorDialog.Color;
+                BtnWallInColor.ForeColor = colorDialog.Color;
+                gridEditor.ChangedWallInnerColor(colorDialog.Color);
+            }
+        }
+
+        void BtnWallBtmColor_Click(object sender, EventArgs e)
+        {
+            using (ColorDialog colorDialog = new ColorDialog())
+            {
+                colorDialog.FullOpen = true;
+                colorDialog.Color = BtnWallBtmColor.BackColor;
+                if (colorDialog.ShowDialog() != DialogResult.OK) return;
+                BtnWallBtmColor.BackColor = colorDialog.Color;
+                BtnWallBtmColor.ForeColor = colorDialog.Color;
+                gridEditor.ChangedWallBottomColor(colorDialog.Color);
             }
         }
 
