@@ -29,11 +29,24 @@
             public Color[] ToArray() { return new Color[3] { topColor, inColor, btmColor }; }
         }
 
+        static ulong WallCounter = 0;
+
         public Point leftPoint, rightPoint;
         public WallColors colors;
         public PointF middle, normal;
         public bool isPortal, isConnection;
         public int portalTargetSector, portalTargetWall;
+        public readonly ulong wallID;
+
+        public Wall()
+        {
+            leftPoint = rightPoint = Point.Empty;
+            colors = new WallColors();
+            isPortal = false;
+            portalTargetSector = -1;
+            portalTargetWall = -1;
+            wallID = WallCounter++;
+        }
 
         public Wall(Point left, Point right, Color[] c)
         {
@@ -49,6 +62,22 @@
             portalTargetWall = -1;
 
             UpdateMiddleAndNormal();
+            wallID = WallCounter++;
+        }
+
+        public Wall(Point newLeft, Point newRight, Wall wallCopy)
+        {
+            leftPoint = newLeft;
+            rightPoint = newRight;
+
+            colors = wallCopy.colors;
+
+            isPortal = wallCopy.isPortal;
+            portalTargetSector = wallCopy.portalTargetSector;
+            portalTargetWall = wallCopy.portalTargetWall;
+
+            UpdateMiddleAndNormal();
+            wallID = wallCopy.wallID;
         }
 
         public void UpdateMiddleAndNormal()
@@ -73,7 +102,7 @@
             return new PointF(dir.Y, -dir.X);
         }
 
-        public Color[] GetColors() { return colors.ToArray(); }
+        public readonly Color[] GetColors() { return colors.ToArray(); }
     }
 
     internal struct Sector
@@ -81,6 +110,7 @@
         public List<Wall> walls;
         public Color floorColor, ceillingColor;
         public int floorHeight, ceillingHeight;
+        public Point centroid, min, max;
 
         public Sector()
         {
@@ -88,6 +118,8 @@
             floorHeight = 0;
             ceillingHeight = 10;
             ceillingColor = floorColor = Color.Black;
+
+            UpdateSectorValues();
         }
 
         public Sector(Sector sector)
@@ -97,9 +129,11 @@
             ceillingHeight = sector.ceillingHeight;
             floorColor = sector.floorColor;
             ceillingColor = sector.ceillingColor;
+
+            UpdateSectorValues();
         }
 
-        public bool CheckWallsOrientation()
+        public readonly bool CheckWallsOrientation()
         {
             int size = walls.Count, sum = 0;
             for (int i = 0; i < size; i++)
@@ -133,6 +167,61 @@
             //floorHeight = 0;
             //ceillingHeight = 10;
             //ceillingColor = floorColor = Color.Black;
+        }
+
+        public void UpdateSectorValues()
+        {
+            centroid = CalculateCentroid();
+            (Point, Point) minMax = GetMinMaxPoints();
+            min = minMax.Item1;
+            max = minMax.Item2;
+        }
+
+        public readonly Point CalculateCentroid()
+        {
+            if (walls.Count == 0) return Point.Empty;
+
+            Point centroid = Point.Empty;
+            int sumArea = 0, area = 0;
+
+            int size = walls.Count;
+            for (int i = 0; i < size; i++)
+            {
+                area = walls[i].leftPoint.X * walls[i].rightPoint.Y - walls[i].rightPoint.X * walls[i].leftPoint.Y;
+                sumArea += area;
+                centroid.X += (walls[i].leftPoint.X + walls[i].rightPoint.X) * area;
+                centroid.Y += (walls[i].leftPoint.Y + walls[i].rightPoint.Y) * area;
+            }
+
+            centroid.Divide(sumArea * 3);
+            return centroid;
+        }
+
+        public readonly (Point, Point) GetMinMaxPoints()
+        {
+            Point min = new Point(int.MaxValue, int.MaxValue), max = new Point(int.MinValue, int.MinValue);
+            int wallsSize = walls.Count;
+            for (int i = 0; i < wallsSize; i++)
+            {
+                if (walls[i].leftPoint.X < min.X) min.X = walls[i].leftPoint.X;
+                else if (walls[i].leftPoint.X > max.X) max.X = walls[i].leftPoint.X;
+
+                if (walls[i].rightPoint.X < min.X) min.X = walls[i].rightPoint.X;
+                else if (walls[i].rightPoint.X > max.X) max.X = walls[i].rightPoint.X;
+
+                if (walls[i].leftPoint.Y < min.Y) min.Y = walls[i].leftPoint.Y;
+                else if (walls[i].leftPoint.Y > max.Y) max.Y = walls[i].leftPoint.Y;
+
+                if (walls[i].rightPoint.Y < min.Y) min.Y = walls[i].rightPoint.Y;
+                else if (walls[i].rightPoint.Y > max.Y) max.Y = walls[i].rightPoint.Y;
+            }
+
+            return (min, max);
+        }
+
+        public readonly bool PointInsideSector(Point point)
+        {
+            return point.X < min.X || point.X > max.X || point.Y < min.Y || point.Y > max.Y;
         }
     }
 
@@ -591,24 +680,7 @@
             int sectorSize = sectors.Count;
             for (int i = 0; i < sectorSize; i++)
             {
-                Point min = new Point(int.MaxValue, int.MaxValue), max = new Point(int.MinValue, int.MinValue);
-                int wallsSize = sectors[i].walls.Count;
-                for (int j = 0; j < wallsSize; j++)
-                {
-                    if (ActiveSectors[i].walls[j].leftPoint.X < min.X) min.X = ActiveSectors[i].walls[j].leftPoint.X;
-                    else if (ActiveSectors[i].walls[j].leftPoint.X > max.X) max.X = ActiveSectors[i].walls[j].leftPoint.X;
-
-                    if (ActiveSectors[i].walls[j].rightPoint.X < min.X) min.X = ActiveSectors[i].walls[j].rightPoint.X;
-                    else if (ActiveSectors[i].walls[j].rightPoint.X > max.X) max.X = ActiveSectors[i].walls[j].rightPoint.X;
-
-                    if (ActiveSectors[i].walls[j].leftPoint.Y < min.Y) min.Y = ActiveSectors[i].walls[j].leftPoint.Y;
-                    else if (ActiveSectors[i].walls[j].leftPoint.Y > max.Y) max.Y = ActiveSectors[i].walls[j].leftPoint.Y;
-
-                    if (ActiveSectors[i].walls[j].rightPoint.Y < min.Y) min.Y = ActiveSectors[i].walls[j].rightPoint.Y;
-                    else if (ActiveSectors[i].walls[j].rightPoint.Y > max.Y) max.Y = ActiveSectors[i].walls[j].rightPoint.Y;
-                }
-
-                if (mousePoint.X < min.X || mousePoint.X > max.X || mousePoint.Y < min.Y || mousePoint.Y > max.Y) continue;
+                if (ActiveSectors[i].PointInsideSector(mousePoint)) continue;
                 indx = i;
                 return true;
             }

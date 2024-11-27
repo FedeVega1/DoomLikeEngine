@@ -86,6 +86,7 @@ private:
 	void ProcessWorldSector(int& sector, int worldSector, int portalIndx);
 	bool CheckIfSectorIsProcessed(int sector);
 	int GetClosestWorldSector();
+	bool FindPlayerPositionOnBSP(struct BSPNode*& foundNode);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

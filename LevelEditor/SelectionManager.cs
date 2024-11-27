@@ -204,6 +204,7 @@ namespace LevelEditor
                             sector.walls[j] = wall;
                         }
 
+                        sector.UpdateSectorValues();
                         ActiveSectors[i] = sector;
                     });
                     break;

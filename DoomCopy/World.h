@@ -26,6 +26,7 @@ struct Wall
 	}
 
 	Vector2 GetAvrgMiddlePoint() const { return Vector2((leftPoint.x + rightPoint.x) / 2.0f, (leftPoint.y + rightPoint.y) / 2.0f); }
+	bool VectorInFrontWall(Vector2 pos, Vector2 vector) const;
 };
 
 struct Sector
@@ -59,6 +60,17 @@ struct Sector
 	Vector2 CalculateSectorCentroid() const;
 };
 
+struct BSPNode
+{
+	int sectorIndx;
+	Wall wall;
+	std::shared_ptr<BSPNode> frontNode;
+	std::shared_ptr<BSPNode> backNode;
+
+	BSPNode() : sectorIndx(-1), wall(), frontNode(nullptr), backNode(nullptr)
+	{ }
+};
+
 class World : public Entity
 {
 public:
@@ -77,11 +89,17 @@ protected:
 private:
 	Sector* sectorData;
 	int numberOfSectors;
+	BSPNode rootNode;
+	int maxNumberOfBSPNodes;
+
+	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3;
+	unsigned char intBuffer[intSize], pointBuffer[pointSize], colorBuffer[colorSize];
 
 	const char BSPVersionSize = 2;
-	char const BSPVersion[2]{ 00, 03 };
+	char const BSPVersion[2]{ 00, 04 };
 
 	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Color ByteArrayToColor(const unsigned char* const byteArray) const;
+	void ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLittleEndian, int& nodeCount) const;
 };

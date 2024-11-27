@@ -8,10 +8,6 @@
 
 World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef), numberOfSectors(0), sectorData(nullptr)
 {
-	const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3;
-
-	unsigned char intBuffer[intSize], pointBuffer[pointSize], colorBuffer[colorSize];
-
 	OLOG_LF("Working Directory: {0}", std::filesystem::current_path().string());
 
 	std::ifstream mapFile;
@@ -84,7 +80,7 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 				wall.btmColor = ByteArrayToColor(colorBuffer);
 
 				unsigned char portalFlags;
-				mapFile.read((char*) & portalFlags, 1);
+				mapFile.read((char*) &portalFlags, 1);
 
 				wall.isPortal = (portalFlags & 0b1) == 0b1;
 				wall.isConnection = (portalFlags & 0b10) == 0b10;
@@ -115,6 +111,17 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 			OLOG_LF("Loaded Sector: {0} Correct", i);
 		}
 
+		mapFile.read((char*) intBuffer, intSize);
+
+		mapFile.read((char*) intBuffer, intSize);
+		maxNumberOfBSPNodes = ByteArrayToInt(intBuffer, isLittleEndian);
+
+		int nodeCount = 0;
+		rootNode = BSPNode();
+		ReadBSPNode(&rootNode, &mapFile, isLittleEndian, nodeCount);
+
+		OLOG_LF("Loaded {0} BSP nodes from a total of {1}", nodeCount, maxNumberOfBSPNodes);
+
 		mapFile.close();
 		OLOG_L("Loaded all Sectors Correct!");
 	}
@@ -124,6 +131,65 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 		strerror_s(buffer, 50, errno);
 		OLOG_CF("Couldn't load file {0}!! - Error: {1}, {2}", mapFileName, e.code().message(), buffer);
 	}
+}
+
+void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLittleEndian, int& nodeCount) const
+{
+	unsigned char singleByte;
+	stream->read((char*) &singleByte, 1);
+
+	stream->read((char*) intBuffer, intSize);
+	currentNode->sectorIndx = ByteArrayToInt(intBuffer, isLittleEndian);
+	OLOG_LF("Node Sector: {0}", currentNode->sectorIndx);
+
+	Wall wall = Wall();
+
+	stream->read((char*) pointBuffer, pointSize);
+	wall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+	stream->read((char*) pointBuffer, pointSize);
+	wall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+	stream->read((char*) colorBuffer, colorSize);
+	wall.topColor = ByteArrayToColor(colorBuffer);
+
+	stream->read((char*) colorBuffer, colorSize);
+	wall.inColor = ByteArrayToColor(colorBuffer);
+
+	stream->read((char*) colorBuffer, colorSize);
+	wall.btmColor = ByteArrayToColor(colorBuffer);
+
+	unsigned char portalFlags;
+	stream->read((char*) &portalFlags, 1);
+
+	wall.isPortal = (portalFlags & 0b1) == 0b1;
+	wall.isConnection = (portalFlags & 0b10) == 0b10;
+
+	stream->read((char*) intBuffer, intSize);
+	wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
+
+	stream->read((char*) intBuffer, intSize);
+	wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+
+	currentNode->wall = wall;
+
+	stream->read((char*) &singleByte, 1);
+
+	nodeCount++;
+	if (nodeCount >= maxNumberOfBSPNodes) return;
+
+	stream->read((char*) &singleByte, 1);
+
+	if (singleByte == 0xBB)
+	{
+		currentNode->frontNode = std::make_shared<BSPNode>();
+		ReadBSPNode(currentNode->frontNode.get(), stream, isLittleEndian, nodeCount);
+		return;
+	}
+
+	if (singleByte != 0xCC) return;
+	currentNode->backNode = std::make_shared<BSPNode>();
+	ReadBSPNode(currentNode->backNode.get(), stream, isLittleEndian, nodeCount);
 }
 
 World::~World()
@@ -247,4 +313,21 @@ Vector2 Sector::CalculateSectorCentroid() const
 
 	centroid /= (sumArea * 3.0f);
 	return centroid;
+}
+
+bool Wall::VectorInFrontWall(Vector2 pos, Vector2 vector) const
+{
+	Vector2 posVector = (vector + pos) - pos;
+	Vector2 posRightvector = rightPoint - pos;
+	Vector2 wallVector = rightPoint - leftPoint;
+
+	float num = Vector2::Cross(posRightvector, posVector);
+	float den = Vector2::Cross(posVector, wallVector);
+
+	bool numIsZero = std::abs(num) < kEpsilon;
+	bool denIsZero = std::abs(den) < kEpsilon;
+
+	if (numIsZero && denIsZero) return true;
+	if (num < 0 || (numIsZero && den > 0)) return true;
+	return false;
 }

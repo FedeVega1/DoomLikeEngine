@@ -352,6 +352,7 @@ namespace LevelEditor
             using (Stream fileStream = File.Create(fileName))
             {
                 gridEditor.GetSectors(out List<Sector> sectors);
+
                 if (fileManager.CompileMap(fileName, fileStream, ref sectors)) return;
                 fileStream.Close();
                 File.Delete(fileName);

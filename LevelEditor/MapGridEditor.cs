@@ -1,6 +1,4 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     readonly internal struct GridEditorData
     {

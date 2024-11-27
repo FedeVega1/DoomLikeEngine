@@ -28,6 +28,7 @@
         }
 
         public static float Dot(this PointF left, PointF right) => left.X * right.X + left.Y * right.Y;
+        public static int Cross(this Point left, Point right) => left.X * right.Y - right.X * left.Y;
 
         public static PointF Add(this PointF left, PointF right) => new PointF(left.X + right.X, left.Y + right.Y);
         public static PointF Add(this PointF left, float right) => new PointF(left.X + right, left.Y + right);

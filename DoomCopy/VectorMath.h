@@ -106,6 +106,7 @@ struct Vector2
 	}
 
 	static Vector2 Clamp(Vector2 vector, float min, float max) { return Vector2(std::clamp(vector.x, min, max), std::clamp(vector.y, min, max)); }
+	static float Cross(Vector2 vector, Vector2 other) { return (vector.x * other.y) - (other.x * vector.y); }
 
 	inline std::string ToString() const { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
 

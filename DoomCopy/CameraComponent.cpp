@@ -37,6 +37,15 @@ void Camera::AfterTick()
 {
 	GetSectorsToProcess();
 
+	//BSPNode* closestNode;
+	//if (!FindPlayerPositionOnBSP(closestNode))
+	//{
+	//	OLOG_E("Can't find the camera anywhere inside the level!");
+	//	return;
+	//}
+
+	//OLOG_LF("Camera found at sector: {0}", closestNode->sectorIndx);
+
 	Vector3 currentPos = GetTransform()->GetPos();
 	currentPos.z += cameraZOffset;
 	currentPos.z *= -1;
@@ -82,6 +91,30 @@ void Camera::AfterTick()
 			}
 		}
 	}
+}
+
+bool Camera::FindPlayerPositionOnBSP(BSPNode*& foundNode)
+{
+	BSPNode* lastNode = nullptr;
+	BSPNode* currentNode = &world->rootNode;
+	Vector2 currentPos = GetTransform()->GetPos().XY();
+	Vector2 forward = GetTransform()->GetForwardVector().XY();
+
+	while (currentNode != nullptr)
+	{
+		if (!currentNode->wall.VectorInFrontWall(currentPos, forward))
+		{
+			lastNode = currentNode;
+			currentNode = currentNode->frontNode.get();
+			continue;
+		}
+
+		lastNode = currentNode;
+		currentNode = currentNode->backNode.get();
+	}
+
+	foundNode = lastNode;
+	return foundNode != nullptr;
 }
 
 void Camera::GetSectorsToProcess()
