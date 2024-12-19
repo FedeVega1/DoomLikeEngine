@@ -79,6 +79,10 @@ namespace LevelEditor
             if (obj is bool) return ((bool) obj).ToString();
             if (obj is float) return ((float) obj).ToString();
             if (obj is double) return ((double) obj).ToString();
+            if (obj is ushort) return ((ushort) obj).ToString();
+            if (obj is sbyte) return ((sbyte) obj).ToString();
+            if (obj is uint) return ((uint) obj).ToString();
+            if (obj is ulong) return ((ulong) obj).ToString();
             if (obj is Point p) return "(" + p.X.ToString() + ", " + p.Y.ToString() + ")";
             if (obj is PointF pf) return "(" + pf.X.ToString() + ", " + pf.Y.ToString() + ")";
             return "Unknow Type";

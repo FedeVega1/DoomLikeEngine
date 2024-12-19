@@ -7,14 +7,15 @@ struct ProcessedWall
 	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
 	int portalTargetSector, portalTargetWall;
+	int wallSectorIndx;
 
 	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), topColor(0, 0, 0), 
 		inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(-1), 
-		portalTargetWall(-1)
+		portalTargetWall(-1), wallSectorIndx(-1)
 	{ }
 
 	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color tc, Color ic, Color bc,
-		bool portal, bool connection, int sector, int wall)
+		bool portal, bool connection, int sector, int wall, int sectorIndx)
 	{ 
 		leftTopPoint = ltPoint;
 		rightTopPoint = rtPoint;
@@ -27,6 +28,7 @@ struct ProcessedWall
 		isConnection = connection;
 		portalTargetSector = sector;
 		portalTargetWall = wall;
+		wallSectorIndx = sectorIndx;
 	}
 };
 
@@ -52,7 +54,7 @@ public:
 	virtual void Tick() override;
 	virtual void AfterTick() override;
 
-	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0), cameraZOffset(0)
+	Camera() : BaseComponent(), xRotation(0), world(nullptr), processedSectors(nullptr), numbProcessedSectors(0), cameraZOffset(0), closestNodes(nullptr), numbProcessedWalls(0), processedWalls(nullptr)
 	{ }
 
 	~Camera()
@@ -62,9 +64,12 @@ public:
 			delete[] processedSectors.get()[i].sectorWalls;
 			processedSectors.get()[i].sectorWalls = nullptr;
 		}
+
+		delete[] closestNodes;
+		delete[] processedWalls;
 	}
 
-	 int GetProcessedSectors(std::shared_ptr<ProcessedSector[]> & outProcessedSectors);
+	 int GetProcessedWalls(ProcessedWall*& outProcessedWalls) const;
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
 
 protected:
@@ -74,19 +79,22 @@ private:
 	static const float movSpeed;
 	static const float rotSpeed;
 
+	int numbProcessedWalls;
 	int numbProcessedSectors;
 	int xRotation;
 	float cameraZOffset;
 	class World* world;
 	std::shared_ptr<ProcessedSector[]> processedSectors;
+	struct BSPNode** closestNodes;
+	ProcessedWall* processedWalls;
 
-	void ClipBehindCamera(Vector3& pointA, const Vector3& pointB);
+	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	void GetSectorsToProcess();
 	void CopyWorldSectorData(int& sector, int worldSector);
 	void ProcessWorldSector(int& sector, int worldSector, int portalIndx);
 	bool CheckIfSectorIsProcessed(int sector);
 	int GetClosestWorldSector();
-	bool FindPlayerPositionOnBSP(struct BSPNode*& foundNode);
+	void GetWallsFromBSP(const Vector2& pos, struct BSPNode* startNode, struct BSPNode** closestNodesArray, int& outArraySize);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

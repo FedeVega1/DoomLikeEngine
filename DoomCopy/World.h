@@ -6,13 +6,14 @@ struct Wall
 	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
 	int portalTargetSector, portalTargetWall;
+	unsigned long long wallID;
 
 	Wall() : leftPoint(), rightPoint(), topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), 
-		isConnection(false), portalTargetSector(-1), portalTargetWall(-1)
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL)
 	{ }
 
 	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int sector, 
-		int wall)
+		int wall, unsigned long long id)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
@@ -23,10 +24,11 @@ struct Wall
 		isConnection = connection;
 		portalTargetSector = sector;
 		portalTargetWall = wall;
+		wallID = id;
 	}
 
 	Vector2 GetAvrgMiddlePoint() const { return Vector2((leftPoint.x + rightPoint.x) / 2.0f, (leftPoint.y + rightPoint.y) / 2.0f); }
-	bool VectorInFrontWall(Vector2 pos, Vector2 vector) const;
+	bool VectorInFrontWall(Vector2 vector) const;
 };
 
 struct Sector
@@ -64,11 +66,17 @@ struct BSPNode
 {
 	int sectorIndx;
 	Wall wall;
-	std::shared_ptr<BSPNode> frontNode;
-	std::shared_ptr<BSPNode> backNode;
+	BSPNode* frontNode;
+	BSPNode* backNode;
 
 	BSPNode() : sectorIndx(-1), wall(), frontNode(nullptr), backNode(nullptr)
 	{ }
+
+	~BSPNode()
+	{
+		delete frontNode;
+		delete backNode;
+	}
 };
 
 class World : public Entity
@@ -80,6 +88,11 @@ public:
 	bool CheckIfPositionInsideSector(const Vector3& pos, int sector) const;
 	bool CheckIfPositionInsideSector(const Vector3& pos, int* const sector) const;
 
+	bool FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) const;
+	bool FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& wallIndx) const;
+
+	Sector GetSectorData(int sectorIndx) const { return sectorData[sectorIndx]; }
+
 	World(Game* const gameRef, const std::string& mapFileName);
 	~World();
 
@@ -90,16 +103,18 @@ private:
 	Sector* sectorData;
 	int numberOfSectors;
 	BSPNode rootNode;
+	Wall splitterWall;
 	int maxNumberOfBSPNodes;
 
-	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3;
-	unsigned char intBuffer[intSize], pointBuffer[pointSize], colorBuffer[colorSize];
+	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3, idSize = sizeof(unsigned long long);
+	unsigned char intBuffer[intSize], pointBuffer[pointSize], colorBuffer[colorSize], idBuffer[idSize];
 
 	const char BSPVersionSize = 2;
-	char const BSPVersion[2]{ 00, 04 };
+	char const BSPVersion[2]{ 00, 05 };
 
 	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Color ByteArrayToColor(const unsigned char* const byteArray) const;
+	unsigned long long ByteArrayToULL(const unsigned char* byteArray, bool isLittleEndian) const;
 	void ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLittleEndian, int& nodeCount) const;
 };

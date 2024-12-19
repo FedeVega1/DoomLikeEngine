@@ -3,6 +3,7 @@
 #include "GameObjects.h"
 #include "VectorMath.h"
 #include "CameraComponent.h"
+#include "World.h"
 #include "Renderer.h"
 
 void Renderer::ProcessGame(HWND hwnd, Game* const game)
@@ -25,78 +26,75 @@ void Renderer::ProcessGame(HWND hwnd, Game* const game)
     InvalidateRect(hwnd, NULL, false);
 }
 
-void Renderer::ProcessSector(int sectorIndx, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors)
+void Renderer::ProcessWall(int wallIndx, const ProcessedWall* wallPtr, int numbWalls, const Sector& wallSectorData)
 {
-    const ProcessedSector& sector = sectorPtr[sectorIndx];
+    const ProcessedWall& wall = wallPtr[wallIndx];
 
-    for (int i = 0; i < sector.numberOfWalls; i++)
+    if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
+
+    if (wall.isPortal) { }
+
+    ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
+
+    // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
+    int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
+    int dYTop = sWall.rightTopPoint.y - sWall.leftTopPoint.y;
+    int dX = sWall.rightBtmPoint.x - sWall.leftBtmPoint.x;
+    if (dX == 0) dX = 1; // Avoid division by 0
+
+    int startX = sWall.leftTopPoint.x;
+
+    sWall.leftTopPoint.x = std::clamp(sWall.leftTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+    sWall.rightTopPoint.x = std::clamp(sWall.rightTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+
+    for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
     {
-        if ((sector.sectorWalls[i].leftBtmPoint.y < 1 && sector.sectorWalls[i].rightBtmPoint.y < 1)) continue;
+        // Get the Y position of each pixel across their ΔY
 
-        if (sector.sectorWalls[i].isPortal) { }
+        int diff = x - startX + .5f;
+        Vector2Int yPoint = Vector2Int(((dYBtm * diff) / dX) + sWall.leftBtmPoint.y, ((dYTop * diff) / dX) + sWall.leftTopPoint.y);
 
-        ScreenSpaceWall sWall = GetScreenSpaceWall(sector.sectorWalls[i]);
+        yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
+        yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
-        // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
-        int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
-        int dYTop = sWall.rightTopPoint.y - sWall.leftTopPoint.y;
-        int dX = sWall.rightBtmPoint.x - sWall.leftBtmPoint.x;
-        if (dX == 0) dX = 1; // Avoid division by 0
+        // Draw the Ceilling and Floor from their respective line into the Screen limits
 
-        int startX = sWall.leftTopPoint.x;
+        for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wallSectorData.floorColor);
+        for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wallSectorData.ceillingColor);
 
-        sWall.leftTopPoint.x = std::clamp(sWall.leftTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
-        sWall.rightTopPoint.x = std::clamp(sWall.rightTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
-
-        for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
+        if (wall.isConnection)
         {
-            // Get the Y position of each pixel across their ΔY
+            // If a connection is found, don't draw the wall and find it's neighbour wall.
+            // Render the bottom and top walls from the difference in height between our
+            // current sector and its neighbour
 
-            int diff = x - startX + .5f;
-            Vector2Int yPoint = Vector2Int(((dYBtm * diff) / dX) + sWall.leftBtmPoint.y, ((dYTop * diff) / dX) + sWall.leftTopPoint.y);
+            //int sectIndx = GetSectorIndexFromID(wall.portalTargetSector, wallPtr, numbWalls);
+            //if (sectIndx == -1) continue;
+            //const ProcessedSector& prevSector = sectorPtr[sectIndx];
 
-            yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
-            yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
+            //if (sector.bottomPoint < prevSector.bottomPoint)
+            //{
+            //    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
+            //    int prevDYBtm = prevSWall.leftBtmPoint.y - prevSWall.rightBtmPoint.y;
+            //    int prevYPoint = ((prevDYBtm * diff) / dX) + prevSWall.rightBtmPoint.y;
+            //    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, sWall.btmColor);
+            //}
 
-            // Draw the Ceilling and Floor from their respective line into the Screen limits
-
-            for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, sector.floorColor);
-            for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, sector.ceillingColor);
-
-            if (sector.sectorWalls[i].isConnection)
-            {
-                // If a connection is found, don't draw the wall and find it's neighbour wall.
-                // Render the bottom and top walls from the difference in height between our
-                // current sector and its neighbour
-
-                int sectIndx = GetSectorIndexFromID(sector.sectorWalls[i].portalTargetSector, sectorPtr, numbSectors);
-                if (sectIndx == -1) continue;
-                const ProcessedSector& prevSector = sectorPtr[sectIndx];
-
-                if (sector.bottomPoint < prevSector.bottomPoint)
-                {
-                    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
-                    int prevDYBtm = prevSWall.leftBtmPoint.y - prevSWall.rightBtmPoint.y;
-                    int prevYPoint = ((prevDYBtm * diff) / dX) + prevSWall.rightBtmPoint.y;
-                    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, sWall.btmColor);
-                }
-
-                if (sector.topPoint > prevSector.topPoint)
-                {
-                    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
-                    int prevDYTop = prevSWall.leftTopPoint.y - prevSWall.rightTopPoint.y;
-                    int prevYPoint = ((prevDYTop * diff) / dX) + prevSWall.rightTopPoint.y;
-                    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, sWall.topColor);
-                }
-            }
-            else
-            {
-                // Render the actual wall
-                for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sWall.inColor);
-            }
-
-            if (debugStepDraw) Sleep(50);
+            //if (sector.topPoint > prevSector.topPoint)
+            //{
+            //    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
+            //    int prevDYTop = prevSWall.leftTopPoint.y - prevSWall.rightTopPoint.y;
+            //    int prevYPoint = ((prevDYTop * diff) / dX) + prevSWall.rightTopPoint.y;
+            //    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, sWall.topColor);
+            //}
         }
+        else
+        {
+            // Render the actual wall
+            for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sWall.inColor);
+        }
+
+        if (debugStepDraw) Sleep(50);
     }
 }
 

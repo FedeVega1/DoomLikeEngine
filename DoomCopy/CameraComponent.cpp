@@ -11,7 +11,12 @@ void Camera::Start()
 {
 	BaseComponent::Start();
 
+	closestNodes = new BSPNode*[world->maxNumberOfBSPNodes];
+	processedWalls = nullptr;
 	processedSectors = nullptr;
+
+	for (int i = 0; i < world->maxNumberOfBSPNodes; i++)
+		closestNodes[i] = nullptr;
 
 	Input::INS.RegisterAxis("CameraForwardBack", KeyCode::W, KeyCode::S, &Camera::DebugForwardBack, this);
 	Input::INS.RegisterAxis("CameraLeftRight", KeyCode::A, KeyCode::D, &Camera::DebugLeftRight, this);
@@ -22,10 +27,10 @@ void Camera::Start()
 const float Camera::movSpeed = 400;
 const float Camera::rotSpeed = 350;
 
-int Camera::GetProcessedSectors(std::shared_ptr<ProcessedSector[]>& outProcessedSectors)
+int Camera::GetProcessedWalls(ProcessedWall*& outProcessedWalls) const
 { 
-	outProcessedSectors = processedSectors;
-	return numbProcessedSectors;
+	outProcessedWalls = processedWalls;
+	return numbProcessedWalls;
 }
 
 void Camera::Tick()
@@ -37,16 +42,21 @@ void Camera::AfterTick()
 {
 	GetSectorsToProcess();
 
-	//BSPNode* closestNode;
-	//if (!FindPlayerPositionOnBSP(closestNode))
-	//{
-	//	OLOG_E("Can't find the camera anywhere inside the level!");
-	//	return;
-	//}
-
-	//OLOG_LF("Camera found at sector: {0}", closestNode->sectorIndx);
-
 	Vector3 currentPos = GetTransform()->GetPos();
+	Vector2 posToSplitter = currentPos.XY() - world->splitterWall.leftPoint;
+	numbProcessedWalls = 0;
+
+	GetWallsFromBSP(posToSplitter, &world->rootNode, closestNodes, numbProcessedWalls);
+
+	if (!closestNodes || !closestNodes[0])
+	{
+		OLOG_E("Can't find the camera anywhere inside the level!");
+		return;
+	}
+
+	if (processedWalls) delete[] processedWalls;
+	processedWalls = new ProcessedWall[numbProcessedWalls];
+
 	currentPos.z += cameraZOffset;
 	currentPos.z *= -1;
 
@@ -54,67 +64,71 @@ void Camera::AfterTick()
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
 
-	for (int s = 0; s < numbProcessedSectors; s++)
+	for (int i = 0; i < numbProcessedWalls; i++)
 	{
-		int walls = processedSectors[s].numberOfWalls;
-		for (int w = 0; w < walls; w++)
+		int w, s = closestNodes[i]->sectorIndx;
+		if (!world->FindWallByIDWithSector(closestNodes[i]->wall.wallID, s, w)) continue;
+
+		ProcessedWall& wall = processedWalls[i] = ProcessedWall
 		{
-			ProcessedWall& wall = processedSectors[s].sectorWalls[w];
+			V3_ZERO, V3_ZERO,
+			world->sectorData[s].sectorWalls[w].leftPoint,
+			world->sectorData[s].sectorWalls[w].rightPoint,
+			world->sectorData[s].sectorWalls[w].topColor,
+			world->sectorData[s].sectorWalls[w].inColor,
+			world->sectorData[s].sectorWalls[w].btmColor,
+			world->sectorData[s].sectorWalls[w].isPortal,
+			world->sectorData[s].sectorWalls[w].isConnection,
+			world->sectorData[s].sectorWalls[w].portalTargetSector,
+			world->sectorData[s].sectorWalls[w].portalTargetWall,
+			s
+		};
 
-			wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
-			wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
+		wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
+		wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 
-			wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), processedSectors[s].bottomPoint + currentPos.z);
-			wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), processedSectors[s].bottomPoint + currentPos.z);
+		wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), world->sectorData[s].bottomPoint + currentPos.z);
+		wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), world->sectorData[s].bottomPoint + currentPos.z);
 
-			wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
-			wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+		wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+		wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-			wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, processedSectors[s].topPoint + currentPos.z);
-			wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, processedSectors[s].topPoint + currentPos.z);
+		wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, world->sectorData[s].topPoint + currentPos.z);
+		wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, world->sectorData[s].topPoint + currentPos.z);
 
-			wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
-			wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+		wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+		wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-			if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
+		if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
 
-			if (wall.leftBtmPoint.y < 1)
-			{
-				ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
-				ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
-			}
+		if (wall.leftBtmPoint.y < 1)
+		{
+			ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
+			ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
+		}
 
-			if (wall.rightBtmPoint.y < 1)
-			{
-				ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
-				ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
-			}
+		if (wall.rightBtmPoint.y < 1)
+		{
+			ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
+			ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
 		}
 	}
 }
 
-bool Camera::FindPlayerPositionOnBSP(BSPNode*& foundNode)
+void Camera::GetWallsFromBSP(const Vector2& pos, BSPNode* startNode, BSPNode** closestNodesArray, int& outArraySize)
 {
-	BSPNode* lastNode = nullptr;
-	BSPNode* currentNode = &world->rootNode;
-	Vector2 currentPos = GetTransform()->GetPos().XY();
-	Vector2 forward = GetTransform()->GetForwardVector().XY();
+	if (!startNode) return;
 
-	while (currentNode != nullptr)
+	if (world->splitterWall.VectorInFrontWall(pos))
 	{
-		if (!currentNode->wall.VectorInFrontWall(currentPos, forward))
-		{
-			lastNode = currentNode;
-			currentNode = currentNode->frontNode.get();
-			continue;
-		}
-
-		lastNode = currentNode;
-		currentNode = currentNode->backNode.get();
+		GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
+		GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
+		return;
 	}
 
-	foundNode = lastNode;
-	return foundNode != nullptr;
+	GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
+	closestNodesArray[outArraySize++] = startNode;
+	GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
 }
 
 void Camera::GetSectorsToProcess()
@@ -175,19 +189,19 @@ void Camera::CopyWorldSectorData(int& sector, int worldSector)
 	processedSectors[sector].sectorWalls = new ProcessedWall[walls];
 	for (int w = 0; w < walls; w++)
 	{
-		processedSectors[sector].sectorWalls[w] = ProcessedWall
-		{
-			V3_ZERO, V3_ZERO,
-			world->sectorData[worldSector].sectorWalls[w].leftPoint,
-			world->sectorData[worldSector].sectorWalls[w].rightPoint,
-			world->sectorData[worldSector].sectorWalls[w].topColor,
-			world->sectorData[worldSector].sectorWalls[w].inColor,
-			world->sectorData[worldSector].sectorWalls[w].btmColor,
-			world->sectorData[worldSector].sectorWalls[w].isPortal,
-			world->sectorData[worldSector].sectorWalls[w].isConnection,
-			world->sectorData[worldSector].sectorWalls[w].portalTargetSector,
-			world->sectorData[worldSector].sectorWalls[w].portalTargetWall
-		};
+		//processedSectors[sector].sectorWalls[w] = ProcessedWall
+		//{
+		//	V3_ZERO, V3_ZERO,
+		//	world->sectorData[worldSector].sectorWalls[w].leftPoint,
+		//	world->sectorData[worldSector].sectorWalls[w].rightPoint,
+		//	world->sectorData[worldSector].sectorWalls[w].topColor,
+		//	world->sectorData[worldSector].sectorWalls[w].inColor,
+		//	world->sectorData[worldSector].sectorWalls[w].btmColor,
+		//	world->sectorData[worldSector].sectorWalls[w].isPortal,
+		//	world->sectorData[worldSector].sectorWalls[w].isConnection,
+		//	world->sectorData[worldSector].sectorWalls[w].portalTargetSector,
+		//	world->sectorData[worldSector].sectorWalls[w].portalTargetWall
+		//};
 	}
 
 	processedSectors[sector].numberOfWalls = walls;

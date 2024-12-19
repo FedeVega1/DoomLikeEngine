@@ -4,6 +4,7 @@
 #include "GameObjects.h"
 #include "VectorMath.h"
 #include "CameraComponent.h"
+#include "World.h"
 #include "GDIRenderer.h"
 
 HRESULT GDIRenderer::InitRenderer(HWND hwnd)
@@ -43,10 +44,10 @@ void GDIRenderer::RenderScreen(HWND hwnd, Game* const game)
     // DEBUG
     PaintScreen(Color(0, 0, 0));
     
-    std::shared_ptr<ProcessedSector[]> sectors = nullptr;
-    int numbSectors = game->GetMainCamera()->GetProcessedSectors(sectors);
-    if (!sectors) return;
-    for (int i = 0; i < numbSectors; i++) ProcessSector(i, sectors, numbSectors);
+    ProcessedWall* walls = nullptr;
+    int numbWalls = game->GetMainCamera()->GetProcessedWalls(walls);
+    if (!walls) return;
+    for (int i = 0; i < numbWalls; i++) ProcessWall(i, walls, numbWalls, game->GetWorldRef()->GetSectorData(walls[i].wallSectorIndx));
     // DEBUG
 
     int scanlines = StretchDIBits(debugHDC, 0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, 0, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT, buffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -74,6 +75,7 @@ void GDIRenderer::DrawPixel(int x, int y, Color color)
 {
     x = std::clamp(x, 0, DEFAULT_BUFFER_WIDTH - 1);
     y = std::clamp(y, 0, DEFAULT_BUFFER_HEIGHT - 1);
+
     buffer[PixelPos(x, y)] = color.ToDWORD(true);
 
     if (debugStepDraw)

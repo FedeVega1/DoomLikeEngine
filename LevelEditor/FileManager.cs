@@ -2,7 +2,7 @@
 {
     internal class FileManager
     {
-        const string MAPVersion = "v00.03", BSPVersion = "v00.04";
+        const string MAPVersion = "v00.03", BSPVersion = "v00.05";
 
         public string CurrentOpenedFile { get; private set; }
 
@@ -217,12 +217,17 @@
                 }
 
                 fileStream.Write(ToByteArray(0xAAAAAAAA, out arrSize), 0, arrSize); // Start of BSP tree
-                BSPNode bsp = builder.PerformBSP(sectors);
+                BSPNode bsp = builder.PerformBSP(sectors, out Wall splitter);
 
                 COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp));
                 COLoggerImport.LogNormal("BSP Number of Intersections: {0}", builder.debug_NumberOfIntersections);
                 COLoggerImport.LogNormal("BSP Number of Front Nodes: {0}", debug_NumberOfBSPFrontNodes);
                 COLoggerImport.LogNormal("BSP Number of Back Nodes: {0}", debug_NumberOfBSPBackNodes);
+                COLoggerImport.LogNormal("BSP Selected Splitter Wall: {0}", splitter.wallID);
+
+                fileStream.Write(ToByteArray(splitter.leftPoint, out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(splitter.rightPoint, out arrSize), 0, arrSize);
+
                 fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp), out arrSize), 0, arrSize);
                 CompileBSP(bsp, fileStream);
             }
@@ -249,13 +254,21 @@
             fileStream.WriteByte(portalFlags);
             fileStream.Write(ToByteArray(wall.portalTargetSector, out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.portalTargetWall, out arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(wall.wallID, out arrSize), 0, arrSize);
+        }
+
+        void CompileBSPWall(Wall wall, Stream fileStream)
+        {
+            fileStream.Write(ToByteArray(wall.leftPoint, out int arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(wall.rightPoint, out arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(wall.wallID, out arrSize), 0, arrSize);
         }
 
         void CompileBSP(BSPNode currentNode, Stream fileStream)
         {
             fileStream.WriteByte(0xDD);
             fileStream.Write(ToByteArray(currentNode.sectorIndex, out int arrSize), 0, arrSize);
-            CompileWall(currentNode.wall, fileStream);
+            CompileBSPWall(currentNode.wall, fileStream);
             fileStream.WriteByte(0xDD);
 
             if (currentNode.frontNodes.Count > 0)
@@ -296,6 +309,25 @@
         static byte[] ToByteArray(int dataToConvert, out int size)
         {
             size = sizeof(int);
+            byte[] array = new byte[size];
+
+            if (BitConverter.IsLittleEndian)
+            {
+                for (int i = 0; i < size; i++)
+                    array[i] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
+            else
+            {
+                for (int i = size - 1, n = 0; i >= 0; i--, n++)
+                    array[n] = (byte) ((dataToConvert >> (8 * i)) & 0xFF);
+            }
+
+            return array;
+        }
+
+        static byte[] ToByteArray(ulong dataToConvert, out int size)
+        {
+            size = sizeof(ulong);
             byte[] array = new byte[size];
 
             if (BitConverter.IsLittleEndian)

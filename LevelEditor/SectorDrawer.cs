@@ -80,6 +80,21 @@
             wallID = wallCopy.wallID;
         }
 
+        public Wall(Wall wallCopy)
+        {
+            leftPoint = wallCopy.leftPoint;
+            rightPoint = wallCopy.rightPoint;
+
+            colors = wallCopy.colors;
+
+            isPortal = wallCopy.isPortal;
+            portalTargetSector = wallCopy.portalTargetSector;
+            portalTargetWall = wallCopy.portalTargetWall;
+
+            UpdateMiddleAndNormal();
+            wallID = wallCopy.wallID;
+        }
+
         public void UpdateMiddleAndNormal()
         {
             middle = leftPoint.Add(rightPoint.Subtract(leftPoint).Divide(2));

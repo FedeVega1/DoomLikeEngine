@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <bit>
 
-World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef), numberOfSectors(0), sectorData(nullptr)
+World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef), numberOfSectors(0), sectorData(nullptr), maxNumberOfBSPNodes(0)
 {
 	OLOG_LF("Working Directory: {0}", std::filesystem::current_path().string());
 
@@ -91,6 +91,9 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 				mapFile.read((char*) intBuffer, intSize);
 				wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
 
+				mapFile.read((char*) idBuffer, idSize);
+				wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
+
 				sector.sectorWalls[j] = wall;
 			}
 
@@ -112,6 +115,14 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 		}
 
 		mapFile.read((char*) intBuffer, intSize);
+
+		splitterWall = Wall();
+
+		mapFile.read((char*) pointBuffer, pointSize);
+		splitterWall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+		mapFile.read((char*) pointBuffer, pointSize);
+		splitterWall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
 		mapFile.read((char*) intBuffer, intSize);
 		maxNumberOfBSPNodes = ByteArrayToInt(intBuffer, isLittleEndian);
@@ -150,26 +161,8 @@ void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLitt
 	stream->read((char*) pointBuffer, pointSize);
 	wall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-	stream->read((char*) colorBuffer, colorSize);
-	wall.topColor = ByteArrayToColor(colorBuffer);
-
-	stream->read((char*) colorBuffer, colorSize);
-	wall.inColor = ByteArrayToColor(colorBuffer);
-
-	stream->read((char*) colorBuffer, colorSize);
-	wall.btmColor = ByteArrayToColor(colorBuffer);
-
-	unsigned char portalFlags;
-	stream->read((char*) &portalFlags, 1);
-
-	wall.isPortal = (portalFlags & 0b1) == 0b1;
-	wall.isConnection = (portalFlags & 0b10) == 0b10;
-
-	stream->read((char*) intBuffer, intSize);
-	wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
-
-	stream->read((char*) intBuffer, intSize);
-	wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+	stream->read((char*) idBuffer, idSize);
+	wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
 
 	currentNode->wall = wall;
 
@@ -182,14 +175,14 @@ void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLitt
 
 	if (singleByte == 0xBB)
 	{
-		currentNode->frontNode = std::make_shared<BSPNode>();
-		ReadBSPNode(currentNode->frontNode.get(), stream, isLittleEndian, nodeCount);
+		currentNode->frontNode = new BSPNode();
+		ReadBSPNode(currentNode->frontNode, stream, isLittleEndian, nodeCount);
 		return;
 	}
 
 	if (singleByte != 0xCC) return;
-	currentNode->backNode = std::make_shared<BSPNode>();
-	ReadBSPNode(currentNode->backNode.get(), stream, isLittleEndian, nodeCount);
+	currentNode->backNode = new BSPNode();
+	ReadBSPNode(currentNode->backNode, stream, isLittleEndian, nodeCount);
 }
 
 World::~World()
@@ -210,6 +203,20 @@ int World::ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEnd
 {
 	if (isLittleEndian) return (static_cast<int>(byteArray[3]) << 24) | (static_cast<int>(byteArray[2]) << 16) | (static_cast<int>(byteArray[1]) << 8) | static_cast<int>(byteArray[0]);
 	return (static_cast<int>(byteArray[0]) << 24) | (static_cast<int>(byteArray[1]) << 16) | (static_cast<int>(byteArray[2]) << 8) | static_cast<int>(byteArray[3]);
+}
+
+unsigned long long World::ByteArrayToULL(const unsigned char* byteArray, bool isLittleEndian) const
+{
+	if (isLittleEndian)
+	{
+		int high = (static_cast<int>(byteArray[7]) << 24) | (static_cast<int>(byteArray[6]) << 16) | (static_cast<int>(byteArray[5]) << 8) | static_cast<int>(byteArray[4]);
+		int low = (static_cast<int>(byteArray[3]) << 24) | (static_cast<int>(byteArray[2]) << 16) | (static_cast<int>(byteArray[1]) << 8) | static_cast<int>(byteArray[0]);
+		return ((unsigned long long) high) | ((unsigned long long) low);
+	}
+
+	int high = (static_cast<int>(byteArray[0]) << 24) | (static_cast<int>(byteArray[1]) << 16) | (static_cast<int>(byteArray[2]) << 8) | static_cast<int>(byteArray[3]);
+	int low = (static_cast<int>(byteArray[4]) << 24) | (static_cast<int>(byteArray[5]) << 16) | (static_cast<int>(byteArray[6]) << 8) | static_cast<int>(byteArray[7]);
+	return ((unsigned long long) high) | ((unsigned long long) low);
 }
 
 Vector2Int World::ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const
@@ -315,19 +322,39 @@ Vector2 Sector::CalculateSectorCentroid() const
 	return centroid;
 }
 
-bool Wall::VectorInFrontWall(Vector2 pos, Vector2 vector) const
+bool Wall::VectorInFrontWall(Vector2 vector) const
 {
-	Vector2 posVector = (vector + pos) - pos;
-	Vector2 posRightvector = rightPoint - pos;
 	Vector2 wallVector = rightPoint - leftPoint;
+	return vector.x * wallVector.y < wallVector.x * vector.y;
+}
 
-	float num = Vector2::Cross(posRightvector, posVector);
-	float den = Vector2::Cross(posVector, wallVector);
+bool World::FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) const
+{
+	for (int s = 0; s < numberOfSectors; s++)
+	{
+		for (int w = 0; w < sectorData[s].numberOfWalls; w++)
+		{
+			if (sectorData[s].sectorWalls[w].wallID != id) continue;
+			sectorIndx = s;
+			wallIndx = w;
+			return true;
+		}
+	}
 
-	bool numIsZero = std::abs(num) < kEpsilon;
-	bool denIsZero = std::abs(den) < kEpsilon;
+	wallIndx = -1;
+	sectorIndx = -1;
+	return false;
+}
 
-	if (numIsZero && denIsZero) return true;
-	if (num < 0 || (numIsZero && den > 0)) return true;
+bool World::FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& wallIndx) const
+{
+	for (int w = 0; w < sectorData[sectorIndx].numberOfWalls; w++)
+	{
+		if (sectorData[sectorIndx].sectorWalls[w].wallID != id) continue;
+		wallIndx = w;
+		return true;
+	}
+
+	wallIndx = -1;
 	return false;
 }
