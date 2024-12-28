@@ -12,6 +12,13 @@ struct Wall
 		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL)
 	{ }
 
+	Wall(Vector2 lPoint, Vector2 rPoint) : topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false),
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL)
+	{
+		leftPoint = lPoint;
+		rightPoint = rPoint;
+	}
+
 	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int sector, 
 		int wall, unsigned long long id)
 	{
@@ -66,10 +73,11 @@ struct BSPNode
 {
 	int sectorIndx;
 	Wall wall;
+	Wall splitter;
 	BSPNode* frontNode;
 	BSPNode* backNode;
 
-	BSPNode() : sectorIndx(-1), wall(), frontNode(nullptr), backNode(nullptr)
+	BSPNode() : sectorIndx(-1), wall(), splitter(), frontNode(nullptr), backNode(nullptr)
 	{ }
 
 	~BSPNode()
@@ -103,7 +111,6 @@ private:
 	Sector* sectorData;
 	int numberOfSectors;
 	BSPNode rootNode;
-	Wall splitterWall;
 	int maxNumberOfBSPNodes;
 
 	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3, idSize = sizeof(unsigned long long);

@@ -30,7 +30,7 @@ const float Camera::rotSpeed = 350;
 int Camera::GetProcessedWalls(ProcessedWall*& outProcessedWalls) const
 { 
 	outProcessedWalls = processedWalls;
-	return numbProcessedWalls;
+	return world->maxNumberOfBSPNodes - numbProcessedWalls;
 }
 
 void Camera::Tick()
@@ -40,22 +40,22 @@ void Camera::Tick()
 
 void Camera::AfterTick()
 {
-	GetSectorsToProcess();
+	//GetSectorsToProcess();
 
 	Vector3 currentPos = GetTransform()->GetPos();
-	Vector2 posToSplitter = currentPos.XY() - world->splitterWall.leftPoint;
-	numbProcessedWalls = 0;
+	numbProcessedWalls = world->maxNumberOfBSPNodes;
 
-	GetWallsFromBSP(posToSplitter, &world->rootNode, closestNodes, numbProcessedWalls);
+	GetWallsFromBSP(currentPos.XY(), &world->rootNode, closestNodes, numbProcessedWalls);
+	if (numbProcessedWalls < 0) numbProcessedWalls = 0;
 
-	if (!closestNodes || !closestNodes[0])
+	if (!closestNodes || !closestNodes[world->maxNumberOfBSPNodes - 1])
 	{
 		OLOG_E("Can't find the camera anywhere inside the level!");
 		return;
 	}
 
 	if (processedWalls) delete[] processedWalls;
-	processedWalls = new ProcessedWall[numbProcessedWalls];
+	processedWalls = new ProcessedWall[world->maxNumberOfBSPNodes - numbProcessedWalls];
 
 	currentPos.z += cameraZOffset;
 	currentPos.z *= -1;
@@ -64,12 +64,12 @@ void Camera::AfterTick()
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
 
-	for (int i = 0; i < numbProcessedWalls; i++)
+	for (int i = numbProcessedWalls, j = 0; i < world->maxNumberOfBSPNodes; i++, j++)
 	{
 		int w, s = closestNodes[i]->sectorIndx;
 		if (!world->FindWallByIDWithSector(closestNodes[i]->wall.wallID, s, w)) continue;
 
-		ProcessedWall& wall = processedWalls[i] = ProcessedWall
+		processedWalls[j] = ProcessedWall
 		{
 			V3_ZERO, V3_ZERO,
 			world->sectorData[s].sectorWalls[w].leftPoint,
@@ -83,6 +83,8 @@ void Camera::AfterTick()
 			world->sectorData[s].sectorWalls[w].portalTargetWall,
 			s
 		};
+
+		ProcessedWall& wall = processedWalls[j];
 
 		wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
 		wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
@@ -118,16 +120,18 @@ void Camera::AfterTick()
 void Camera::GetWallsFromBSP(const Vector2& pos, BSPNode* startNode, BSPNode** closestNodesArray, int& outArraySize)
 {
 	if (!startNode) return;
+	Vector2 posToSplitter = pos - startNode->splitter.leftPoint;
 
-	if (world->splitterWall.VectorInFrontWall(pos))
+	if (startNode->splitter.VectorInFrontWall(posToSplitter))
 	{
 		GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
+		closestNodesArray[--outArraySize] = startNode;
 		GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
 		return;
 	}
 
 	GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
-	closestNodesArray[outArraySize++] = startNode;
+	closestNodesArray[--outArraySize] = startNode;
 	GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
 }
 

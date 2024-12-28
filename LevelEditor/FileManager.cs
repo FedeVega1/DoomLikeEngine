@@ -217,16 +217,13 @@
                 }
 
                 fileStream.Write(ToByteArray(0xAAAAAAAA, out arrSize), 0, arrSize); // Start of BSP tree
-                BSPNode bsp = builder.PerformBSP(sectors, out Wall splitter);
+                BSPNode bsp = builder.PerformBSP(sectors);
 
                 COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp));
                 COLoggerImport.LogNormal("BSP Number of Intersections: {0}", builder.debug_NumberOfIntersections);
                 COLoggerImport.LogNormal("BSP Number of Front Nodes: {0}", debug_NumberOfBSPFrontNodes);
                 COLoggerImport.LogNormal("BSP Number of Back Nodes: {0}", debug_NumberOfBSPBackNodes);
-                COLoggerImport.LogNormal("BSP Selected Splitter Wall: {0}", splitter.wallID);
-
-                fileStream.Write(ToByteArray(splitter.leftPoint, out arrSize), 0, arrSize);
-                fileStream.Write(ToByteArray(splitter.rightPoint, out arrSize), 0, arrSize);
+                COLoggerImport.LogNormal("BSP Selected Splitter Wall: {0}", bsp.splitter.wallID);
 
                 fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp), out arrSize), 0, arrSize);
                 CompileBSP(bsp, fileStream);
@@ -269,6 +266,7 @@
             fileStream.WriteByte(0xDD);
             fileStream.Write(ToByteArray(currentNode.sectorIndex, out int arrSize), 0, arrSize);
             CompileBSPWall(currentNode.wall, fileStream);
+            CompileBSPWall(currentNode.splitter, fileStream);
             fileStream.WriteByte(0xDD);
 
             if (currentNode.frontNodes.Count > 0)

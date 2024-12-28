@@ -2,15 +2,16 @@
 {
     internal class BSPNode
     {
-        public Wall wall;
+        public Wall wall, splitter;
         public int sectorIndex;
         public List<BSPNode> frontNodes;
         public List<BSPNode> backNodes;
 
-        public BSPNode(int sectorIndx, Wall wall)
+        public BSPNode(int sectorIndx, Wall w, Wall split)
         {
             sectorIndex = sectorIndx;
-            this.wall = wall;
+            wall = w;
+            splitter = split;
             frontNodes = new List<BSPNode>();
             backNodes = new List<BSPNode>();
         }
@@ -20,7 +21,7 @@
     {
         public int debug_NumberOfIntersections;
 
-        public BSPNode PerformBSP(List<Sector> sectors, out Wall splitterSegment)
+        public BSPNode PerformBSP(List<Sector> sectors)
         {
             Queue<Wall> walls = new Queue<Wall>();
 
@@ -32,27 +33,25 @@
                     walls.Enqueue(sectors[i].walls[j]);
             }
 
-            splitterSegment = new Wall(walls.Peek());
-
-            BSPNode bsp = new BSPNode(0, walls.Dequeue());
-            PartitionSector(bsp, ref splitterSegment, ref walls, ref sectors);
+            BSPNode bsp = new BSPNode(0, walls.Peek(), walls.Dequeue());
+            PartitionSector(bsp, ref walls, ref sectors);
             return bsp;
         }
 
-        void PartitionSector(BSPNode rootNode, ref Wall splitter, ref Queue<Wall> walls, ref List<Sector> sectors)
+        void PartitionSector(BSPNode rootNode, ref Queue<Wall> walls, ref List<Sector> sectors)
         {
             while (walls.Count > 0)
             {
                 Wall wall = walls.Dequeue();
                 FindWallSectorByID(wall.wallID, ref sectors, out int wallSector);
-                PartitionWall(splitter, rootNode, ref wall, wallSector);
+                PartitionWall(rootNode, ref wall, wallSector);
             }
 
-            CheckChildNodes(splitter, ref rootNode.frontNodes, ref sectors);
-            CheckChildNodes(splitter, ref rootNode.backNodes, ref sectors);
+            CheckChildNodes(ref rootNode.frontNodes, ref sectors);
+            CheckChildNodes(ref rootNode.backNodes, ref sectors);
         }
 
-        void CheckChildNodes(Wall splitter, ref List<BSPNode> nodeList, ref List<Sector> sectors)
+        void CheckChildNodes(ref List<BSPNode> nodeList, ref List<Sector> sectors)
         {
             if (nodeList.Count <= 1) return;
 
@@ -60,18 +59,18 @@
             {
                 Wall wall = nodeList[1].wall;
                 FindWallSectorByID(wall.wallID, ref sectors, out int wallSector);
-                PartitionWall(splitter, nodeList[0], ref wall, wallSector);
+                PartitionWall(nodeList[0], ref wall, wallSector);
                 nodeList.RemoveAt(1);
             }
 
-            CheckChildNodes(splitter, ref nodeList[0].frontNodes, ref sectors);
-            CheckChildNodes(splitter, ref nodeList[0].backNodes, ref sectors);
+            CheckChildNodes(ref nodeList[0].frontNodes, ref sectors);
+            CheckChildNodes(ref nodeList[0].backNodes, ref sectors);
         }
 
-        void PartitionWall(Wall splitter, BSPNode currentNode, ref Wall currentWall, int wallSector)
+        void PartitionWall(BSPNode currentNode, ref Wall currentWall, int wallSector)
         {
-            Point ab = splitter.rightPoint.Subtract(splitter.leftPoint);
-            Point ac = currentWall.rightPoint.Subtract(splitter.leftPoint);
+            Point ab = currentNode.wall.rightPoint.Subtract(currentNode.wall.leftPoint);
+            Point ac = currentWall.rightPoint.Subtract(currentNode.wall.leftPoint);
             Point dc = currentWall.rightPoint.Subtract(currentWall.leftPoint);
 
             int num = ac.Cross(ab);
@@ -82,7 +81,7 @@
 
             if (numIsZero && denIsZero)
             {
-                currentNode.frontNodes.Add(new BSPNode(wallSector, currentWall));
+                currentNode.frontNodes.Add(new BSPNode(wallSector, currentWall, currentNode.wall));
                 return;
             }
 
@@ -102,15 +101,15 @@
                         ibWall = temp;
                     }
 
-                    currentNode.frontNodes.Add(new BSPNode(wallSector, aiWall));
-                    currentNode.backNodes.Add(new BSPNode(wallSector, ibWall));
+                    currentNode.frontNodes.Add(new BSPNode(wallSector, aiWall, currentNode.wall));
+                    currentNode.backNodes.Add(new BSPNode(wallSector, ibWall, currentNode.wall));
                     debug_NumberOfIntersections++;
                     return;
                 }    
             }
 
-            if (num < 0 || (numIsZero && den > 0)) currentNode.frontNodes.Add(new BSPNode(wallSector, currentWall));
-            else if (num > 0 || (numIsZero && den < 0)) currentNode.backNodes.Add(new BSPNode(wallSector, currentWall));
+            if (num < 0 || (numIsZero && den > 0)) currentNode.frontNodes.Add(new BSPNode(wallSector, currentWall, currentNode.wall));
+            else if (num > 0 || (numIsZero && den < 0)) currentNode.backNodes.Add(new BSPNode(wallSector, currentWall, currentNode.wall));
         }
 
         bool FindWallSectorByID(ulong id, ref List<Sector> sectors, out int sector)

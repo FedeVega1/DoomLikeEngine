@@ -116,14 +116,6 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 
 		mapFile.read((char*) intBuffer, intSize);
 
-		splitterWall = Wall();
-
-		mapFile.read((char*) pointBuffer, pointSize);
-		splitterWall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
-		mapFile.read((char*) pointBuffer, pointSize);
-		splitterWall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
 		mapFile.read((char*) intBuffer, intSize);
 		maxNumberOfBSPNodes = ByteArrayToInt(intBuffer, isLittleEndian);
 
@@ -165,6 +157,19 @@ void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLitt
 	wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
 
 	currentNode->wall = wall;
+
+	Wall splitter = Wall();
+
+	stream->read((char*) pointBuffer, pointSize);
+	splitter.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+	stream->read((char*) pointBuffer, pointSize);
+	splitter.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+	stream->read((char*) idBuffer, idSize);
+	splitter.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
+
+	currentNode->splitter = splitter;
 
 	stream->read((char*) &singleByte, 1);
 
