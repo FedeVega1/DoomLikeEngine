@@ -1,6 +1,6 @@
 ﻿namespace LevelEditor
 {
-    internal struct Wall
+    internal class Wall
     {
         public struct WallColors
         {
@@ -37,8 +37,10 @@
         public bool isPortal, isConnection;
         public int portalTargetSector, portalTargetWall;
         public readonly ulong wallID;
+        
+        public Sector Sector { get; private set; }
 
-        public Wall()
+        public Wall(Sector s)
         {
             leftPoint = rightPoint = Point.Empty;
             colors = new WallColors();
@@ -46,9 +48,10 @@
             portalTargetSector = -1;
             portalTargetWall = -1;
             wallID = WallCounter++;
+            Sector = s;
         }
 
-        public Wall(Point left, Point right, Color[] c)
+        public Wall(Point left, Point right, Color[] c, Sector s)
         {
             leftPoint = left;
             rightPoint = right;
@@ -60,6 +63,8 @@
             isPortal = false;
             portalTargetSector = -1;
             portalTargetWall = -1;
+
+            Sector = s;
 
             UpdateMiddleAndNormal();
             wallID = WallCounter++;
@@ -76,24 +81,26 @@
             portalTargetSector = wallCopy.portalTargetSector;
             portalTargetWall = wallCopy.portalTargetWall;
 
-            UpdateMiddleAndNormal();
-            wallID = wallCopy.wallID;
-        }
-
-        public Wall(Wall wallCopy)
-        {
-            leftPoint = wallCopy.leftPoint;
-            rightPoint = wallCopy.rightPoint;
-
-            colors = wallCopy.colors;
-
-            isPortal = wallCopy.isPortal;
-            portalTargetSector = wallCopy.portalTargetSector;
-            portalTargetWall = wallCopy.portalTargetWall;
+            Sector = wallCopy.Sector;
 
             UpdateMiddleAndNormal();
             wallID = wallCopy.wallID;
         }
+
+        //public Wall(Wall wallCopy)
+        //{
+        //    leftPoint = wallCopy.leftPoint;
+        //    rightPoint = wallCopy.rightPoint;
+
+        //    colors = wallCopy.colors;
+
+        //    isPortal = wallCopy.isPortal;
+        //    portalTargetSector = wallCopy.portalTargetSector;
+        //    portalTargetWall = wallCopy.portalTargetWall;
+
+        //    UpdateMiddleAndNormal();
+        //    wallID = wallCopy.wallID;
+        //}
 
         public void UpdateMiddleAndNormal()
         {
@@ -117,11 +124,14 @@
             return new PointF(dir.Y, -dir.X);
         }
 
-        public readonly Color[] GetColors() { return colors.ToArray(); }
+        public Color[] GetColors() { return colors.ToArray(); }
     }
 
-    internal struct Sector
+    internal class Sector
     {
+        static uint SectorCounter = 0;
+        public uint SectorID { get; private set; }
+
         public List<Wall> walls;
         public Color floorColor, ceillingColor;
         public int floorHeight, ceillingHeight;
@@ -137,8 +147,35 @@
             UpdateSectorValues();
         }
 
+        public Sector(List<Wall> wallList, int fH, int cH, Color fC, Color cC, uint sectorID)
+        {
+            walls = wallList;
+            floorHeight = fH;
+            ceillingHeight = cH;
+            ceillingColor = cC;
+            floorColor = fC;
+            SectorID = sectorID;
+
+            UpdateSectorValues();
+        }
+
+        public Sector(uint newID)
+        {
+            SectorID = newID;
+            if (SectorCounter < SectorID) SectorCounter = SectorID;
+
+            walls = new List<Wall>();
+            floorHeight = 0;
+            ceillingHeight = 10;
+            ceillingColor = floorColor = Color.Black;
+
+            UpdateSectorValues();
+        }
+
         public Sector(Sector sector)
         {
+            SectorID = SectorCounter++;
+
             walls = new List<Wall>(sector.walls);
             floorHeight = sector.floorHeight;
             ceillingHeight = sector.ceillingHeight;
@@ -148,7 +185,7 @@
             UpdateSectorValues();
         }
 
-        public readonly bool CheckWallsOrientation()
+        public bool CheckWallsOrientation()
         {
             int size = walls.Count, sum = 0;
             for (int i = 0; i < size; i++)
@@ -192,7 +229,7 @@
             max = minMax.Item2;
         }
 
-        public readonly Point CalculateCentroid()
+        public Point CalculateCentroid()
         {
             if (walls.Count == 0) return Point.Empty;
 
@@ -212,7 +249,7 @@
             return centroid;
         }
 
-        public readonly (Point, Point) GetMinMaxPoints()
+        public (Point, Point) GetMinMaxPoints()
         {
             Point min = new Point(int.MaxValue, int.MaxValue), max = new Point(int.MinValue, int.MinValue);
             int wallsSize = walls.Count;
@@ -234,7 +271,7 @@
             return (min, max);
         }
 
-        public readonly bool PointInsideSector(Point point)
+        public bool PointInsideSector(Point point)
         {
             return point.X < min.X || point.X > max.X || point.Y < min.Y || point.Y > max.Y;
         }
@@ -334,7 +371,7 @@
 
         public bool OnMouseDown(Point cursorPos)
         {
-            currentDrawnSector.walls.Add(new Wall(DrawLineStart, DrawLineEnd, currentDrawnWallsColor));
+            currentDrawnSector.walls.Add(new Wall(DrawLineStart, DrawLineEnd, currentDrawnWallsColor, currentDrawnSector));
             DrawLineEnd = DrawLineStart = cursorPos;
 
             if (currentDrawnSector.walls[currentDrawnSector.walls.Count - 1].rightPoint == currentDrawnSector.walls[0].leftPoint)
@@ -555,11 +592,11 @@
 
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
             sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors()).MakePortal(w2.Item1, w2.Item2, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(w2.Item1, w2.Item2, true);
 
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors()));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors()));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
         }
 
         void ConnectWall_SameS_DiffW(Wall newWall, (int, int) w1, (int, int) w2)
@@ -577,11 +614,11 @@
 
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
             sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors()).MakePortal(w2.Item1, w2.Item2, true);
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(w2.Item1, w2.Item2, true);
 
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors()));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
-            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors()));
+            sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(splicedWall.leftPoint, newWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
         }
 
         void ConnectWall_DiffS(Wall newWall, (int, int) w1, (int, int) w2)

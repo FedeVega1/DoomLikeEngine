@@ -1,6 +1,3 @@
-using System.IO;
-using System.IO.Pipes;
-
 namespace LevelEditor
 {
     public partial class MainWindow : Form
@@ -8,6 +5,7 @@ namespace LevelEditor
         MapGridEditor gridEditor;
         FileManager fileManager;
         AboutWindow about;
+        BSPAnalyzer analyzer;
         System.Windows.Forms.Timer shiftCtrlTimer;
 
         public MainWindow()
@@ -36,10 +34,11 @@ namespace LevelEditor
             }
 
             about = new AboutWindow();
+            analyzer = new BSPAnalyzer();
             COLoggerImport.InitLogSys(true, false);
 
-            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize, 
-                ref ImgEditorDraw, ref BtnWallTopColor, ref BtnWallInColor, ref BtnWallBtmColor, ref BtnCeillingColor, 
+            gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize,
+                ref ImgEditorDraw, ref BtnWallTopColor, ref BtnWallInColor, ref BtnWallBtmColor, ref BtnCeillingColor,
                 ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight, ref LblSelectionData));
             fileManager = new FileManager();
         }
@@ -55,8 +54,8 @@ namespace LevelEditor
 
         protected override bool ProcessKeyPreview(ref Message m)
         {
-            COLoggerImport.LogNormal((Keys) m.WParam);
-            switch ((Keys) m.WParam)
+            COLoggerImport.LogNormal((Keys)m.WParam);
+            switch ((Keys)m.WParam)
             {
                 case Keys.ShiftKey:
                     gridEditor.ShiftKeyDown = m.Msg == 0x0100;
@@ -209,7 +208,7 @@ namespace LevelEditor
         void MainWindow_DragDrop(object sender, DragEventArgs e)
         {
             if (e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            string[] data = (string[]) e.Data.GetData(DataFormats.FileDrop);
+            string[] data = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             if (data == null || !File.Exists(data[0]) || Path.GetExtension(data[0]) != ".map") return;
 
@@ -277,8 +276,8 @@ namespace LevelEditor
         void NumbCeillingHeight_ValueChanged(object sender, EventArgs e)
         {
             if (NumbCeillingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
-            int value = (int) NumbCeillingHeight.NumericUpDownControl.Value;
-            int floorValue = (int) NumbFloorHeight.NumericUpDownControl.Value;
+            int value = (int)NumbCeillingHeight.NumericUpDownControl.Value;
+            int floorValue = (int)NumbFloorHeight.NumericUpDownControl.Value;
 
             if (value <= floorValue)
             {
@@ -292,8 +291,8 @@ namespace LevelEditor
         void NumbFloorHeight_ValueChanged(object sender, EventArgs e)
         {
             if (NumbCeillingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
-            int value = (int) NumbFloorHeight.NumericUpDownControl.Value;
-            int ceilValue = (int) NumbCeillingHeight.NumericUpDownControl.Value;
+            int value = (int)NumbFloorHeight.NumericUpDownControl.Value;
+            int ceilValue = (int)NumbCeillingHeight.NumericUpDownControl.Value;
 
             if (value >= ceilValue)
             {
@@ -357,6 +356,13 @@ namespace LevelEditor
                 fileStream.Close();
                 File.Delete(fileName);
             }
+        }
+
+        void BtnEditAnalyze_Click(object sender, EventArgs e)
+        {
+            gridEditor.GetSectors(out List<Sector> sectors);
+            analyzer.InitAnalyzer(sectors);
+            analyzer.ShowDialog();
         }
     }
 }

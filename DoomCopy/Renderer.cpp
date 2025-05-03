@@ -26,10 +26,8 @@ void Renderer::ProcessGame(HWND hwnd, Game* const game)
     InvalidateRect(hwnd, NULL, false);
 }
 
-void Renderer::ProcessWall(int wallIndx, const ProcessedWall* wallPtr, int numbWalls, const Sector& wallSectorData)
+void Renderer::ProcessWall(const ProcessedWall& wall)
 {
-    const ProcessedWall& wall = wallPtr[wallIndx];
-
     if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
 
     if (wall.isPortal) { }
@@ -59,8 +57,8 @@ void Renderer::ProcessWall(int wallIndx, const ProcessedWall* wallPtr, int numbW
 
         // Draw the Ceilling and Floor from their respective line into the Screen limits
 
-        for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wallSectorData.floorColor);
-        for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wallSectorData.ceillingColor);
+        for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
+        for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
 
         if (wall.isConnection)
         {
@@ -70,7 +68,7 @@ void Renderer::ProcessWall(int wallIndx, const ProcessedWall* wallPtr, int numbW
 
             //int sectIndx = GetSectorIndexFromID(wall.portalTargetSector, wallPtr, numbWalls);
             //if (sectIndx == -1) continue;
-            //const ProcessedSector& prevSector = sectorPtr[sectIndx];
+            //const ProcessedSector& prevSector =  sectorPtr[sectIndx];
 
             //if (sector.bottomPoint < prevSector.bottomPoint)
             //{
@@ -96,17 +94,6 @@ void Renderer::ProcessWall(int wallIndx, const ProcessedWall* wallPtr, int numbW
 
         if (debugStepDraw) Sleep(50);
     }
-}
-
-int Renderer::GetSectorIndexFromID(int id, const std::shared_ptr<ProcessedSector[]>& sectorPtr, int numbSectors) const
-{
-    for (int i = 0; i < numbSectors; i++)
-    {
-        if (sectorPtr[i].sectorID != id) continue;
-        return i;
-    }
-
-    return -1;
 }
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)

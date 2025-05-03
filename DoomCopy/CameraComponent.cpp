@@ -11,12 +11,8 @@ void Camera::Start()
 {
 	BaseComponent::Start();
 
-	closestNodes = new BSPNode*[world->maxNumberOfBSPNodes];
-	processedWalls = nullptr;
-	processedSectors = nullptr;
-
-	for (int i = 0; i < world->maxNumberOfBSPNodes; i++)
-		closestNodes[i] = nullptr;
+	processedWalls = std::vector<ProcessedWall>();
+	processedWalls.reserve(10);
 
 	Input::INS.RegisterAxis("CameraForwardBack", KeyCode::W, KeyCode::S, &Camera::DebugForwardBack, this);
 	Input::INS.RegisterAxis("CameraLeftRight", KeyCode::A, KeyCode::D, &Camera::DebugLeftRight, this);
@@ -27,11 +23,7 @@ void Camera::Start()
 const float Camera::movSpeed = 400;
 const float Camera::rotSpeed = 350;
 
-int Camera::GetProcessedWalls(ProcessedWall*& outProcessedWalls) const
-{ 
-	outProcessedWalls = processedWalls;
-	return world->maxNumberOfBSPNodes - numbProcessedWalls;
-}
+void Camera::GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const { outProcessedWalls = processedWalls; }
 
 void Camera::Tick()
 {
@@ -40,213 +32,85 @@ void Camera::Tick()
 
 void Camera::AfterTick()
 {
-	//GetSectorsToProcess();
-
+	processedWalls.clear();
 	Vector3 currentPos = GetTransform()->GetPos();
-	numbProcessedWalls = world->maxNumberOfBSPNodes;
-
-	GetWallsFromBSP(currentPos.XY(), &world->rootNode, closestNodes, numbProcessedWalls);
-	if (numbProcessedWalls < 0) numbProcessedWalls = 0;
-
-	if (!closestNodes || !closestNodes[world->maxNumberOfBSPNodes - 1])
-	{
-		OLOG_E("Can't find the camera anywhere inside the level!");
-		return;
-	}
-
-	if (processedWalls) delete[] processedWalls;
-	processedWalls = new ProcessedWall[world->maxNumberOfBSPNodes - numbProcessedWalls];
-
-	currentPos.z += cameraZOffset;
-	currentPos.z *= -1;
 
 	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
 	float cos = (float) SCTABLE.cos[currentRotation];
 	float sin = (float) SCTABLE.sin[currentRotation];
 
-	for (int i = numbProcessedWalls, j = 0; i < world->maxNumberOfBSPNodes; i++, j++)
-	{
-		int w, s = closestNodes[i]->sectorIndx;
-		if (!world->FindWallByIDWithSector(closestNodes[i]->wall.wallID, s, w)) continue;
-
-		processedWalls[j] = ProcessedWall
-		{
-			V3_ZERO, V3_ZERO,
-			world->sectorData[s].sectorWalls[w].leftPoint,
-			world->sectorData[s].sectorWalls[w].rightPoint,
-			world->sectorData[s].sectorWalls[w].topColor,
-			world->sectorData[s].sectorWalls[w].inColor,
-			world->sectorData[s].sectorWalls[w].btmColor,
-			world->sectorData[s].sectorWalls[w].isPortal,
-			world->sectorData[s].sectorWalls[w].isConnection,
-			world->sectorData[s].sectorWalls[w].portalTargetSector,
-			world->sectorData[s].sectorWalls[w].portalTargetWall,
-			s
-		};
-
-		ProcessedWall& wall = processedWalls[j];
-
-		wall.leftBtmPoint.AddXY(-currentPos.x, -currentPos.y);
-		wall.rightBtmPoint.AddXY(-currentPos.x, -currentPos.y);
-
-		wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), world->sectorData[s].bottomPoint + currentPos.z);
-		wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), world->sectorData[s].bottomPoint + currentPos.z);
-
-		wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
-		wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
-
-		wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, world->sectorData[s].topPoint + currentPos.z);
-		wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, world->sectorData[s].topPoint + currentPos.z);
-
-		wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
-		wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
-
-		if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) continue;
-
-		if (wall.leftBtmPoint.y < 1)
-		{
-			ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
-			ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
-		}
-
-		if (wall.rightBtmPoint.y < 1)
-		{
-			ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
-			ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
-		}
-	}
+	GetWallsFromBSP(currentPos, world->rootNode, cos, sin);
+	if (processedWalls.size() == 0) OLOG_E("Can't find the camera anywhere inside the level!");
 }
 
-void Camera::GetWallsFromBSP(const Vector2& pos, BSPNode* startNode, BSPNode** closestNodesArray, int& outArraySize)
+void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const float& cos, const float& sin)
 {
 	if (!startNode) return;
-	Vector2 posToSplitter = pos - startNode->splitter.leftPoint;
+	Vector2 posToSplitter = pos.XY() - startNode->splitter.leftPoint;
 
 	if (startNode->splitter.VectorInFrontWall(posToSplitter))
 	{
-		GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
-		closestNodesArray[--outArraySize] = startNode;
-		GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
+		GetWallsFromBSP(pos, startNode->backNode, cos, sin);
+		ProcessWallFromBSPNode(startNode, pos, cos, sin);
+		GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
 		return;
 	}
 
-	GetWallsFromBSP(pos, startNode->backNode, closestNodesArray, outArraySize);
-	closestNodesArray[--outArraySize] = startNode;
-	GetWallsFromBSP(pos, startNode->frontNode, closestNodesArray, outArraySize);
+	GetWallsFromBSP(pos, startNode->backNode, cos, sin);
+	GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
 }
 
-void Camera::GetSectorsToProcess()
+void Camera::ProcessWallFromBSPNode(const BSPNode* const node, Vector3 pos, const float& cos, const float& sin)
 {
-	numbProcessedSectors = world->numberOfSectors;
+	pos.z += cameraZOffset;
+	pos.z *= -1;
 
-	if (!processedSectors) processedSectors = std::make_shared<ProcessedSector[]>(numbProcessedSectors);
-	else 
+	ProcessedWall wall = ProcessedWall
 	{
-		for (int i = 0; i < numbProcessedSectors; i++) 
-		{
-			delete[] processedSectors[i].sectorWalls;
-			processedSectors[i] = ProcessedSector();
-		}
-	}
+		V3_ZERO, V3_ZERO,
+		node->wall.leftPoint, node->wall.rightPoint,
+		node->wall.topColor, node->wall.inColor, node->wall.btmColor,
+		node->wall.isPortal, node->wall.isConnection,
+		node->wall.portalTargetSector, node->wall.portalTargetWall,
+		node->wall.parentSector
+	};
 
-	for (int i = GetClosestWorldSector(), s = 0; i < numbProcessedSectors; i++)
-		ProcessWorldSector(s, i, -1);
-}
+	wall.leftBtmPoint.AddXY(-pos.x, -pos.y);
+	wall.rightBtmPoint.AddXY(-pos.x, -pos.y);
 
-void Camera::ProcessWorldSector(int& sector, int worldSector, int portalIndx)
-{
-	if (!world->sectorData[worldSector].HasPortals())
+	wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), wall.parentSector->bottomPoint + pos.z);
+	wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), wall.parentSector->bottomPoint + pos.z);
+
+	wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+	wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+
+	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->topPoint + pos.z);
+	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->topPoint + pos.z);
+
+	wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
+	wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
+
+	if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1)
 	{
-		if (CheckIfSectorIsProcessed(worldSector)) return;
-		CopyWorldSectorData(sector, worldSector);
+		//processedWalls.push_back(wall);
+		//processedWalls.insert(processedWalls.begin(), wall);
 		return;
 	}
 
-	std::vector<int> portalConnections = std::vector<int>();
-	world->sectorData[worldSector].GetPortalSectors(&portalConnections, portalIndx);
-	for (int i = 0; i < portalConnections.size(); i++)
+	if (wall.leftBtmPoint.y < 1)
 	{
-		if (CheckIfSectorIsProcessed(portalConnections[i])) continue;
-		ProcessWorldSector(sector, portalConnections[i], worldSector);
+		ClipBehindCamera(wall.leftBtmPoint, wall.rightBtmPoint);
+		ClipBehindCamera(wall.leftTopPoint, wall.rightTopPoint);
 	}
 
-	if (CheckIfSectorIsProcessed(worldSector)) return;
-	CopyWorldSectorData(sector, worldSector);
-}
-
-bool Camera::CheckIfSectorIsProcessed(int sector)
-{
-	for (int i = 0; i < numbProcessedSectors; i++)
+	if (wall.rightBtmPoint.y < 1)
 	{
-		if (processedSectors[i].worldSectorIndex != sector) continue;
-		return true;
+		ClipBehindCamera(wall.rightBtmPoint, wall.leftBtmPoint);
+		ClipBehindCamera(wall.rightTopPoint, wall.leftTopPoint);
 	}
 
-	return false;
-}
-
-void Camera::CopyWorldSectorData(int& sector, int worldSector)
-{
-	int walls = world->sectorData[worldSector].numberOfWalls;
-	if (processedSectors[sector].sectorWalls != nullptr) delete[] processedSectors[sector].sectorWalls;
-
-	processedSectors[sector].sectorWalls = new ProcessedWall[walls];
-	for (int w = 0; w < walls; w++)
-	{
-		//processedSectors[sector].sectorWalls[w] = ProcessedWall
-		//{
-		//	V3_ZERO, V3_ZERO,
-		//	world->sectorData[worldSector].sectorWalls[w].leftPoint,
-		//	world->sectorData[worldSector].sectorWalls[w].rightPoint,
-		//	world->sectorData[worldSector].sectorWalls[w].topColor,
-		//	world->sectorData[worldSector].sectorWalls[w].inColor,
-		//	world->sectorData[worldSector].sectorWalls[w].btmColor,
-		//	world->sectorData[worldSector].sectorWalls[w].isPortal,
-		//	world->sectorData[worldSector].sectorWalls[w].isConnection,
-		//	world->sectorData[worldSector].sectorWalls[w].portalTargetSector,
-		//	world->sectorData[worldSector].sectorWalls[w].portalTargetWall
-		//};
-	}
-
-	processedSectors[sector].numberOfWalls = walls;
-	processedSectors[sector].bottomPoint = world->sectorData[worldSector].bottomPoint;
-	processedSectors[sector].topPoint = world->sectorData[worldSector].topPoint;
-	processedSectors[sector].floorColor = world->sectorData[worldSector].floorColor;
-	processedSectors[sector].ceillingColor = world->sectorData[worldSector].ceillingColor;
-	processedSectors[sector].sectorID = world->sectorData[worldSector].sectorID;
-	processedSectors[sector++].worldSectorIndex = worldSector;
-}
-
-int Camera::GetClosestWorldSector()
-{
-	int overlapSectorsSize = 0, size = world->numberOfSectors, sector = 0;
-	int* overlapSectors = new int[size];
-	Vector2 currentPos = GetTransform()->GetPos().XY();
-
-	for (int i = 0; i < size; i++)
-	{
-		if (!world->sectorData[i].PointIsInsideSector(currentPos)) continue;
-		overlapSectors[overlapSectorsSize++] = i;
-	}
-
-	if (overlapSectorsSize == 1)
-	{
-		sector = overlapSectors[0];
-		delete[] overlapSectors;
-		return sector;
-	}
-
-	float closestDistance = 99999999.0f;
-	for (int i = 0; i < overlapSectorsSize; i++)
-	{
-		float dist = world->sectorData[overlapSectors[i]].GetAvrgDistanceToPoint(currentPos);
-		if (dist >= closestDistance) continue;
-		closestDistance = dist;
-		sector = overlapSectors[i];
-	}
-
-	delete[] overlapSectors;
-	return sector;
+	processedWalls.push_back(wall);
+	//processedWalls.insert(processedWalls.begin(), wall);
 }
 
 void Camera::OnDestroy()

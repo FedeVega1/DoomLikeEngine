@@ -4,6 +4,9 @@
     <Compile Update="AboutBox1.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="BSPAnalyzer.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

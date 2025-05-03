@@ -91,6 +91,7 @@ namespace LevelEditor
             LblOrigin = new ToolStripStatusLabel();
             LblCursor = new ToolStripStatusLabel();
             ColorPanel = new ColorDialog();
+            btnEditAnalyze = new ToolStripMenuItem();
             panel1 = new Panel();
             LblTopWallColor = new ToolStripLabel();
             LblWallTopTexture = new ToolStripLabel();
@@ -113,7 +114,7 @@ namespace LevelEditor
             panel1.SuspendLayout();
             toolStrip1.SuspendLayout();
             LayoutPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)ImgEditorDraw).BeginInit();
             panel2.SuspendLayout();
             toolStrip2.SuspendLayout();
             MainToolbar.SuspendLayout();
@@ -159,7 +160,7 @@ namespace LevelEditor
             BtnWallTopColor.AutoToolTip = false;
             BtnWallTopColor.BackColor = Color.Black;
             BtnWallTopColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallTopColor.Image = (Image) resources.GetObject("BtnWallTopColor.Image");
+            BtnWallTopColor.Image = (Image)resources.GetObject("BtnWallTopColor.Image");
             BtnWallTopColor.ImageTransparentColor = Color.Magenta;
             BtnWallTopColor.Name = "BtnWallTopColor";
             BtnWallTopColor.Size = new Size(191, 19);
@@ -177,7 +178,7 @@ namespace LevelEditor
             BtnWallTopTexture.AutoToolTip = false;
             BtnWallTopTexture.BackColor = Color.Black;
             BtnWallTopTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallTopTexture.Image = (Image) resources.GetObject("BtnWallTopTexture.Image");
+            BtnWallTopTexture.Image = (Image)resources.GetObject("BtnWallTopTexture.Image");
             BtnWallTopTexture.ImageTransparentColor = Color.Magenta;
             BtnWallTopTexture.Name = "BtnWallTopTexture";
             BtnWallTopTexture.Size = new Size(191, 19);
@@ -194,7 +195,7 @@ namespace LevelEditor
             BtnWallInColor.AutoToolTip = false;
             BtnWallInColor.BackColor = Color.Black;
             BtnWallInColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallInColor.Image = (Image) resources.GetObject("BtnWallInColor.Image");
+            BtnWallInColor.Image = (Image)resources.GetObject("BtnWallInColor.Image");
             BtnWallInColor.ImageTransparentColor = Color.Magenta;
             BtnWallInColor.Name = "BtnWallInColor";
             BtnWallInColor.Size = new Size(191, 19);
@@ -212,7 +213,7 @@ namespace LevelEditor
             BtnWallInTexture.AutoToolTip = false;
             BtnWallInTexture.BackColor = Color.Black;
             BtnWallInTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallInTexture.Image = (Image) resources.GetObject("BtnWallInTexture.Image");
+            BtnWallInTexture.Image = (Image)resources.GetObject("BtnWallInTexture.Image");
             BtnWallInTexture.ImageTransparentColor = Color.Magenta;
             BtnWallInTexture.Name = "BtnWallInTexture";
             BtnWallInTexture.Size = new Size(191, 19);
@@ -229,7 +230,7 @@ namespace LevelEditor
             BtnWallBtmColor.AutoToolTip = false;
             BtnWallBtmColor.BackColor = Color.Black;
             BtnWallBtmColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallBtmColor.Image = (Image) resources.GetObject("BtnWallBtmColor.Image");
+            BtnWallBtmColor.Image = (Image)resources.GetObject("BtnWallBtmColor.Image");
             BtnWallBtmColor.ImageTransparentColor = Color.Magenta;
             BtnWallBtmColor.Name = "BtnWallBtmColor";
             BtnWallBtmColor.Size = new Size(191, 19);
@@ -247,7 +248,7 @@ namespace LevelEditor
             BtnWallBtmTexture.AutoToolTip = false;
             BtnWallBtmTexture.BackColor = Color.Black;
             BtnWallBtmTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnWallBtmTexture.Image = (Image) resources.GetObject("BtnWallBtmTexture.Image");
+            BtnWallBtmTexture.Image = (Image)resources.GetObject("BtnWallBtmTexture.Image");
             BtnWallBtmTexture.ImageTransparentColor = Color.Magenta;
             BtnWallBtmTexture.Name = "BtnWallBtmTexture";
             BtnWallBtmTexture.Size = new Size(191, 19);
@@ -255,7 +256,7 @@ namespace LevelEditor
             // 
             // BtnLinesMode
             // 
-            BtnLinesMode.Image = (Image) resources.GetObject("BtnLinesMode.Image");
+            BtnLinesMode.Image = (Image)resources.GetObject("BtnLinesMode.Image");
             BtnLinesMode.ImageTransparentColor = Color.Magenta;
             BtnLinesMode.Margin = new Padding(10, 5, 5, 0);
             BtnLinesMode.Name = "BtnLinesMode";
@@ -280,7 +281,7 @@ namespace LevelEditor
             // 
             // BtnEditNodes
             // 
-            BtnEditNodes.Image = (Image) resources.GetObject("BtnEditNodes.Image");
+            BtnEditNodes.Image = (Image)resources.GetObject("BtnEditNodes.Image");
             BtnEditNodes.ImageTransparentColor = Color.Magenta;
             BtnEditNodes.Margin = new Padding(10, 3, 5, 2);
             BtnEditNodes.Name = "BtnEditNodes";
@@ -290,7 +291,7 @@ namespace LevelEditor
             // 
             // BtnEditWalls
             // 
-            BtnEditWalls.Image = (Image) resources.GetObject("BtnEditWalls.Image");
+            BtnEditWalls.Image = (Image)resources.GetObject("BtnEditWalls.Image");
             BtnEditWalls.ImageTransparentColor = Color.Magenta;
             BtnEditWalls.Margin = new Padding(10, 1, 5, 2);
             BtnEditWalls.Name = "BtnEditWalls";
@@ -300,7 +301,7 @@ namespace LevelEditor
             // 
             // LblEditSectors
             // 
-            LblEditSectors.Image = (Image) resources.GetObject("LblEditSectors.Image");
+            LblEditSectors.Image = (Image)resources.GetObject("LblEditSectors.Image");
             LblEditSectors.ImageTransparentColor = Color.Magenta;
             LblEditSectors.Margin = new Padding(10, 1, 5, 2);
             LblEditSectors.Name = "LblEditSectors";
@@ -328,7 +329,7 @@ namespace LevelEditor
             // 
             // ImgEditorDraw
             // 
-            ImgEditorDraw.BackColor = Color.FromArgb(  35,   35,   35);
+            ImgEditorDraw.BackColor = Color.FromArgb(35, 35, 35);
             ImgEditorDraw.BorderStyle = BorderStyle.FixedSingle;
             ImgEditorDraw.Dock = DockStyle.Fill;
             ImgEditorDraw.Location = new Point(0, 10);
@@ -414,7 +415,7 @@ namespace LevelEditor
             BtnCeillingColor.AutoToolTip = false;
             BtnCeillingColor.BackColor = Color.Black;
             BtnCeillingColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnCeillingColor.Image = (Image) resources.GetObject("BtnCeillingColor.Image");
+            BtnCeillingColor.Image = (Image)resources.GetObject("BtnCeillingColor.Image");
             BtnCeillingColor.ImageTransparentColor = Color.Magenta;
             BtnCeillingColor.Name = "BtnCeillingColor";
             BtnCeillingColor.Size = new Size(80, 52);
@@ -433,7 +434,7 @@ namespace LevelEditor
             BtnFloorColor.AutoToolTip = false;
             BtnFloorColor.BackColor = Color.Black;
             BtnFloorColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnFloorColor.Image = (Image) resources.GetObject("BtnFloorColor.Image");
+            BtnFloorColor.Image = (Image)resources.GetObject("BtnFloorColor.Image");
             BtnFloorColor.ImageTransparentColor = Color.Magenta;
             BtnFloorColor.Name = "BtnFloorColor";
             BtnFloorColor.Size = new Size(80, 52);
@@ -457,7 +458,7 @@ namespace LevelEditor
             BtnCeillingtexture.AutoToolTip = false;
             BtnCeillingtexture.BackColor = Color.Black;
             BtnCeillingtexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnCeillingtexture.Image = (Image) resources.GetObject("BtnCeillingtexture.Image");
+            BtnCeillingtexture.Image = (Image)resources.GetObject("BtnCeillingtexture.Image");
             BtnCeillingtexture.ImageTransparentColor = Color.Magenta;
             BtnCeillingtexture.Name = "BtnCeillingtexture";
             BtnCeillingtexture.Size = new Size(80, 52);
@@ -476,7 +477,7 @@ namespace LevelEditor
             BtnFloorTexture.AutoToolTip = false;
             BtnFloorTexture.BackColor = Color.Black;
             BtnFloorTexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnFloorTexture.Image = (Image) resources.GetObject("BtnFloorTexture.Image");
+            BtnFloorTexture.Image = (Image)resources.GetObject("BtnFloorTexture.Image");
             BtnFloorTexture.ImageTransparentColor = Color.Magenta;
             BtnFloorTexture.Name = "BtnFloorTexture";
             BtnFloorTexture.Size = new Size(80, 52);
@@ -513,39 +514,39 @@ namespace LevelEditor
             // BtnFileNew
             // 
             BtnFileNew.Name = "BtnFileNew";
-            BtnFileNew.Size = new Size(114, 22);
+            BtnFileNew.Size = new Size(180, 22);
             BtnFileNew.Text = "New";
             BtnFileNew.Click += BtnFileNew_Click;
             // 
             // BtnFileLoad
             // 
             BtnFileLoad.Name = "BtnFileLoad";
-            BtnFileLoad.Size = new Size(114, 22);
+            BtnFileLoad.Size = new Size(180, 22);
             BtnFileLoad.Text = "Load";
             BtnFileLoad.Click += BtnFileLoad_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(111, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // BtnFileSave
             // 
             BtnFileSave.Name = "BtnFileSave";
-            BtnFileSave.Size = new Size(114, 22);
+            BtnFileSave.Size = new Size(180, 22);
             BtnFileSave.Text = "Save";
             BtnFileSave.Click += BtnFileSave_Click;
             // 
             // BtnFileSaveAs
             // 
             BtnFileSaveAs.Name = "BtnFileSaveAs";
-            BtnFileSaveAs.Size = new Size(114, 22);
+            BtnFileSaveAs.Size = new Size(180, 22);
             BtnFileSaveAs.Text = "Save &As";
             BtnFileSaveAs.Click += BtnFileSaveAs_Click;
             // 
             // BtnEdit
             // 
-            BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo, toolStripSeparator1, BtnEditSettings });
+            BtnEdit.DropDownItems.AddRange(new ToolStripItem[] { BtnEditUndo, BtnEditRedo, toolStripSeparator1, BtnEditSettings, btnEditAnalyze });
             BtnEdit.ForeColor = SystemColors.ControlText;
             BtnEdit.Name = "BtnEdit";
             BtnEdit.Size = new Size(39, 20);
@@ -554,26 +555,26 @@ namespace LevelEditor
             // BtnEditUndo
             // 
             BtnEditUndo.Name = "BtnEditUndo";
-            BtnEditUndo.Size = new Size(116, 22);
+            BtnEditUndo.Size = new Size(180, 22);
             BtnEditUndo.Text = "Undo";
             BtnEditUndo.Click += BtnEditUndo_Click;
             // 
             // BtnEditRedo
             // 
             BtnEditRedo.Name = "BtnEditRedo";
-            BtnEditRedo.Size = new Size(116, 22);
+            BtnEditRedo.Size = new Size(180, 22);
             BtnEditRedo.Text = "Redo";
             BtnEditRedo.Click += BtnEditRedo_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(113, 6);
+            toolStripSeparator1.Size = new Size(177, 6);
             // 
             // BtnEditSettings
             // 
             BtnEditSettings.Name = "BtnEditSettings";
-            BtnEditSettings.Size = new Size(116, 22);
+            BtnEditSettings.Size = new Size(180, 22);
             BtnEditSettings.Text = "Settings";
             // 
             // BtnHelp
@@ -588,7 +589,7 @@ namespace LevelEditor
             // BtnHelpAbout
             // 
             BtnHelpAbout.Name = "BtnHelpAbout";
-            BtnHelpAbout.Size = new Size(107, 22);
+            BtnHelpAbout.Size = new Size(180, 22);
             BtnHelpAbout.Text = "About";
             BtnHelpAbout.Click += BtnHelpAbout_Click;
             // 
@@ -652,6 +653,13 @@ namespace LevelEditor
             ColorPanel.AnyColor = true;
             ColorPanel.FullOpen = true;
             // 
+            // btnEditAnalyze
+            // 
+            btnEditAnalyze.Name = "btnEditAnalyze";
+            btnEditAnalyze.Size = new Size(180, 22);
+            btnEditAnalyze.Text = "Analyze";
+            btnEditAnalyze.Click += BtnEditAnalyze_Click;
+            // 
             // MainWindow
             // 
             AllowDrop = true;
@@ -675,7 +683,7 @@ namespace LevelEditor
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             LayoutPanel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) ImgEditorDraw).EndInit();
+            ((System.ComponentModel.ISupportInitialize)ImgEditorDraw).EndInit();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
             toolStrip2.ResumeLayout(false);
@@ -744,5 +752,6 @@ namespace LevelEditor
         private ToolStripButton BtnWallTopTexture;
         private ToolStripButton BtnWallInColor;
         private ToolStripButton BtnWallInTexture;
+        private ToolStripMenuItem btnEditAnalyze;
     }
 }

@@ -6,6 +6,41 @@
 #include <filesystem>
 #include <bit>
 
+int front = 0, back = 0;
+
+int Partition(BSPNode** const arr, int left, int right)
+{
+	int pivot = arr[left]->nodeID;
+	while (true)
+	{
+		while (arr[left]->nodeID < pivot) left++;
+		while (arr[right]->nodeID > pivot) right--;
+
+		if (left < right)
+		{
+			if (arr[left]->nodeID == arr[right]->nodeID) return right;
+
+			BSPNode* temp = arr[left];
+			arr[left] = arr[right];
+			arr[right] = temp;
+			continue;
+		}
+
+		return right;
+	}
+}
+
+void Quick_Sort(BSPNode** arr, int left, int right)
+{
+	if (left < right)
+	{
+		int pivot = Partition(arr, left, right);
+
+		if (pivot > 1) Quick_Sort(arr, left, pivot - 1);
+		if (pivot + 1 < right) Quick_Sort(arr, pivot + 1, right);
+	}
+}
+
 World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef), numberOfSectors(0), sectorData(nullptr), maxNumberOfBSPNodes(0)
 {
 	OLOG_LF("Working Directory: {0}", std::filesystem::current_path().string());
@@ -50,52 +85,12 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 		sectorData = new Sector[numberOfSectors];
 		for (int i = 0; i < numberOfSectors; i++)
 		{
-			OLOG_LF("Loading Sector: {0}", i);
+			Sector& sector = sectorData[i] = Sector();
 
-			Sector sector = Sector();
-			mapFile.read((char*) intBuffer, intSize);
+			mapFile.read((char*)intBuffer, intSize);
+			sector.sectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
-			sector.numberOfWalls = ByteArrayToInt(intBuffer, isLittleEndian);
-
-			sector.sectorWalls = new Wall[sector.numberOfWalls];
-			for (int j = 0; j < sector.numberOfWalls; j++)
-			{
-				Wall wall = Wall();
-
-				mapFile.read((char*) pointBuffer, pointSize);
-				wall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
-				mapFile.read((char*) pointBuffer, pointSize);
-				wall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
-				OLOG_LF("Sector: {0} - Wall: {1} - LeftPoint {2} | RightPoint {3}", i, j, wall.leftPoint.ToString(), wall.rightPoint.ToString());
-
-				mapFile.read((char*) colorBuffer, colorSize);
-				wall.topColor = ByteArrayToColor(colorBuffer);
-
-				mapFile.read((char*) colorBuffer, colorSize);
-				wall.inColor = ByteArrayToColor(colorBuffer);
-
-				mapFile.read((char*) colorBuffer, colorSize);
-				wall.btmColor = ByteArrayToColor(colorBuffer);
-
-				unsigned char portalFlags;
-				mapFile.read((char*) &portalFlags, 1);
-
-				wall.isPortal = (portalFlags & 0b1) == 0b1;
-				wall.isConnection = (portalFlags & 0b10) == 0b10;
-
-				mapFile.read((char*) intBuffer, intSize);
-				wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
-
-				mapFile.read((char*) intBuffer, intSize);
-				wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
-
-				mapFile.read((char*) idBuffer, idSize);
-				wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
-
-				sector.sectorWalls[j] = wall;
-			}
+			OLOG_LF("Loading Sector: {0}", sector.sectorID);
 
 			mapFile.read((char*) intBuffer, intSize);
 			sector.topPoint = static_cast<float>(ByteArrayToInt(intBuffer, isLittleEndian));
@@ -109,9 +104,7 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 			mapFile.read((char*) colorBuffer, colorSize);
 			sector.ceillingColor = ByteArrayToColor(colorBuffer);
 
-			sector.sectorID = i;
-			sectorData[i] = sector;
-			OLOG_LF("Loaded Sector: {0} Correct", i);
+			OLOG_LF("Loaded Sector: {0} Correct", sector.sectorID);
 		}
 
 		mapFile.read((char*) intBuffer, intSize);
@@ -119,11 +112,10 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 		mapFile.read((char*) intBuffer, intSize);
 		maxNumberOfBSPNodes = ByteArrayToInt(intBuffer, isLittleEndian);
 
-		int nodeCount = 0;
-		rootNode = BSPNode();
-		ReadBSPNode(&rootNode, &mapFile, isLittleEndian, nodeCount);
+		ReadBSPNode(&mapFile, isLittleEndian);
 
-		OLOG_LF("Loaded {0} BSP nodes from a total of {1}", nodeCount, maxNumberOfBSPNodes);
+		//OLOG_LF("Loaded {0} BSP nodes from a total of {1}", nodeCount, maxNumberOfBSPNodes);
+		//OLOG_LF("Loaded {0} front Nodes and {1} back nodes", front, back);
 
 		mapFile.close();
 		OLOG_L("Loaded all Sectors Correct!");
@@ -136,16 +128,73 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 	}
 }
 
-void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLittleEndian, int& nodeCount) const
+void World::ReadBSPNode(std::ifstream* stream, bool isLittleEndian)
 {
 	unsigned char singleByte;
-	stream->read((char*) &singleByte, 1);
+	BSPNode** nodeArray = new BSPNode*[maxNumberOfBSPNodes];
 
-	stream->read((char*) intBuffer, intSize);
-	currentNode->sectorIndx = ByteArrayToInt(intBuffer, isLittleEndian);
-	OLOG_LF("Node Sector: {0}", currentNode->sectorIndx);
+	for (int i = 0; i < maxNumberOfBSPNodes; i++)
+	{
+		BSPNode& node = *(nodeArray[i] = new BSPNode());
 
-	Wall wall = Wall();
+		stream->read((char*) &singleByte, 1);
+		node.childFlag = singleByte;
+
+		stream->read((char*) intBuffer, intSize);
+		node.nodeID = ByteArrayToUInt(intBuffer, isLittleEndian);
+
+		Wall newWall;
+		GetWallFromFile(stream, isLittleEndian, newWall);
+		node.wall = newWall;
+
+		Wall splitter = Wall();
+
+		stream->read((char*) pointBuffer, pointSize);
+		splitter.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+		stream->read((char*) pointBuffer, pointSize);
+		splitter.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
+
+		stream->read((char*) idBuffer, idSize);
+		splitter.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
+
+		node.splitter = splitter;
+
+		stream->read((char*) intBuffer, intSize);
+		node.parentID = ByteArrayToUInt(intBuffer, isLittleEndian);
+
+		OLOG_LF("Loaded Node {0} with parentID {1} and childFlag {2}", node.nodeID, node.parentID, node.childFlag);
+	}
+
+	Quick_Sort(nodeArray, 0, maxNumberOfBSPNodes - 1);
+
+	for (int i = 0; i < maxNumberOfBSPNodes; i++)
+	{
+		if (nodeArray[i]->childFlag == 0xFF)
+		{
+			rootNode = nodeArray[i];
+			continue;
+		}
+
+		if (nodeArray[i]->parentID != 0xFFFFFFFF)
+			nodeArray[i]->parentNode = nodeArray[nodeArray[i]->parentID];
+
+		if (nodeArray[i]->childFlag == 0xBB)
+		{
+			nodeArray[nodeArray[i]->parentID]->frontNode = nodeArray[i];
+			continue;
+		}
+
+		if (nodeArray[i]->childFlag != 0xCC) continue;
+		nodeArray[nodeArray[i]->parentID]->backNode = nodeArray[i];
+	}
+
+	delete[] nodeArray;
+}
+
+void World::GetWallFromFile(std::ifstream* stream, bool isLittleEndian, Wall& wall) const
+{
+	wall = Wall();
 
 	stream->read((char*) pointBuffer, pointSize);
 	wall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
@@ -153,52 +202,54 @@ void World::ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLitt
 	stream->read((char*) pointBuffer, pointSize);
 	wall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
+	stream->read((char*) colorBuffer, colorSize);
+	wall.topColor = ByteArrayToColor(colorBuffer);
+
+	stream->read((char*) colorBuffer, colorSize);
+	wall.inColor = ByteArrayToColor(colorBuffer);
+
+	stream->read((char*) colorBuffer, colorSize);
+	wall.btmColor = ByteArrayToColor(colorBuffer);
+
+	unsigned char portalFlags;
+	stream->read((char*) &portalFlags, 1);
+
+	wall.isPortal = (portalFlags & 0b1) == 0b1;
+	wall.isConnection = (portalFlags & 0b10) == 0b10;
+
+	stream->read((char*) intBuffer, intSize);
+	wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
+
+	stream->read((char*) intBuffer, intSize);
+	wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+
 	stream->read((char*) idBuffer, idSize);
 	wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
 
-	currentNode->wall = wall;
+	stream->read((char*) intBuffer, intSize);
+	unsigned int sectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
-	Wall splitter = Wall();
-
-	stream->read((char*) pointBuffer, pointSize);
-	splitter.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
-	stream->read((char*) pointBuffer, pointSize);
-	splitter.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
-
-	stream->read((char*) idBuffer, idSize);
-	splitter.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
-
-	currentNode->splitter = splitter;
-
-	stream->read((char*) &singleByte, 1);
-
-	nodeCount++;
-	if (nodeCount >= maxNumberOfBSPNodes) return;
-
-	stream->read((char*) &singleByte, 1);
-
-	if (singleByte == 0xBB)
+	for (int i = 0; i < numberOfSectors; i++)
 	{
-		currentNode->frontNode = new BSPNode();
-		ReadBSPNode(currentNode->frontNode, stream, isLittleEndian, nodeCount);
+		if (sectorID != sectorData[i].sectorID) continue;
+		wall.parentSector = &sectorData[i];
+		sectorData[i].sectorWalls.push_back(&wall);
 		return;
 	}
 
-	if (singleByte != 0xCC) return;
-	currentNode->backNode = new BSPNode();
-	ReadBSPNode(currentNode->backNode, stream, isLittleEndian, nodeCount);
+	OLOG_CF("Couldn't find sector ID {0}", sectorID);
+	throw std::system_error(1, std::generic_category());
 }
 
 World::~World()
 {
 	Entity::~Entity();
 
-	for (int i = 0; i < numberOfSectors; i++)
-	{
-		delete[] sectorData[i].sectorWalls;
-		sectorData[i].sectorWalls = nullptr;
-	}
+	//for (int i = 0; i < numberOfSectors; i++)
+	//{
+	//	delete[] sectorData[i].sectorWalls;
+	//	sectorData[i].sectorWalls = nullptr;
+	//}
 
 	delete[] sectorData;
 	sectorData = nullptr;
@@ -208,6 +259,12 @@ int World::ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEnd
 {
 	if (isLittleEndian) return (static_cast<int>(byteArray[3]) << 24) | (static_cast<int>(byteArray[2]) << 16) | (static_cast<int>(byteArray[1]) << 8) | static_cast<int>(byteArray[0]);
 	return (static_cast<int>(byteArray[0]) << 24) | (static_cast<int>(byteArray[1]) << 16) | (static_cast<int>(byteArray[2]) << 8) | static_cast<int>(byteArray[3]);
+}
+
+unsigned int World::ByteArrayToUInt(const unsigned char* const byteArray, bool isLittleEndian) const
+{
+	if (isLittleEndian) return (static_cast<unsigned int>(byteArray[3]) << 24) | (static_cast<unsigned int>(byteArray[2]) << 16) | (static_cast<unsigned int>(byteArray[1]) << 8) | static_cast<unsigned int>(byteArray[0]);
+	return (static_cast<unsigned int>(byteArray[0]) << 24) | (static_cast<unsigned int>(byteArray[1]) << 16) | (static_cast<unsigned int>(byteArray[2]) << 8) | static_cast<unsigned int>(byteArray[3]);
 }
 
 unsigned long long World::ByteArrayToULL(const unsigned char* byteArray, bool isLittleEndian) const
@@ -255,9 +312,9 @@ bool World::CheckIfPositionInsideSector(const Vector3& pos, int* const sector) c
 
 bool Sector::HasPortals() const
 {
-	for (int i = 0; i < numberOfWalls; i++)
+	for (size_t i = 0; i < sectorWalls.size(); i++)
 	{
-		if (sectorWalls[i].isPortal)
+		if (sectorWalls[i]->isPortal)
 			return true;
 	}
 
@@ -266,20 +323,20 @@ bool Sector::HasPortals() const
 
 void Sector::GetPortalSectors(std::vector<int>*portalSectors, int ignoreSector) const
 {
-	for (int i = 0; i < numberOfWalls; i++)
+	for (size_t i = 0; i < sectorWalls.size(); i++)
 	{
-		if (!sectorWalls[i].isPortal || sectorWalls[i].portalTargetSector == ignoreSector) continue;
-		portalSectors->push_back(sectorWalls[i].portalTargetSector);
+		if (!sectorWalls[i]->isPortal || sectorWalls[i]->portalTargetSector == ignoreSector) continue;
+		portalSectors->push_back(sectorWalls[i]->portalTargetSector);
 	}
 }
 
 float Sector::GetAvrgDistanceToPoint(Vector2 point) const
 {
 	float avrgDistance = 0;
-	for (int i = 0; i < numberOfWalls; i++)
-		avrgDistance += Vector2::Distance(point, sectorWalls[i].GetAvrgMiddlePoint());
+	for (int i = 0; i < sectorWalls.size(); i++)
+		avrgDistance += Vector2::Distance(point, sectorWalls[i]->GetAvrgMiddlePoint());
 
-	return avrgDistance / numberOfWalls;
+	return avrgDistance / sectorWalls.size();
 }
 
 void Sector::GetMaxPoints(Vector2& min, Vector2& max) const
@@ -287,19 +344,19 @@ void Sector::GetMaxPoints(Vector2& min, Vector2& max) const
 	min = V2_ONE * 99999999.0f;
 	max = V2_ONE * -99999999.0f;
 
-	for (int i = 0; i < numberOfWalls; i++)
+	for (int i = 0; i < sectorWalls.size(); i++)
 	{
-		if (sectorWalls[i].leftPoint.x < min.x) min.x = sectorWalls[i].leftPoint.x;
-		else if (sectorWalls[i].leftPoint.x > max.x) max.x = sectorWalls[i].leftPoint.x;
+		if (sectorWalls[i]->leftPoint.x < min.x) min.x = sectorWalls[i]->leftPoint.x;
+		else if (sectorWalls[i]->leftPoint.x > max.x) max.x = sectorWalls[i]->leftPoint.x;
 
-		if (sectorWalls[i].rightPoint.x < min.x) min.x = sectorWalls[i].rightPoint.x;
-		else if (sectorWalls[i].rightPoint.x > max.x) max.x = sectorWalls[i].rightPoint.x;
+		if (sectorWalls[i]->rightPoint.x < min.x) min.x = sectorWalls[i]->rightPoint.x;
+		else if (sectorWalls[i]->rightPoint.x > max.x) max.x = sectorWalls[i]->rightPoint.x;
 
-		if (sectorWalls[i].leftPoint.y < min.y) min.y = sectorWalls[i].leftPoint.y;
-		else if (sectorWalls[i].leftPoint.y > max.y) max.y = sectorWalls[i].leftPoint.y;
+		if (sectorWalls[i]->leftPoint.y < min.y) min.y = sectorWalls[i]->leftPoint.y;
+		else if (sectorWalls[i]->leftPoint.y > max.y) max.y = sectorWalls[i]->leftPoint.y;
 
-		if (sectorWalls[i].rightPoint.y < min.y) min.y = sectorWalls[i].rightPoint.y;
-		else if (sectorWalls[i].rightPoint.y > max.y) max.y = sectorWalls[i].rightPoint.y;
+		if (sectorWalls[i]->rightPoint.y < min.y) min.y = sectorWalls[i]->rightPoint.y;
+		else if (sectorWalls[i]->rightPoint.y > max.y) max.y = sectorWalls[i]->rightPoint.y;
 	}
 }
 
@@ -315,12 +372,12 @@ Vector2 Sector::CalculateSectorCentroid() const
 	Vector2 centroid = V2_ZERO;
 	float sumArea = 0.0f, area = 0.0f;
 
-	for (int i = 0; i < numberOfWalls; i++)
+	for (int i = 0; i < sectorWalls.size(); i++)
 	{
-		area = sectorWalls[i].leftPoint.x * sectorWalls[i].rightPoint.y - sectorWalls[i].rightPoint.x * sectorWalls[i].leftPoint.y;
+		area = sectorWalls[i]->leftPoint.x * sectorWalls[i]->rightPoint.y - sectorWalls[i]->rightPoint.x * sectorWalls[i]->leftPoint.y;
 		sumArea += area;
-		centroid.x += (sectorWalls[i].leftPoint.x + sectorWalls[i].rightPoint.x) * area;
-		centroid.y += (sectorWalls[i].leftPoint.y + sectorWalls[i].rightPoint.y) * area;
+		centroid.x += (sectorWalls[i]->leftPoint.x + sectorWalls[i]->rightPoint.x) * area;
+		centroid.y += (sectorWalls[i]->leftPoint.y + sectorWalls[i]->rightPoint.y) * area;
 	}
 
 	centroid /= (sumArea * 3.0f);
@@ -337,9 +394,9 @@ bool World::FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) 
 {
 	for (int s = 0; s < numberOfSectors; s++)
 	{
-		for (int w = 0; w < sectorData[s].numberOfWalls; w++)
+		for (int w = 0; w < sectorData[s].sectorWalls.size(); w++)
 		{
-			if (sectorData[s].sectorWalls[w].wallID != id) continue;
+			if (sectorData[s].sectorWalls[w]->wallID != id) continue;
 			sectorIndx = s;
 			wallIndx = w;
 			return true;
@@ -353,9 +410,9 @@ bool World::FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) 
 
 bool World::FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& wallIndx) const
 {
-	for (int w = 0; w < sectorData[sectorIndx].numberOfWalls; w++)
+	for (int w = 0; w < sectorData[sectorIndx].sectorWalls.size(); w++)
 	{
-		if (sectorData[sectorIndx].sectorWalls[w].wallID != id) continue;
+		if (sectorData[sectorIndx].sectorWalls[w]->wallID != id) continue;
 		wallIndx = w;
 		return true;
 	}

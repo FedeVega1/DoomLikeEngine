@@ -18,17 +18,17 @@ void Transform::Start()
 
 void Transform::Tick()
 {
-	if (pos != lastPos)
-	{
-		World* world = GetGameObject()->GetGameRef()->GetWorldRef();
-		if (!world->CheckIfPositionInsideSector(pos, currentSector))
-		{
-			if (!world->CheckIfPositionInsideSector(pos, &currentSector))
-				OLOG_EF("GameObject went out of Bounds! - {0}", pos.ToString());
-			else
-				OLOG_LF("GameObject moved to sector: {0}", currentSector);
-		}
-	}
+	//if (pos != lastPos)
+	//{
+	//	World* world = GetGameObject()->GetGameRef()->GetWorldRef();
+	//	if (!world->CheckIfPositionInsideSector(pos, currentSector))
+	//	{
+	//		if (!world->CheckIfPositionInsideSector(pos, &currentSector))
+	//			OLOG_EF("GameObject went out of Bounds! - {0}", pos.ToString());
+	//		else
+	//			OLOG_LF("GameObject moved to sector: {0}", currentSector);
+	//	}
+	//}
 
 	lastPos = pos;
 	//OLOG_LF("Pos - ({0}, {1}, {2})", pos.x, pos.y, pos.z);

@@ -7,20 +7,21 @@ struct Wall
 	bool isPortal, isConnection;
 	int portalTargetSector, portalTargetWall;
 	unsigned long long wallID;
+	struct Sector* parentSector;
 
 	Wall() : leftPoint(), rightPoint(), topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), 
-		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL)
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL), parentSector(nullptr)
 	{ }
 
 	Wall(Vector2 lPoint, Vector2 rPoint) : topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false),
-		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL)
+		isConnection(false), portalTargetSector(-1), portalTargetWall(-1), wallID(0ULL), parentSector(nullptr)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
 	}
 
-	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int sector, 
-		int wall, unsigned long long id)
+	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int targetSector, 
+		int wall, unsigned long long id, struct Sector* const sector)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
@@ -29,9 +30,10 @@ struct Wall
 		btmColor = bc;
 		isPortal = portal;
 		isConnection = connection;
-		portalTargetSector = sector;
+		portalTargetSector = targetSector;
 		portalTargetWall = wall;
 		wallID = id;
+		parentSector = sector;
 	}
 
 	Vector2 GetAvrgMiddlePoint() const { return Vector2((leftPoint.x + rightPoint.x) / 2.0f, (leftPoint.y + rightPoint.y) / 2.0f); }
@@ -40,20 +42,18 @@ struct Wall
 
 struct Sector
 { 
-	Wall* sectorWalls;
-	int numberOfWalls, sectorID;
+	std::vector<Wall*> sectorWalls;
+	unsigned int sectorID;
 	float bottomPoint, topPoint;
 	Color floorColor, ceillingColor;
 	Vector2 sectorCenter;
 
-	Sector() : sectorWalls(nullptr), numberOfWalls(0), bottomPoint(0.0f), topPoint(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), sectorID(-1)
+	Sector() : sectorWalls(), bottomPoint(0.0f), topPoint(0.0f), floorColor(0, 0, 0), ceillingColor(0, 0, 0), sectorID(0)
 	{ }
 
-	Sector(int id, Wall* _sectorWalls, int _numberOfWalls, float _bottomPoint, float _topPoint, Color _floor, Color _ceilling)
+	Sector(unsigned int id, float _bottomPoint, float _topPoint, Color _floor, Color _ceilling) : sectorWalls()
 	{ 
 		sectorID = id;
-		sectorWalls = _sectorWalls;
-		numberOfWalls = _numberOfWalls;
 		bottomPoint = _bottomPoint;
 		topPoint = _topPoint;
 		floorColor = _floor;
@@ -71,13 +71,17 @@ struct Sector
 
 struct BSPNode
 {
-	int sectorIndx;
+	unsigned char childFlag;
+	unsigned int nodeID, parentID;
+
 	Wall wall;
 	Wall splitter;
+
 	BSPNode* frontNode;
 	BSPNode* backNode;
+	BSPNode* parentNode;
 
-	BSPNode() : sectorIndx(-1), wall(), splitter(), frontNode(nullptr), backNode(nullptr)
+	BSPNode() : wall(), splitter(), frontNode(nullptr), backNode(nullptr), parentNode(nullptr), nodeID(0), parentID(0), childFlag(0)
 	{ }
 
 	~BSPNode()
@@ -110,18 +114,20 @@ protected:
 private:
 	Sector* sectorData;
 	int numberOfSectors;
-	BSPNode rootNode;
+	BSPNode* rootNode;
 	int maxNumberOfBSPNodes;
 
 	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3, idSize = sizeof(unsigned long long);
 	unsigned char intBuffer[intSize], pointBuffer[pointSize], colorBuffer[colorSize], idBuffer[idSize];
 
 	const char BSPVersionSize = 2;
-	char const BSPVersion[2]{ 00, 05 };
+	char const BSPVersion[2]{ 00, 06 };
 
 	int ByteArrayToInt(const unsigned char* const byteArray, bool isLittleEndian) const;
+	unsigned int ByteArrayToUInt(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, bool isLittleEndian) const;
 	Color ByteArrayToColor(const unsigned char* const byteArray) const;
 	unsigned long long ByteArrayToULL(const unsigned char* byteArray, bool isLittleEndian) const;
-	void ReadBSPNode(BSPNode* currentNode, std::ifstream* stream, bool isLittleEndian, int& nodeCount) const;
+	void ReadBSPNode(std::ifstream* stream, bool isLittleEndian);
+	void GetWallFromFile(std::ifstream* stream, bool isLittleEndian, Wall& wall) const;
 };

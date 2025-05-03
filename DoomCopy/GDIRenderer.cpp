@@ -12,6 +12,8 @@ HRESULT GDIRenderer::InitRenderer(HWND hwnd)
     buffer = new DWORD[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
     //buffer = std::make_shared<DWORD>(DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT);
 
+    walls = std::vector<ProcessedWall>();
+
     HDC hDesktop = GetDC(hwnd);
     memHDC = CreateCompatibleDC(hDesktop);
     hbmp = CreateCompatibleBitmap(hDesktop, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT);
@@ -44,10 +46,38 @@ void GDIRenderer::RenderScreen(HWND hwnd, Game* const game)
     // DEBUG
     PaintScreen(Color(0, 0, 0));
     
-    ProcessedWall* walls = nullptr;
-    int numbWalls = game->GetMainCamera()->GetProcessedWalls(walls);
-    if (!walls) return;
-    for (int i = 0; i < numbWalls; i++) ProcessWall(i, walls, numbWalls, game->GetWorldRef()->GetSectorData(walls[i].wallSectorIndx));
+    game->GetMainCamera()->GetProcessedWalls(walls);
+
+    //for (int x = -5; x < 6; x++)
+    //{
+    //    for (int y = -5; y < 6; y++)
+    //        DrawPixel(x + HALF_WIDTH, y + HALF_HEIGHT, COLOR_RED);
+    //}
+
+    //DrawPixel(HALF_WIDTH, HALF_HEIGHT, COLOR_GREEN);
+
+    //for (size_t i = 0; i < walls.size(); i++)
+    //{
+    //    ScreenSpaceWall swall = ScreenSpaceWall
+    //    {
+    //        V2INT_ZERO, V2INT_ZERO,
+    //        Vector2Int((int) std::roundf(((walls[i].leftBtmPoint.x) / walls[i].rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((walls[i].leftBtmPoint.z) / walls[i].leftBtmPoint.y) + HALF_HEIGHT)),
+    //        Vector2Int((int) std::roundf(((walls[i].rightBtmPoint.x) / walls[i].rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((walls[i].rightBtmPoint.z) / walls[i].rightBtmPoint.y) + HALF_HEIGHT)),
+    //        walls[i].topColor, walls[i].inColor, walls[i].btmColor,
+    //    };
+
+    //    for (int x = walls[i].leftBtmPoint.x; x < walls[i].rightBtmPoint.x; x++)
+    //    {
+    //        for (int y = -5; y < 6; y++)
+    //        {
+
+    //        }
+    //    }
+
+    //    DrawPixel(HALF_WIDTH, HALF_HEIGHT, COLOR_GREEN);
+    //}
+
+    //for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
     // DEBUG
 
     int scanlines = StretchDIBits(debugHDC, 0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, 0, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT, buffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);

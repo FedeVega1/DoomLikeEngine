@@ -1,8 +1,11 @@
-﻿namespace LevelEditor
+﻿using System.IO;
+using Windows.Globalization.DateTimeFormatting;
+
+namespace LevelEditor
 {
     internal class FileManager
     {
-        const string MAPVersion = "v00.03", BSPVersion = "v00.05";
+        const string MAPVersion = "v00.04", BSPVersion = "v00.07";
 
         public string CurrentOpenedFile { get; private set; }
 
@@ -37,6 +40,8 @@
                 fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
                 for (int i = 0; i < size; i++)
                 {
+                    fileStream.Write(ToByteArray(sectors[i].SectorID, out arrSize), 0, arrSize);
+
                     int count = sectors[i].walls.Count;
                     fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
 
@@ -58,7 +63,7 @@
                     fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
 
-                    COLoggerImport.LogNormal("Saved sector {0} correct", i);
+                    COLoggerImport.LogNormal("Saved sector {0} correct", sectors[i].SectorID);
                 }
             }
             catch (Exception e)
@@ -115,7 +120,8 @@
 
                 for (int i = 0; i < size; i++)
                 {
-                    Sector sector = new Sector();
+                    fileStream.Read(intBuffer, 0, intSize);
+                    Sector sector = new Sector(ByteArrayToUInt(intBuffer, isLittleEndian));
                     sector.walls = new List<Wall>();
 
                     fileStream.Read(intBuffer, 0, intSize);
@@ -123,7 +129,7 @@
 
                     for (int j = 0; j < count; j++)
                     {
-                        Wall wall = new Wall();
+                        Wall wall = new Wall(sector);
 
                         fileStream.Read(pointBuffer, 0, pointSize);
                         wall.leftPoint = ByteArrayToPoint(pointBuffer, isLittleEndian);
@@ -166,7 +172,7 @@
                     sector.ceillingColor = ByteArrayToColor(colorBuffer);
 
                     sectors.Add(sector);
-                    COLoggerImport.LogNormal("Load sector {0} correct", i);
+                    COLoggerImport.LogNormal("Load sector {0} correct", sector.SectorID);
                 }
             }
             catch (Exception e)
@@ -203,29 +209,29 @@
                 fileStream.Write(ToByteArray(size, out arrSize), 0, arrSize);
                 for (int i = 0; i < size; i++)
                 {
-                    int count = sectors[i].walls.Count;
-                    fileStream.Write(ToByteArray(count, out arrSize), 0, arrSize);
-
-                    for (int j = 0; j < count; j++) CompileWall(sectors[i].walls[j], fileStream);
-
+                    fileStream.Write(ToByteArray(sectors[i].SectorID, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
 
-                    COLoggerImport.LogNormal("Compiled sector {0} correct", i);
+                    COLoggerImport.LogNormal("Compiled sector {0} correct", sectors[i].SectorID);
                 }
 
                 fileStream.Write(ToByteArray(0xAAAAAAAA, out arrSize), 0, arrSize); // Start of BSP tree
-                BSPNode bsp = builder.PerformBSP(sectors);
+                BSPNode bsp = builder.PerformBSP(sectors, out List<SubSector> subSectors);
 
                 COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp));
                 COLoggerImport.LogNormal("BSP Number of Intersections: {0}", builder.debug_NumberOfIntersections);
                 COLoggerImport.LogNormal("BSP Number of Front Nodes: {0}", debug_NumberOfBSPFrontNodes);
                 COLoggerImport.LogNormal("BSP Number of Back Nodes: {0}", debug_NumberOfBSPBackNodes);
-                COLoggerImport.LogNormal("BSP Selected Splitter Wall: {0}", bsp.splitter.wallID);
+                COLoggerImport.LogNormal("BSP Selected Splitter Wall: Start {0} | Dir: {1}", bsp.splitter.startPoint, bsp.splitter.dir);
+
+                fileStream.Write(ToByteArray(subSectors.Count, out size), 0, size);
+                CompileSubSectors(ref subSectors, fileStream);
 
                 fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp), out arrSize), 0, arrSize);
+                fileStream.WriteByte(0xFF);
                 CompileBSP(bsp, fileStream);
             }
             catch (Exception e)
@@ -240,66 +246,91 @@
             return true;
         }
 
-        void CompileWall(Wall wall, Stream fileStream)
+        void CompileBSPWall(Wall wall, Stream fileStream)
         {
             fileStream.Write(ToByteArray(wall.leftPoint, out int arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.rightPoint, out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.colors[0], out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.colors[1], out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.colors[2], out arrSize), 0, arrSize);
-            byte portalFlags = (byte) ((wall.isPortal ? 0x1 : 0) << 1 | (wall.isConnection ? 0x1 : 0));
+            byte portalFlags = (byte)((wall.isPortal ? 0x1 : 0) << 1 | (wall.isConnection ? 0x1 : 0));
             fileStream.WriteByte(portalFlags);
             fileStream.Write(ToByteArray(wall.portalTargetSector, out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.portalTargetWall, out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(wall.wallID, out arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(wall.Sector.SectorID, out arrSize), 0, arrSize);
         }
 
-        void CompileBSPWall(Wall wall, Stream fileStream)
+        void CompileBSPSplitter(Splitter splitter, Stream fileStream)
         {
-            fileStream.Write(ToByteArray(wall.leftPoint, out int arrSize), 0, arrSize);
-            fileStream.Write(ToByteArray(wall.rightPoint, out arrSize), 0, arrSize);
-            fileStream.Write(ToByteArray(wall.wallID, out arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(splitter.startPoint, out int arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(splitter.dir, out arrSize), 0, arrSize);
+        }
+
+        void CompileSubSectors(ref List<SubSector> subSectors, Stream fileStream)
+        {
+            int size = subSectors.Count, arrSize;
+            for (int i = 0; i < size; i++)
+            {
+                fileStream.Write(ToByteArray(subSectors[i].SubSectorID, out arrSize), 0, arrSize);
+
+                int wallCount = subSectors[i].walls.Count;
+                fileStream.Write(ToByteArray(wallCount, out arrSize), 0, arrSize);
+
+                for (int w = 0; w < wallCount; w++)
+                    CompileBSPWall(subSectors[i].walls[w], fileStream);
+
+                COLoggerImport.LogNormal("Compiled SubSector {0} correct", subSectors[i].SubSectorID);
+            }
         }
 
         void CompileBSP(BSPNode currentNode, Stream fileStream)
         {
-            fileStream.WriteByte(0xDD);
-            fileStream.Write(ToByteArray(currentNode.sectorIndex, out int arrSize), 0, arrSize);
-            CompileBSPWall(currentNode.wall, fileStream);
-            CompileBSPWall(currentNode.splitter, fileStream);
-            fileStream.WriteByte(0xDD);
+            fileStream.Write(ToByteArray(currentNode.NodeID, out int arrSize), 0, arrSize);
 
-            if (currentNode.frontNodes.Count > 0)
+            CompileBSPWall(currentNode.walls[0], fileStream);
+            CompileBSPSplitter(currentNode.splitter, fileStream);
+
+            if (currentNode.parentNode != null) fileStream.Write(ToByteArray(currentNode.parentNode.NodeID, out arrSize), 0, arrSize);
+            else fileStream.Write(ToByteArray(0xFFFFFFFF, out arrSize), 0, arrSize);
+
+            if (currentNode.subSector != null) fileStream.Write(ToByteArray(currentNode.subSector.SubSectorID, out arrSize), 0, arrSize);
+            else fileStream.Write(ToByteArray(0xFFFFFFF, out arrSize), 0, arrSize);
+
+            fileStream.Write(ToByteArray(currentNode.bBox.topPoint, out arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(currentNode.bBox.bottomPoint, out arrSize), 0, arrSize);
+
+            COLoggerImport.LogNormal("Compiled Node {0} correct", currentNode.NodeID);
+
+            if (currentNode.frontNode != null)
             {
                 fileStream.WriteByte(0xBB);
-                CompileBSP(currentNode.frontNodes[0], fileStream);
+                CompileBSP(currentNode.frontNode, fileStream);
             }
 
-            if (currentNode.backNodes.Count > 0)
+            if (currentNode.backNode != null)
             {
                 fileStream.WriteByte(0xCC);
-                CompileBSP(currentNode.backNodes[0], fileStream);
+                CompileBSP(currentNode.backNode, fileStream);
             }
         }
 
         int GetSizeOfBSPTree(BSPNode node)
         {
-            if (node.frontNodes.Count == node.backNodes.Count && node.backNodes.Count == 0) return 0;
-            int size = node.frontNodes.Count + node.backNodes.Count;
-
-            if (node.frontNodes.Count > 0)
+            int childs = 0;
+            if (node.frontNode != null)
             {
-                size += GetSizeOfBSPTree(node.frontNodes[0]);
                 debug_NumberOfBSPFrontNodes++;
+                childs += 1 + GetSizeOfBSPTree(node.frontNode);
             }
 
-            if (node.backNodes.Count > 0)
+            if (node.backNode != null)
             {
-                size += GetSizeOfBSPTree(node.backNodes[0]);
                 debug_NumberOfBSPBackNodes++;
+                childs += 1 + GetSizeOfBSPTree(node.backNode);
             }
 
-            return size;
+            return childs;
         }
 
         public void ResetCurrentFile() => CurrentOpenedFile = "NULL";
@@ -380,6 +411,28 @@
             return array;
         }
 
+        static byte[] ToByteArray(float dataToConvert, out int size)
+        {
+            size = sizeof(float);
+            byte[] array = new byte[size];
+
+            Buffer.BlockCopy(new float[] { dataToConvert }, 0, array, 0, size);
+
+            if (!BitConverter.IsLittleEndian) Array.Reverse(array);
+            return array;
+        }
+
+        static byte[] ToByteArray(float dataToConvert)
+        {
+            int size = sizeof(float);
+            byte[] array = new byte[size];
+
+            Buffer.BlockCopy(new float[] { dataToConvert }, 0, array, 0, size);
+
+            if (!BitConverter.IsLittleEndian) Array.Reverse(array);
+            return array;
+        }
+
         static byte[] ToByteArray(Point dataToConvert, out int size)
         {
             int intSize = sizeof(int);
@@ -398,6 +451,24 @@
             return array;
         }
 
+        static byte[] ToByteArray(PointF dataToConvert, out int size)
+        {
+            int floatSize = sizeof(float);
+            size = floatSize * 2;
+
+            byte[] array = new byte[size];
+            byte[] x = ToByteArray(dataToConvert.X);
+            byte[] y = ToByteArray(dataToConvert.Y);
+
+            for (int i = 0; i < floatSize; i++)
+            {
+                array[i] = x[i];
+                array[i + floatSize] = y[i];
+            }
+
+            return array;
+        }
+
         static byte[] ToByteArray(Color dataToConvert, out int size)
         {
             size = 3;
@@ -410,14 +481,19 @@
             return ((int) dataToConvert[0] << 24) | ((int) dataToConvert[1] << 16) | ((int) dataToConvert[2] << 8) | ((int) dataToConvert[3]);
         }
 
+        static uint ByteArrayToUInt(byte[] dataToConvert, bool isLittleEndian)
+        {
+            if (isLittleEndian) return ((uint)dataToConvert[3] << 24) | ((uint)dataToConvert[2] << 16) | ((uint)dataToConvert[1] << 8) | ((uint)dataToConvert[0]);
+            return ((uint)dataToConvert[0] << 24) | ((uint)dataToConvert[1] << 16) | ((uint)dataToConvert[2] << 8) | ((uint)dataToConvert[3]);
+        }
+
         static Point ByteArrayToPoint(byte[] dataToConvert, bool isLittleEndian)
         {
             int x = ByteArrayToInt([dataToConvert[0], dataToConvert[1], dataToConvert[2], dataToConvert[3]], isLittleEndian);
             int y = ByteArrayToInt([dataToConvert[4], dataToConvert[5], dataToConvert[6], dataToConvert[7]], isLittleEndian);
             return new Point(x, y);
         }
+
         static Color ByteArrayToColor(byte[] dataToConvert) => Color.FromArgb(0xFF, dataToConvert[0], dataToConvert[1], dataToConvert[2]);
-
-
     }
 }

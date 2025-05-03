@@ -18,7 +18,7 @@ public:
 	void ToggleStepDraw(bool toggle) { debugStepDraw = toggle; }
 
 private:
-
+	std::vector<struct ProcessedWall> walls;
 	DWORD* buffer;
 	BITMAPINFO bitmapInfo;
 

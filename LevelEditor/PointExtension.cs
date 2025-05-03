@@ -27,6 +27,12 @@
             return MathF.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
         }
 
+        public static float Distance(this PointF a, PointF b)
+        {
+            PointF diff = new PointF(a.X - b.X, a.Y - b.Y);
+            return MathF.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
+        }
+
         public static float Dot(this PointF left, PointF right) => left.X * right.X + left.Y * right.Y;
         public static int Cross(this Point left, Point right) => left.X * right.Y - right.X * left.Y;
 

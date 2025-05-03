@@ -369,18 +369,19 @@
                     Wall wall = sectorDrawer.ActiveSectors[i].walls[j];
                     wall.leftPoint = wall.leftPoint.Subtract(grid.GetCurrentOriginPos());
                     wall.rightPoint = wall.rightPoint.Subtract(grid.GetCurrentOriginPos());
+                    wall.UpdateMiddleAndNormal();
 
                     walls.Add(wall);
                 }
 
-                sectors.Add(new Sector
-                {
-                    walls = walls,
-                    ceillingHeight = sectorDrawer.ActiveSectors[i].ceillingHeight,
-                    floorHeight = sectorDrawer.ActiveSectors[i].floorHeight,
-                    ceillingColor = sectorDrawer.ActiveSectors[i].ceillingColor,
-                    floorColor = sectorDrawer.ActiveSectors[i].floorColor,
-                });
+                sectors.Add(new Sector(
+                    walls,
+                    sectorDrawer.ActiveSectors[i].ceillingHeight,
+                    sectorDrawer.ActiveSectors[i].floorHeight,
+                    sectorDrawer.ActiveSectors[i].ceillingColor,
+                    sectorDrawer.ActiveSectors[i].floorColor,
+                    sectorDrawer.ActiveSectors[i].SectorID
+                ));
             }
         }
 
