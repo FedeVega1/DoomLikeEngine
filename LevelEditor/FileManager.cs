@@ -264,6 +264,7 @@ namespace LevelEditor
         void CompileBSPSplitter(Splitter splitter, Stream fileStream)
         {
             fileStream.Write(ToByteArray(splitter.startPoint, out int arrSize), 0, arrSize);
+            fileStream.Write(ToByteArray(splitter.segment, out arrSize), 0, arrSize);
             fileStream.Write(ToByteArray(splitter.dir, out arrSize), 0, arrSize);
         }
 
@@ -288,7 +289,6 @@ namespace LevelEditor
         {
             fileStream.Write(ToByteArray(currentNode.NodeID, out int arrSize), 0, arrSize);
 
-            CompileBSPWall(currentNode.walls[0], fileStream);
             CompileBSPSplitter(currentNode.splitter, fileStream);
 
             if (currentNode.parentNode != null) fileStream.Write(ToByteArray(currentNode.parentNode.NodeID, out arrSize), 0, arrSize);

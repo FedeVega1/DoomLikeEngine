@@ -157,6 +157,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="D2Renderer.h" />
     <ClInclude Include="DoomCopy.h" />
+    <ClInclude Include="FileManager.h" />
     <ClInclude Include="Inputs.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Game.h" />
@@ -168,11 +169,13 @@
     <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="VectorMath.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="WorldDataTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="D2Renderer.cpp" />
     <ClCompile Include="DoomCopy.cpp" />
+    <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObjects.cpp" />
     <ClCompile Include="GDIRenderer.cpp" />

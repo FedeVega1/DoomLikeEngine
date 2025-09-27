@@ -77,7 +77,7 @@ void GDIRenderer::RenderScreen(HWND hwnd, Game* const game)
     //    DrawPixel(HALF_WIDTH, HALF_HEIGHT, COLOR_GREEN);
     //}
 
-    //for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
+    for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
     // DEBUG
 
     int scanlines = StretchDIBits(debugHDC, 0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, 0, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT, buffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);

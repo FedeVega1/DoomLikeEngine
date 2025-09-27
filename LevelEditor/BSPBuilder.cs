@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     internal class SubSector
     {
@@ -42,7 +40,7 @@ namespace LevelEditor
         public static bool operator ==(Splitter split1, Splitter split2) => split1.Equals(split2);
         public static bool operator !=(Splitter split1, Splitter split2) => !split1.Equals(split2);
 
-        public override bool Equals([NotNullWhen(true)] object obj)
+        public override bool Equals(object obj)
         {
             if (obj is not Splitter) return false;
             Splitter other = (Splitter) obj;
@@ -74,7 +72,7 @@ namespace LevelEditor
         public static bool operator==(BoundingBox bbox1, BoundingBox bbox2) => bbox1.Equals(bbox2);
         public static bool operator!=(BoundingBox bbox1, BoundingBox bbox2) => !bbox1.Equals(bbox2);
 
-        public override bool Equals([NotNullWhen(true)] object obj)
+        public override bool Equals(object obj)
         {
             if (obj is not BoundingBox) return false;
             BoundingBox other = (BoundingBox) obj;
@@ -204,7 +202,7 @@ namespace LevelEditor
             return pointList;
         }
 
-        int ZCrossProduct(Point A, Point B, Point C)
+        static int ZCrossProduct(Point A, Point B, Point C)
         {
             Point d1 = new Point(B.X - A.X, B.Y - A.Y);
             Point d2 = new Point(C.X - B.X, C.Y - B.Y);
@@ -214,14 +212,27 @@ namespace LevelEditor
 
     internal class BSPBuilder
     {
-        enum SimulationResult { None, TotalFront, TotalBack, Split, Mix}
+        enum SimulationResult { None, TotalFront, TotalBack, Split, Mix }
 
         public int debug_NumberOfIntersections;
 
+        int[] simResults;
         List<SubSector> currentSubSectors;
+        List<(Splitter, SimulationResult, int, int)> splitterResults;
+        Point[] directions;
 
         public BSPBuilder()
         {
+            simResults = new int[3] { 0, 0, 0 };
+            splitterResults = new List<(Splitter, SimulationResult, int, int)>();
+
+            directions = new Point[6]
+            {
+                new Point(1, 0), new Point(-1, 0),
+                new Point(0, 1), new Point(0, -1),
+                new Point(1, 1), new Point(-1, -1),
+            };
+
             currentSubSectors = new List<SubSector>();
         }
 
@@ -292,20 +303,10 @@ namespace LevelEditor
             Point ca = currentWall.leftPoint.Subtract(currentNode.splitter.startPoint);
             Point da = currentWall.rightPoint.Subtract(currentNode.splitter.startPoint);
 
-            int num = ab.Cross(ca);
-            int den = ab.Cross(da);
+            int num = ab.Cross(ca), den = ab.Cross(da);
+            bool numIsZero = Math.Abs(num) == 0, denIsZero = Math.Abs(den) == 0;
 
-            bool numIsZero = Math.Abs(num) == 0;
-            bool denIsZero = Math.Abs(den) == 0;
-
-            if (numIsZero && denIsZero)
-            {
-                if (currentNode.frontNode == null) currentNode.frontNode = new BSPNode(currentWall, currentNode);
-                else currentNode.frontNode.walls.Add(currentWall);
-                return;
-            }
-            
-            if (num >= 0 && den >= 0)
+            if ((numIsZero && denIsZero) || (num >= 0 && den >= 0))
             {
                 if (currentNode.frontNode == null) currentNode.frontNode = new BSPNode(currentWall, currentNode);
                 else currentNode.frontNode.walls.Add(currentWall);
@@ -344,48 +345,79 @@ namespace LevelEditor
 
         Splitter SelectASplitter(List<Wall> walls, ref BoundingBox bBox)
         {
-            int[] simResults = new int[3] { 0, 0, 0 };
-            List<(Splitter, SimulationResult, int, int)> results = new List<(Splitter, SimulationResult, int, int)>();
+            AnalyzeWalls(walls);
+
+            Splitter bestSplitter = CheckSimulationResults();
+            if (bestSplitter != Splitter.Empty) return bestSplitter;
+
+            splitterResults.Clear();
+            Point center = new Point((int) MathF.Round(bBox.center.X), (int) MathF.Round(bBox.center.Y));
+
+            for (int i = 0; i < 6; i++)
+            {
+                ClearSimResults();
+                Splitter splitter = new Splitter(center, directions[i].Multiply(30), directions[i]);
+
+                SimulateSplits(ref splitter, walls, ref simResults);
+                AnalyzeSimResults(ref splitter);
+            }
+
+            return CheckSimulationResults();
+        }
+
+        void AnalyzeWalls(List<Wall> walls)
+        {
+            splitterResults.Clear();
 
             int size = walls.Count;
             for (int i = 0; i < size; i++)
             {
+                ClearSimResults();
                 Splitter splitter = new Splitter(walls[i]);
+
                 SimulateSplits(ref splitter, walls, ref simResults);
-
-                (Splitter, SimulationResult, int, int) res;
-                if (simResults[2] > 0) res = (splitter, SimulationResult.Split, simResults[2], 0);
-                else if (simResults[0] > 0 && simResults[1] > 0) res = (splitter, SimulationResult.Mix, simResults[0], simResults[1]);
-                else if (simResults[0] > 0 && simResults[1] == 0) res = (splitter, SimulationResult.TotalFront, simResults[0], 0);
-                else res = (splitter, SimulationResult.TotalBack, simResults[1], 0);
-
-                results.Add(res);
+                AnalyzeSimResults(ref splitter);
             }
+        }
 
-            for (int i = 0; i < 3; i++) simResults[i] = 0;
+        void AnalyzeSimResults(ref Splitter splitter)
+        {
+            (Splitter, SimulationResult, int, int) res;
+            if (simResults[2] > 0) res = (splitter, SimulationResult.Split, simResults[2], 0);
+            else if (simResults[0] > 0 && simResults[1] > 0) res = (splitter, SimulationResult.Mix, simResults[0], simResults[1]);
+            else if (simResults[0] > 0 && simResults[1] == 0) res = (splitter, SimulationResult.TotalFront, simResults[0], 0);
+            else res = (splitter, SimulationResult.TotalBack, simResults[1], 0);
 
+            splitterResults.Add(res);
+        }
+
+        void ClearSimResults() { for (int i = 0; i < 3; i++) simResults[i] = 0; }
+
+        Splitter CheckSimulationResults()
+        {
             Splitter bestSplitter = new Splitter();
             SimulationResult lastResult = SimulationResult.None;
             float lastResultValues = 0;
 
+            int size = splitterResults.Count;
             for (int i = 0; i < size; i++)
             {
-                if (results[i].Item2 < SimulationResult.Split || results[i].Item2 < lastResult) continue;
+                if (splitterResults[i].Item2 < SimulationResult.Split || splitterResults[i].Item2 < lastResult) continue;
 
                 bool isBestSplitter = false;
-                switch (results[i].Item2)
+                switch (splitterResults[i].Item2)
                 {
                     case SimulationResult.Split:
-                        if (results[i].Item2 != lastResult || results[i].Item3 < lastResultValues)
+                        if (splitterResults[i].Item2 != lastResult || splitterResults[i].Item3 < lastResultValues)
                         {
-                            lastResultValues = results[i].Item3;
+                            lastResultValues = splitterResults[i].Item3;
                             isBestSplitter = true;
                         }
                         break;
 
                     case SimulationResult.Mix:
-                        float diff = (((float) results[i].Item3 / (float) results[i].Item4)) / .5f;
-                        if (results[i].Item2 != lastResult || Math.Abs(diff - 1) < Math.Abs(lastResultValues - 1))
+                        float diff = ((float) splitterResults[i].Item3 / (float) splitterResults[i].Item4) / .5f;
+                        if (splitterResults[i].Item2 != lastResult || Math.Abs(diff - 1) < Math.Abs(lastResultValues - 1))
                         {
                             lastResultValues = diff;
                             isBestSplitter = true;
@@ -394,62 +426,37 @@ namespace LevelEditor
                 }
 
                 if (!isBestSplitter) continue;
-                bestSplitter = results[i].Item1;
-                lastResult = results[i].Item2;
+                bestSplitter = splitterResults[i].Item1;
+                lastResult = splitterResults[i].Item2;
             }
 
-            if (bestSplitter != Splitter.Empty) return bestSplitter;
-            float random = Random.Shared.NextSingle();
-            Point randomDir = new Point(random > .5 ? (random > .75 ? 1 : -1) : 0, random <= .5 ? (random <= .25 ? -1 : 1) : 0);
-            return new Splitter(new Point((int) MathF.Round(bBox.center.X), (int) MathF.Round(bBox.center.Y)), randomDir.Multiply(30), randomDir);
+            return bestSplitter;
         }
 
-        void SimulateSplits(ref Splitter splitter, List<Wall> wallList, ref int[] result)
+        static void SimulateSplits(ref Splitter splitter, List<Wall> wallList, ref int[] result)
         {
             if (result.Length < 3) return;
 
             int size = wallList.Count;
             for (int i = 0; i < size; i++)
             {
-                Wall currentWall = wallList[i];
-
                 Point ab = splitter.segment;
-                Point ca = currentWall.leftPoint.Subtract(splitter.startPoint);
-                Point da = currentWall.rightPoint.Subtract(splitter.startPoint);
+                Point ca = wallList[i].leftPoint.Subtract(splitter.startPoint);
+                Point da = wallList[i].rightPoint.Subtract(splitter.startPoint);
 
-                int num = ab.Cross(ca);
-                int den = ab.Cross(da);
+                int num = ab.Cross(ca), den = ab.Cross(da);
+                bool numIsZero = Math.Abs(num) == 0, denIsZero = Math.Abs(den) == 0;
 
-                bool numIsZero = Math.Abs(num) == 0;
-                bool denIsZero = Math.Abs(den) == 0;
-
-                if (numIsZero && denIsZero)
+                if ((numIsZero && denIsZero) || (num >= 0 && den >= 0))
                 {
                     result[0]++;
                     continue;
                 }
 
-                if (num >= 0 && den >= 0)
-                {
-                    result[0]++;
-                    continue;
-                }
+                if (num <= 0 && den <= 0) { result[1]++; continue; }
 
-                if (num <= 0 && den <= 0)
-                {
-                    result[1]++;
-                    continue;
-                }
-
-                Point cd = currentWall.leftPoint.Subtract(splitter.startPoint);
-                int cross = ab.Cross(cd);
-
-                if (Math.Abs(cross) == 0)
-                {
-                    result[0]++;
-                    continue;
-                }
-
+                Point cd = wallList[i].leftPoint.Subtract(splitter.startPoint);
+                if (Math.Abs(ab.Cross(cd)) == 0) { result[0]++; continue; }
                 result[2]++;
             }
         }

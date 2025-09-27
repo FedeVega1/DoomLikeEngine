@@ -57,8 +57,8 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
         // Draw the Ceilling and Floor from their respective line into the Screen limits
 
-        for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
-        for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
+        //for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
+        //for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
 
         if (wall.isConnection)
         {
@@ -89,7 +89,8 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
         else
         {
             // Render the actual wall
-            for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, sWall.inColor);
+            for (int y = yPoint.x; y < yPoint.y; y++)
+                DrawPixel(x, y, sWall.inColor);
         }
 
         if (debugStepDraw) Sleep(50);

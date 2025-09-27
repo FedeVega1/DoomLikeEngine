@@ -66,7 +66,7 @@ private:
 	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	
 	void GetWallsFromBSP(const Vector3& pos, struct BSPNode* startNode, const float& cos, const float& sin);
-	void ProcessWallFromBSPNode(const struct BSPNode* const node, Vector3 pos, const float& cos, const float& sin);
+	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const float& cos, const float& sin);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);
