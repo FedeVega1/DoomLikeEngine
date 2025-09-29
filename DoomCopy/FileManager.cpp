@@ -6,39 +6,6 @@
 #include "WorldDataTypes.h"
 #include "FileManager.h"
 
-int Partition(BSPNode** const arr, int left, int right)
-{
-	int pivot = arr[left]->nodeID;
-	while (true)
-	{
-		while (arr[left]->nodeID < pivot) left++;
-		while (arr[right]->nodeID > pivot) right--;
-
-		if (left < right)
-		{
-			if (arr[left]->nodeID == arr[right]->nodeID) return right;
-
-			BSPNode* temp = arr[left];
-			arr[left] = arr[right];
-			arr[right] = temp;
-			continue;
-		}
-
-		return right;
-	}
-}
-
-void Quick_Sort(BSPNode** arr, int left, int right)
-{
-	if (left < right)
-	{
-		int pivot = Partition(arr, left, right);
-
-		if (pivot > 1) Quick_Sort(arr, left, pivot - 1);
-		if (pivot + 1 < right) Quick_Sort(arr, pivot + 1, right);
-	}
-}
-
 FileManager::FileManager() : intBuffer(0), pointBuffer(0), colorBuffer(0), idBuffer(0), pointFBuffer(0)
 {
 
@@ -189,7 +156,14 @@ void FileManager::ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian,
 		OLOG_LF("Loaded Node {0} with parentID {1} and childFlag {2}", node.nodeID, node.parentID, node.childFlag);
 	}
 
-	Quick_Sort(nodeArray, 0, mapData.numberOfBSPNodes - 1);
+	SortData data = SortData<BSPNode*>
+	{
+		nodeArray,
+		[](BSPNode* node) -> int { return node->nodeID; },
+		false
+	};
+
+	Quick_Sort(data, 0, mapData.numberOfBSPNodes - 1);
 
 	for (int i = 0; i < mapData.numberOfBSPNodes; i++)
 	{
@@ -201,6 +175,12 @@ void FileManager::ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian,
 
 		if (nodeArray[i]->parentID != 0xFFFFFFFF)
 			nodeArray[i]->parentNode = nodeArray[nodeArray[i]->parentID];
+
+		if (nodeArray[i]->parentID >= mapData.numberOfBSPNodes)
+		{
+			OLOG_EF("Node {0} has an invalid parentID: {1}", i, nodeArray[i]->parentID);
+			return;
+		}
 
 		if (nodeArray[i]->subSectorID != 0xFFFFFFFF)
 			nodeArray[i]->subSector = GetSubSector(nodeArray[i]->subSectorID, mapData);
@@ -271,7 +251,8 @@ void FileManager::GetWallFromFile(std::ifstream* stream, const bool& isLittleEnd
 	{
 		if (sectorID != mapData.sectorData[i].sectorID) continue;
 		wall.parentSector = &mapData.sectorData[i];
-		mapData.sectorData[i].sectorWalls.push_back(&wall);
+		mapData.sectorData[i].sectorWalls.push_back(wall);
+		mapData.sectorData[i].sectorCenter = mapData.sectorData[i].CalculateSectorCentroid();
 		return;
 	}
 

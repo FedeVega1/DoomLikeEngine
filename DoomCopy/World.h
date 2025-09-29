@@ -25,6 +25,10 @@ private:
 	Sector* sectorData;
 	SubSector* subSectorData;
 	int numberOfSectors;
-	BSPNode* rootNode;
+	class BSPNode* rootNode;
 	int maxNumberOfBSPNodes;
+	int maxNumberOfSubSectors;
+	int maxNumberOfWalls;
+
+	void CountTotalNumberOfWalls();
 };

@@ -58,6 +58,7 @@ private:
 	static const float movSpeed;
 	static const float rotSpeed;
 
+	bool toggleBSPRendering;
 	int xRotation;
 	float cameraZOffset;
 	class World* world;
@@ -65,11 +66,14 @@ private:
 
 	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	
-	void GetWallsFromBSP(const Vector3& pos, struct BSPNode* startNode, const float& cos, const float& sin);
+	void GetWallsFromBSP(const Vector3& pos, class BSPNode* startNode, const float& cos, const float& sin);
 	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const float& cos, const float& sin);
+	void RenderAllSubSectors(Vector3 pos, const float& cos, const float& sin);
+	void RenderWall(ProcessedWall& wall, Vector3 pos, const float& cos, const float& sin);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);
 	void DebugUpDown(float axis);
 	void DebugRotUpDown(float axis);
+	void DebugToggleBSPRendering();
 };

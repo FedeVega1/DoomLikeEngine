@@ -43,7 +43,7 @@ struct Wall
 
 struct Sector
 {
-	std::vector<Wall*> sectorWalls;
+	std::vector<Wall> sectorWalls;
 	unsigned int sectorID;
 	float bottomPoint, topPoint;
 	Color floorColor, ceillingColor;
@@ -103,8 +103,9 @@ struct SubSector
 	}
 };
 
-struct BSPNode
+class BSPNode
 {
+public:
 	unsigned char childFlag;
 	unsigned int nodeID, parentID, subSectorID;
 

@@ -4,7 +4,7 @@
 #include "World.h"
 #include "FileManager.h"
 
-World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef)
+World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameRef), maxNumberOfWalls(0)
 {
 	MapData data;
 	FManager.GetMapData(mapFileName, data);
@@ -14,6 +14,9 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 	subSectorData = data.subSectorData;
 	maxNumberOfBSPNodes = data.numberOfBSPNodes;
 	rootNode = data.rootNode;
+	maxNumberOfSubSectors = data.numberOfSubSectors;
+
+	CountTotalNumberOfWalls();
 }
 
 World::~World()
@@ -30,6 +33,12 @@ World::~World()
 	sectorData = nullptr;
 
 	delete rootNode;
+}
+
+void World::CountTotalNumberOfWalls()
+{
+	for (int i = 0; i < maxNumberOfSubSectors; i++)
+		maxNumberOfWalls += subSectorData[i].subSectorWalls.size();
 }
 
 bool World::CheckIfPositionInsideSector(const Vector3& pos, int sector) const
@@ -55,7 +64,7 @@ bool Sector::HasPortals() const
 {
 	for (size_t i = 0; i < sectorWalls.size(); i++)
 	{
-		if (sectorWalls[i]->isPortal)
+		if (sectorWalls[i].isPortal)
 			return true;
 	}
 
@@ -66,8 +75,8 @@ void Sector::GetPortalSectors(std::vector<int>*portalSectors, int ignoreSector) 
 {
 	for (size_t i = 0; i < sectorWalls.size(); i++)
 	{
-		if (!sectorWalls[i]->isPortal || sectorWalls[i]->portalTargetSectorID == ignoreSector) continue;
-		portalSectors->push_back(sectorWalls[i]->portalTargetSectorID);
+		if (!sectorWalls[i].isPortal || sectorWalls[i].portalTargetSectorID == ignoreSector) continue;
+		portalSectors->push_back(sectorWalls[i].portalTargetSectorID);
 	}
 }
 
@@ -75,7 +84,7 @@ float Sector::GetAvrgDistanceToPoint(Vector2 point) const
 {
 	float avrgDistance = 0;
 	for (int i = 0; i < sectorWalls.size(); i++)
-		avrgDistance += Vector2::Distance(point, sectorWalls[i]->GetAvrgMiddlePoint());
+		avrgDistance += Vector2::Distance(point, sectorWalls[i].GetAvrgMiddlePoint());
 
 	return avrgDistance / sectorWalls.size();
 }
@@ -87,17 +96,17 @@ void Sector::GetMaxPoints(Vector2& min, Vector2& max) const
 
 	for (int i = 0; i < sectorWalls.size(); i++)
 	{
-		if (sectorWalls[i]->leftPoint.x < min.x) min.x = sectorWalls[i]->leftPoint.x;
-		else if (sectorWalls[i]->leftPoint.x > max.x) max.x = sectorWalls[i]->leftPoint.x;
+		if (sectorWalls[i].leftPoint.x < min.x) min.x = sectorWalls[i].leftPoint.x;
+		else if (sectorWalls[i].leftPoint.x > max.x) max.x = sectorWalls[i].leftPoint.x;
 
-		if (sectorWalls[i]->rightPoint.x < min.x) min.x = sectorWalls[i]->rightPoint.x;
-		else if (sectorWalls[i]->rightPoint.x > max.x) max.x = sectorWalls[i]->rightPoint.x;
+		if (sectorWalls[i].rightPoint.x < min.x) min.x = sectorWalls[i].rightPoint.x;
+		else if (sectorWalls[i].rightPoint.x > max.x) max.x = sectorWalls[i].rightPoint.x;
 
-		if (sectorWalls[i]->leftPoint.y < min.y) min.y = sectorWalls[i]->leftPoint.y;
-		else if (sectorWalls[i]->leftPoint.y > max.y) max.y = sectorWalls[i]->leftPoint.y;
+		if (sectorWalls[i].leftPoint.y < min.y) min.y = sectorWalls[i].leftPoint.y;
+		else if (sectorWalls[i].leftPoint.y > max.y) max.y = sectorWalls[i].leftPoint.y;
 
-		if (sectorWalls[i]->rightPoint.y < min.y) min.y = sectorWalls[i]->rightPoint.y;
-		else if (sectorWalls[i]->rightPoint.y > max.y) max.y = sectorWalls[i]->rightPoint.y;
+		if (sectorWalls[i].rightPoint.y < min.y) min.y = sectorWalls[i].rightPoint.y;
+		else if (sectorWalls[i].rightPoint.y > max.y) max.y = sectorWalls[i].rightPoint.y;
 	}
 }
 
@@ -115,10 +124,10 @@ Vector2 Sector::CalculateSectorCentroid() const
 
 	for (int i = 0; i < sectorWalls.size(); i++)
 	{
-		area = sectorWalls[i]->leftPoint.x * sectorWalls[i]->rightPoint.y - sectorWalls[i]->rightPoint.x * sectorWalls[i]->leftPoint.y;
+		area = sectorWalls[i].leftPoint.x * sectorWalls[i].rightPoint.y - sectorWalls[i].rightPoint.x * sectorWalls[i].leftPoint.y;
 		sumArea += area;
-		centroid.x += (sectorWalls[i]->leftPoint.x + sectorWalls[i]->rightPoint.x) * area;
-		centroid.y += (sectorWalls[i]->leftPoint.y + sectorWalls[i]->rightPoint.y) * area;
+		centroid.x += (sectorWalls[i].leftPoint.x + sectorWalls[i].rightPoint.x) * area;
+		centroid.y += (sectorWalls[i].leftPoint.y + sectorWalls[i].rightPoint.y) * area;
 	}
 
 	centroid /= (sumArea * 3.0f);
@@ -139,7 +148,7 @@ bool World::FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) 
 	{
 		for (int w = 0; w < sectorData[s].sectorWalls.size(); w++)
 		{
-			if (sectorData[s].sectorWalls[w]->wallID != id) continue;
+			if (sectorData[s].sectorWalls[w].wallID != id) continue;
 			sectorIndx = s;
 			wallIndx = w;
 			return true;
@@ -155,7 +164,7 @@ bool World::FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& w
 {
 	for (int w = 0; w < sectorData[sectorIndx].sectorWalls.size(); w++)
 	{
-		if (sectorData[sectorIndx].sectorWalls[w]->wallID != id) continue;
+		if (sectorData[sectorIndx].sectorWalls[w].wallID != id) continue;
 		wallIndx = w;
 		return true;
 	}

@@ -5,7 +5,7 @@ struct MapData
 	int numberOfSectors, numberOfBSPNodes, numberOfSubSectors;
 	struct Sector* sectorData;
 	struct SubSector* subSectorData;
-	struct BSPNode* rootNode;
+	class BSPNode* rootNode;
 };
 
 class FileManager
