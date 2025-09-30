@@ -183,7 +183,10 @@ void FileManager::ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian,
 		}
 
 		if (nodeArray[i]->subSectorID != 0xFFFFFFFF)
+		{
 			nodeArray[i]->subSector = GetSubSector(nodeArray[i]->subSectorID, mapData);
+			if (nodeArray[i]->subSector) OLOG_LF("Registered subsector {0} into node {1}", nodeArray[i]->subSectorID, nodeArray[i]->nodeID);
+		}
 
 		if (nodeArray[i]->childFlag == 0xBB)
 		{

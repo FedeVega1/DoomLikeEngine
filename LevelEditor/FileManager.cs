@@ -221,7 +221,7 @@ namespace LevelEditor
                 fileStream.Write(ToByteArray(0xAAAAAAAA, out arrSize), 0, arrSize); // Start of BSP tree
                 BSPNode bsp = builder.PerformBSP(sectors, out List<SubSector> subSectors);
 
-                COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp));
+                COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp) + 1);
                 COLoggerImport.LogNormal("BSP Number of Intersections: {0}", builder.debug_NumberOfIntersections);
                 COLoggerImport.LogNormal("BSP Number of Front Nodes: {0}", debug_NumberOfBSPFrontNodes);
                 COLoggerImport.LogNormal("BSP Number of Back Nodes: {0}", debug_NumberOfBSPBackNodes);
@@ -230,7 +230,7 @@ namespace LevelEditor
                 fileStream.Write(ToByteArray(subSectors.Count, out size), 0, size);
                 CompileSubSectors(ref subSectors, fileStream);
 
-                fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp), out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp) + 1, out arrSize), 0, arrSize);
                 fileStream.WriteByte(0xFF);
                 CompileBSP(bsp, fileStream);
             }
