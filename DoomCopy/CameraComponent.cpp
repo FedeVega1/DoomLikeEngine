@@ -24,7 +24,7 @@ void Camera::Start()
 }
 
 const float Camera::movSpeed = 400;
-const float Camera::rotSpeed = 350;
+const float Camera::rotSpeed = 500;
 
 void Camera::GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const { outProcessedWalls = processedWalls; }
 
@@ -39,8 +39,8 @@ void Camera::AfterTick()
 	Vector3 currentPos = GetTransform()->GetPos();
 
 	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
-	float cos = (float) SCTABLE.cos[currentRotation];
-	float sin = (float) SCTABLE.sin[currentRotation];
+	double cos = SCTABLE.cos[currentRotation];
+	double sin = SCTABLE.sin[currentRotation];
 
 	if (toggleBSPRendering) GetWallsFromBSP(currentPos, world->rootNode, cos, sin);
 	else RenderAllSubSectors(currentPos, cos, sin);
@@ -48,7 +48,7 @@ void Camera::AfterTick()
 	if (processedWalls.size() == 0) OLOG_E("Can't find the camera anywhere inside the level!");
 }
 
-void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const float& cos, const float& sin)
+void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const double& cos, const double& sin)
 {
 	if (!startNode) return;
 
@@ -62,8 +62,8 @@ void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const float
 
 	if (startNode->splitter.VectorInFront(posToSplitter))
 	{
-		GetWallsFromBSP(pos, startNode->backNode, cos, sin);
 		GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
+		GetWallsFromBSP(pos, startNode->backNode, cos, sin);
 		return;
 	}
 
@@ -71,7 +71,7 @@ void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const float
 	GetWallsFromBSP(pos, startNode->backNode, cos, sin);
 }
 
-void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vector3 pos, const float& cos, const float& sin)
+void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vector3 pos, const double& cos, const double& sin)
 {
 	pos.z += cameraZOffset;
 	pos.z *= -1;
@@ -92,7 +92,7 @@ void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vecto
 	}
 }
 
-void Camera::RenderAllSubSectors(Vector3 pos, const float& cos, const float& sin)
+void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& sin)
 {
 	pos.z += cameraZOffset;
 	pos.z *= -1;
@@ -144,7 +144,7 @@ void Camera::RenderAllSubSectors(Vector3 pos, const float& cos, const float& sin
 	}
 }
 
-void Camera::RenderWall(ProcessedWall& wall, Vector3 pos, const float& cos, const float& sin)
+void Camera::RenderWall(ProcessedWall& wall, Vector3 pos, const double& cos, const double& sin)
 {
 	wall.leftBtmPoint.AddXY(-pos.x, -pos.y);
 	wall.rightBtmPoint.AddXY(-pos.x, -pos.y);

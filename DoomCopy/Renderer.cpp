@@ -6,24 +6,14 @@
 #include "World.h"
 #include "Renderer.h"
 
-void Renderer::ProcessGame(HWND hwnd, Game* const game)
+void Renderer::ProcessGame(Game* const game)
 {
-    //PaintScreen(Color(0, 0, 0));
+    PaintScreen(Color(0, 0, 0));
+    segments.clear();
 
-    //size_t count = game->GetEntityCount();
-    //for (size_t i = 0; i < count; i++)
-    //{
-    //    GameObject* go = game->GetGameObject(i);
-    //    if (!go) continue;
-    //    Vector3 pos = go->GetTransform()->GetPos();
-    //    DrawPixel((int) std::roundf(pos.x), (int) std::roundf(pos.y), 0xFF0000);
-    //}
-    //const ProcessedSector* sectors = nullptr;
-    //int numbSectors = game->GetMainCamera()->GetProcessedSectors(&sectors);
-    //if (!sectors) return;
-    //for (int i = 0; i < numbSectors; i++) ProcessSector(sectors[i]);
-
-    InvalidateRect(hwnd, NULL, false);
+    game->GetMainCamera()->GetProcessedWalls(walls);
+    for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
+    std::swap(drawBuffer, screenBuffer);
 }
 
 void Renderer::ProcessWall(const ProcessedWall& wall)
@@ -33,6 +23,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     if (wall.isPortal) { }
 
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
+    if (IsWallOccluded(Vector2Int(sWall.leftBtmPoint.x, sWall.rightBtmPoint.x))) return;
 
     // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
     int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
@@ -45,8 +36,10 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     sWall.leftTopPoint.x = std::clamp(sWall.leftTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
     sWall.rightTopPoint.x = std::clamp(sWall.rightTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
 
+    bool drawn = false;
     for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
     {
+        drawn = true;
         // Get the Y position of each pixel across their ΔY
 
         int diff = x - startX + .5f;
@@ -62,6 +55,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
         if (wall.isConnection)
         {
+            drawn = false;
             // If a connection is found, don't draw the wall and find it's neighbour wall.
             // Render the bottom and top walls from the difference in height between our
             // current sector and its neighbour
@@ -95,6 +89,9 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
         if (debugStepDraw) Sleep(50);
     }
+
+    if (!drawn) return;
+    AddNewSegment(Vector2Int(sWall.leftBtmPoint.x, sWall.rightBtmPoint.x));
 }
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
@@ -115,4 +112,39 @@ Vector3 Renderer::GetWallNormal(Vector3 pointA, Vector3 pointB)
     Vector3 dir1 = Vector3::Normalize(pointB - pointA);
     Vector3 dir2 = Vector3::Normalize(pointA - pointB);
     return Vector3::Cross(dir1, dir2);
+}
+
+bool Renderer::IsWallOccluded(Vector2Int wallSegment)
+{
+    for (size_t i = 0; i < segments.size(); i++)
+    {
+        if (wallSegment.x <= segments[i].x || wallSegment.y >= segments[i].y) continue;
+        return true;
+    }
+
+    return false;
+}
+
+void Renderer::AddNewSegment(Vector2Int newSegment)
+{
+    for (size_t i = 0; i < segments.size(); i++)
+    {
+        if (std::abs(segments[i].y - newSegment.x) < kEpsilon)
+        {
+            newSegment = Vector2Int(segments[i].x, newSegment.y);
+            segments.erase(segments.begin() + i);
+            AddNewSegment(newSegment);
+            return;
+        }
+
+        if (std::abs(segments[i].x - newSegment.y) < kEpsilon)
+        {
+            newSegment = Vector2Int(newSegment.x, segments[i].y);
+            segments.erase(segments.begin() + i);
+            AddNewSegment(newSegment);
+            return;
+        }
+    }
+
+    segments.push_back(newSegment);
 }

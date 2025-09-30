@@ -73,7 +73,8 @@ int MainLoop()
         }
 
         mainGame.MainUpdate();
-        renderer.ProcessGame(mainHWND, &mainGame);
+        renderer.ProcessGame(&mainGame);
+        renderer.RenderScreen();
     }
 
     return (int) msg.wParam;
@@ -160,13 +161,13 @@ void SetupWindowMessages()
             PostQuitMessage(0);
         } },
 
-        { WM_PAINT, [](WPARAM wParam, LPARAM lParam)
-        {
-            renderer.RenderScreen(mainHWND, &mainGame);
-#ifdef D2_RENDER
-            ValidateRect(mainHWND, NULL);
-#endif
-        } },
+//        { WM_PAINT, [](WPARAM wParam, LPARAM lParam)
+//        {
+//            renderer.RenderScreen(mainHWND, &mainGame);
+//#ifdef D2_RENDER
+//            ValidateRect(mainHWND, NULL);
+//#endif
+//        } },
     };
 }
 

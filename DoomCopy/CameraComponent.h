@@ -41,7 +41,7 @@ public:
 	virtual void Tick() override;
 	virtual void AfterTick() override;
 
-	Camera() : BaseComponent(), xRotation(0), world(nullptr), cameraZOffset(0), processedWalls()
+	Camera() : BaseComponent(), xRotation(0), world(nullptr), cameraZOffset(0), processedWalls(), toggleBSPRendering(false)
 	{ }
 
 	~Camera()
@@ -66,10 +66,10 @@ private:
 
 	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	
-	void GetWallsFromBSP(const Vector3& pos, class BSPNode* startNode, const float& cos, const float& sin);
-	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const float& cos, const float& sin);
-	void RenderAllSubSectors(Vector3 pos, const float& cos, const float& sin);
-	void RenderWall(ProcessedWall& wall, Vector3 pos, const float& cos, const float& sin);
+	void GetWallsFromBSP(const Vector3& pos, class BSPNode* startNode, const double& cos, const double& sin);
+	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const double& cos, const double& sin);
+	void RenderAllSubSectors(Vector3 pos, const double& cos, const double& sin);
+	void RenderWall(ProcessedWall& wall, Vector3 pos, const double& cos, const double& sin);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

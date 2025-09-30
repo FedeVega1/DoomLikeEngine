@@ -124,7 +124,7 @@ struct Vector3
 {
 	float x, y, z;
 
-	Vector3(float x = 0, float y = 0, float z = 0)
+	explicit Vector3(float x = 0, float y = 0, float z = 0)
 	{
 		this->x = x;
 		this->y = y;
@@ -143,6 +143,13 @@ struct Vector3
 		x = other.x;
 		y = other.y;
 		this->z = z;
+	}
+
+	Vector3(Vector2 other, double z)
+	{
+		x = other.x;
+		y = other.y;
+		this->z = static_cast<float>(z);
 	}
 
 	Vector3 operator+(Vector3 other) const { return Plus(other); }
