@@ -15,6 +15,34 @@ struct ScreenSpaceWall
 {
 	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
 	Color topColor, inColor, btmColor;
+
+	Vector2Int GetSegment() const
+	{ 
+		int start = std::clamp(leftBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+		int end = std::clamp(rightBtmPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+		return Vector2Int(start, end); 
+	}
+};
+
+struct ScreenSpan
+{
+	Vector2Int spanSegment;
+	bool isConnection;
+	std::array<int, DEFAULT_BUFFER_WIDTH> ceilPoints;
+	std::array<int, DEFAULT_BUFFER_WIDTH> floorPoints;
+
+	ScreenSpan() : spanSegment(), isConnection(false), ceilPoints(), floorPoints() { }
+
+	ScreenSpan(Vector2Int segment, bool isConn)
+	{
+		spanSegment = segment;
+		isConnection = isConn;
+
+		ceilPoints = {0};
+		floorPoints = {DEFAULT_BUFFER_HEIGHT};
+	}
+
+	bool Intersects(Vector2Int otherSegment) const;
 };
 
 class Renderer
@@ -26,7 +54,7 @@ public:
 	virtual void PaintScreen(Color color) = 0;
 	virtual void ProcessGame(Game* const game);
 
-	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), segments() { }
+	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans() { }
 
 protected:
 	HWND hwnd;
@@ -36,11 +64,10 @@ protected:
 	bool debugStepDraw;
 
 	std::vector<struct ProcessedWall> walls;
-	std::vector<struct Vector2Int> segments;
+	std::vector<struct ScreenSpan> spans;
 
 	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);
 	virtual void ProcessWall(const ProcessedWall& wall);
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
-	bool IsWallOccluded(Vector2Int wallSegment);
-	void AddNewSegment(Vector2Int newSegment);
+	bool IsWallOccluded(Vector2Int wallSegment, int& outConnectionSpan);
 };

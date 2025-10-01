@@ -9,7 +9,7 @@
 void Renderer::ProcessGame(Game* const game)
 {
     PaintScreen(Color(0, 0, 0));
-    segments.clear();
+    spans.clear();
 
     game->GetMainCamera()->GetProcessedWalls(walls);
     for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
@@ -23,7 +23,18 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     if (wall.isPortal) { }
 
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
-    if (IsWallOccluded(Vector2Int(sWall.leftBtmPoint.x, sWall.rightBtmPoint.x))) return;
+    Vector2Int wallSegment = sWall.GetSegment();
+    int connSpanIndx = -1;
+
+    if (IsWallOccluded(wallSegment, connSpanIndx)) return;
+    ScreenSpan currentSpan = ScreenSpan(wallSegment, wall.isConnection);
+    bool behindConn = connSpanIndx != -1;
+
+    if (behindConn)
+    {
+        sWall.leftTopPoint.x = spans[connSpanIndx].spanSegment.x;
+        sWall.rightTopPoint.x = spans[connSpanIndx].spanSegment.y;
+    }
 
     // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
     int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
@@ -50,12 +61,21 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
         // Draw the Ceilling and Floor from their respective line into the Screen limits
 
-        for (int y = 0; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
-        for (int y = yPoint.y; y < DEFAULT_BUFFER_HEIGHT; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
+        int floorStart = 0, ceillingEnd = DEFAULT_BUFFER_HEIGHT;
+        if (behindConn)
+        {
+            floorStart = spans[connSpanIndx].floorPoints[x];
+            ceillingEnd = spans[connSpanIndx].ceilPoints[x];
+        }
+
+        currentSpan.floorPoints[x] = yPoint.x;
+        currentSpan.ceilPoints[x] = yPoint.y;
+
+        for (int y = floorStart; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
+        for (int y = yPoint.y; y < ceillingEnd; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
 
         if (wall.isConnection)
         {
-            drawn = false;
             // If a connection is found, don't draw the wall and find it's neighbour wall.
             // Render the bottom and top walls from the difference in height between our
             // current sector and its neighbour
@@ -91,7 +111,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     }
 
     if (!drawn) return;
-    AddNewSegment(Vector2Int(sWall.leftBtmPoint.x, sWall.rightBtmPoint.x));
+    spans.push_back(currentSpan);
 }
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
@@ -114,37 +134,29 @@ Vector3 Renderer::GetWallNormal(Vector3 pointA, Vector3 pointB)
     return Vector3::Cross(dir1, dir2);
 }
 
-bool Renderer::IsWallOccluded(Vector2Int wallSegment)
+bool Renderer::IsWallOccluded(Vector2Int wallSegment, int& outConnectionSpan)
 {
-    for (size_t i = 0; i < segments.size(); i++)
+    outConnectionSpan = -1;
+    for (size_t i = 0; i < spans.size(); i++)
     {
-        if (wallSegment.x <= segments[i].x || wallSegment.y >= segments[i].y) continue;
+        if (!spans[i].Intersects(wallSegment)) continue;
+
+        if (spans[i].isConnection)
+        {
+            outConnectionSpan = i;
+            continue;
+        }
+
         return true;
     }
 
     return false;
 }
 
-void Renderer::AddNewSegment(Vector2Int newSegment)
+bool ScreenSpan::Intersects(Vector2Int otherSegment) const
 {
-    for (size_t i = 0; i < segments.size(); i++)
-    {
-        if (std::abs(segments[i].y - newSegment.x) < kEpsilon)
-        {
-            newSegment = Vector2Int(segments[i].x, newSegment.y);
-            segments.erase(segments.begin() + i);
-            AddNewSegment(newSegment);
-            return;
-        }
-
-        if (std::abs(segments[i].x - newSegment.y) < kEpsilon)
-        {
-            newSegment = Vector2Int(newSegment.x, segments[i].y);
-            segments.erase(segments.begin() + i);
-            AddNewSegment(newSegment);
-            return;
-        }
-    }
-
-    segments.push_back(newSegment);
+    Vector2Int segment = spanSegment;
+    if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
+    if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
+    return std::max(otherSegment.x, segment.x) < std::min(otherSegment.y, segment.y);
 }
