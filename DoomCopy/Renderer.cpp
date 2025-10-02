@@ -23,18 +23,11 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     if (wall.isPortal) { }
 
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
-    Vector2Int wallSegment = sWall.GetSegment();
-    int connSpanIndx = -1;
+    SpanResult res;
 
-    if (IsWallOccluded(wallSegment, connSpanIndx)) return;
-    ScreenSpan currentSpan = ScreenSpan(wallSegment, wall.isConnection);
-    bool behindConn = connSpanIndx != -1;
-
-    if (behindConn)
-    {
-        sWall.leftTopPoint.x = spans[connSpanIndx].spanSegment.x;
-        sWall.rightTopPoint.x = spans[connSpanIndx].spanSegment.y;
-    }
+    if (IsWallOccluded(sWall.GetSegment(), res)) return;
+    ScreenSpan currentSpan = ScreenSpan(res.segment, wall.isConnection);
+    bool behindConn = res.connectionIndx != -1;
 
     // Grab the ΔY & ΔX corresponding to the top and bottom lines of the wall
     int dYBtm = sWall.rightBtmPoint.y - sWall.leftBtmPoint.y;
@@ -44,8 +37,8 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
     int startX = sWall.leftTopPoint.x;
 
-    sWall.leftTopPoint.x = std::clamp(sWall.leftTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
-    sWall.rightTopPoint.x = std::clamp(sWall.rightTopPoint.x, 0, DEFAULT_BUFFER_WIDTH);
+    sWall.leftTopPoint.x = std::clamp(res.segment.x, 0, DEFAULT_BUFFER_WIDTH);
+    sWall.rightTopPoint.x = std::clamp(res.segment.y, 0, DEFAULT_BUFFER_WIDTH);
 
     bool drawn = false;
     for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
@@ -64,8 +57,8 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
         int floorStart = 0, ceillingEnd = DEFAULT_BUFFER_HEIGHT;
         if (behindConn)
         {
-            floorStart = spans[connSpanIndx].floorPoints[x];
-            ceillingEnd = spans[connSpanIndx].ceilPoints[x];
+            floorStart = spans[res.connectionIndx].floorPoints[x];
+            ceillingEnd = spans[res.connectionIndx].ceilPoints[x];
         }
 
         currentSpan.floorPoints[x] = yPoint.x;
@@ -107,7 +100,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
                 DrawPixel(x, y, sWall.inColor);
         }
 
-        if (debugStepDraw) Sleep(50);
+        if (debugStepDraw) Sleep(1);
     }
 
     if (!drawn) return;
@@ -134,18 +127,21 @@ Vector3 Renderer::GetWallNormal(Vector3 pointA, Vector3 pointB)
     return Vector3::Cross(dir1, dir2);
 }
 
-bool Renderer::IsWallOccluded(Vector2Int wallSegment, int& outConnectionSpan)
+bool Renderer::IsWallOccluded(Vector2Int wallSegment, SpanResult& result)
 {
-    outConnectionSpan = -1;
+    result.segment = wallSegment;
     for (size_t i = 0; i < spans.size(); i++)
     {
         if (!spans[i].Intersects(wallSegment)) continue;
 
         if (spans[i].isConnection)
         {
-            outConnectionSpan = i;
+            result.connectionIndx = i;
             continue;
         }
+
+        if (spans[i].ClampToSpan(wallSegment))
+            return IsWallOccluded(wallSegment, result);
 
         return true;
     }
@@ -155,8 +151,22 @@ bool Renderer::IsWallOccluded(Vector2Int wallSegment, int& outConnectionSpan)
 
 bool ScreenSpan::Intersects(Vector2Int otherSegment) const
 {
-    Vector2Int segment = spanSegment;
-    if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
-    if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
-    return std::max(otherSegment.x, segment.x) < std::min(otherSegment.y, segment.y);
+    //Vector2Int segment = spanSegment;
+    //if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
+    //if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
+    return std::max(otherSegment.x, spanSegment.x) < std::min(otherSegment.y, spanSegment.y);
+}
+
+bool ScreenSpan::ClampToSpan(Vector2Int& outOtherSegment) const
+{
+    //Vector2Int segment = spanSegment;
+    //if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
+    //if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
+    int x = outOtherSegment.x, y = outOtherSegment.y;
+    bool clamped = false;
+
+    if (x < spanSegment.y && y > spanSegment.y) { x = spanSegment.y; clamped = true; }
+    if (y > spanSegment.x && x < spanSegment.x) { y = spanSegment.x; clamped = true; }
+    outOtherSegment = Vector2Int(x, y);
+    return clamped;
 }

@@ -43,6 +43,15 @@ struct ScreenSpan
 	}
 
 	bool Intersects(Vector2Int otherSegment) const;
+	bool ClampToSpan(Vector2Int& outOtherSegment) const;
+};
+
+struct SpanResult
+{
+	int connectionIndx;
+	Vector2Int segment;
+
+	SpanResult() : connectionIndx(-1), segment() { }
 };
 
 class Renderer
@@ -69,5 +78,5 @@ protected:
 	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);
 	virtual void ProcessWall(const ProcessedWall& wall);
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
-	bool IsWallOccluded(Vector2Int wallSegment, int& outConnectionSpan);
+	bool IsWallOccluded(Vector2Int wallSegment, SpanResult& result);
 };
