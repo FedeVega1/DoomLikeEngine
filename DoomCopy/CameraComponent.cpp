@@ -67,8 +67,8 @@ void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const doubl
 		return;
 	}
 
-	GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
 	GetWallsFromBSP(pos, startNode->backNode, cos, sin);
+	GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
 }
 
 void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vector3 pos, const double& cos, const double& sin)

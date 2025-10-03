@@ -221,7 +221,9 @@ namespace LevelEditor
                 fileStream.Write(ToByteArray(0xAAAAAAAA, out arrSize), 0, arrSize); // Start of BSP tree
                 BSPNode bsp = builder.PerformBSP(sectors, out List<SubSector> subSectors);
 
-                COLoggerImport.LogNormal("BSP Tree Size: {0}", GetSizeOfBSPTree(bsp) + 1);
+                int bspNodeCount = 0;
+                GetSizeOfBSPTree(bsp, ref bspNodeCount);
+                COLoggerImport.LogNormal("BSP Tree Size: {0}", bspNodeCount);
                 COLoggerImport.LogNormal("BSP Number of Intersections: {0}", builder.debug_NumberOfIntersections);
                 COLoggerImport.LogNormal("BSP Number of Front Nodes: {0}", debug_NumberOfBSPFrontNodes);
                 COLoggerImport.LogNormal("BSP Number of Back Nodes: {0}", debug_NumberOfBSPBackNodes);
@@ -230,7 +232,7 @@ namespace LevelEditor
                 fileStream.Write(ToByteArray(subSectors.Count, out size), 0, size);
                 CompileSubSectors(ref subSectors, fileStream);
 
-                fileStream.Write(ToByteArray(GetSizeOfBSPTree(bsp) + 1, out arrSize), 0, arrSize);
+                fileStream.Write(ToByteArray(bspNodeCount, out arrSize), 0, arrSize);
                 fileStream.WriteByte(0xFF);
                 CompileBSP(bsp, fileStream);
             }
@@ -315,22 +317,21 @@ namespace LevelEditor
             }
         }
 
-        int GetSizeOfBSPTree(BSPNode node)
+        void GetSizeOfBSPTree(BSPNode node, ref int count)
         {
-            int childs = 0;
+            count++;
+
             if (node.frontNode != null)
             {
                 debug_NumberOfBSPFrontNodes++;
-                childs += 1 + GetSizeOfBSPTree(node.frontNode);
+                GetSizeOfBSPTree(node.frontNode, ref count);
             }
 
             if (node.backNode != null)
             {
                 debug_NumberOfBSPBackNodes++;
-                childs += 1 + GetSizeOfBSPTree(node.backNode);
+                GetSizeOfBSPTree(node.backNode, ref count);
             }
-
-            return childs;
         }
 
         public void ResetCurrentFile() => CurrentOpenedFile = "NULL";

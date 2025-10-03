@@ -1,4 +1,6 @@
-﻿namespace LevelEditor
+﻿using WinRT;
+
+namespace LevelEditor
 {
     internal class SubSector
     {
@@ -45,6 +47,11 @@
             if (obj is not Splitter) return false;
             Splitter other = (Splitter) obj;
             return other.startPoint == startPoint && other.segment == segment;
+        }
+
+        public readonly bool ItsInverse(Wall wall)
+        {
+            return startPoint.Equals(wall.rightPoint);
         }
 
         public override int GetHashCode() => base.GetHashCode();
@@ -299,6 +306,12 @@
 
         void PartitionWall(BSPNode currentNode, Wall currentWall)
         {
+            if (currentWall.isConnection && currentNode.splitter.ItsInverse(currentWall))
+            {
+                currentNode.backNode.walls.Add(currentWall);
+                return;
+            }    
+
             Point ab = currentNode.splitter.segment;
             Point ca = currentWall.leftPoint.Subtract(currentNode.splitter.startPoint);
             Point da = currentWall.rightPoint.Subtract(currentNode.splitter.startPoint);
