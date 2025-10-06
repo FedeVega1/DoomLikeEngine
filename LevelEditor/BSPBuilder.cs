@@ -49,11 +49,6 @@ namespace LevelEditor
             return other.startPoint == startPoint && other.segment == segment;
         }
 
-        public readonly bool ItsInverse(Wall wall)
-        {
-            return startPoint.Equals(wall.rightPoint);
-        }
-
         public override int GetHashCode() => base.GetHashCode();
     }
 
@@ -286,8 +281,13 @@ namespace LevelEditor
                 return;
             }
 
+            Wall lastConn = null;
             int size = node.walls.Count;
-            for (int i = 0; i < size; i++) PartitionWall(node, node.walls[i]);
+            for (int i = 0; i < size; i++)
+            {
+                PartitionWall(node, node.walls[i], lastConn);
+                if (node.walls[i].isConnection) lastConn = node.walls[i];
+            }
 
             if (node.frontNode != null)
             {
@@ -304,17 +304,23 @@ namespace LevelEditor
             }
         }
 
-        void PartitionWall(BSPNode currentNode, Wall currentWall)
+        void PartitionWall(BSPNode currentNode, Wall currentWall, Wall lastConn)
         {
-            if (currentWall.isConnection && currentNode.splitter.ItsInverse(currentWall))
+            Point leftPoint = currentWall.leftPoint, rightPoint = currentWall.rightPoint;
+
+            if (currentWall.isConnection && lastConn != null && ItsInverse(currentWall, lastConn))
             {
-                currentNode.backNode.walls.Add(currentWall);
-                return;
-            }    
+                PointF dir = leftPoint.Subtract(rightPoint).Normalize();
+                PointF offsetL = new PointF(leftPoint.X + dir.Y, leftPoint.Y + dir.X);
+                PointF offsetR = new PointF(rightPoint.X + dir.Y, rightPoint.Y + dir.X);
+
+                leftPoint = new Point((int) MathF.Round(offsetL.X), (int) MathF.Round(offsetL.Y));
+                rightPoint = new Point((int) MathF.Round(offsetR.X), (int) MathF.Round(offsetR.Y));
+            }
 
             Point ab = currentNode.splitter.segment;
-            Point ca = currentWall.leftPoint.Subtract(currentNode.splitter.startPoint);
-            Point da = currentWall.rightPoint.Subtract(currentNode.splitter.startPoint);
+            Point ca = leftPoint.Subtract(currentNode.splitter.startPoint);
+            Point da = rightPoint.Subtract(currentNode.splitter.startPoint);
 
             int num = ab.Cross(ca), den = ab.Cross(da);
             bool numIsZero = Math.Abs(num) == 0, denIsZero = Math.Abs(den) == 0;
@@ -472,6 +478,11 @@ namespace LevelEditor
                 if (Math.Abs(ab.Cross(cd)) == 0) { result[0]++; continue; }
                 result[2]++;
             }
+        }
+
+        static bool ItsInverse(Wall wall, Wall other)
+        {
+            return wall.leftPoint.Equals(other.rightPoint) && wall.rightPoint.Equals(other.leftPoint);
         }
     }
 }

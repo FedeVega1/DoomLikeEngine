@@ -151,22 +151,16 @@ bool Renderer::IsWallOccluded(Vector2Int wallSegment, SpanResult& result)
 
 bool ScreenSpan::Intersects(Vector2Int otherSegment) const
 {
-    //Vector2Int segment = spanSegment;
-    //if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
-    //if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
     return std::max(otherSegment.x, spanSegment.x) < std::min(otherSegment.y, spanSegment.y);
 }
 
 bool ScreenSpan::ClampToSpan(Vector2Int& outOtherSegment) const
 {
-    //Vector2Int segment = spanSegment;
-    //if (otherSegment.x > otherSegment.y) std::swap(otherSegment.x, otherSegment.y);
-    //if (spanSegment.x > spanSegment.y) std::swap(segment.x, segment.y);
     int x = outOtherSegment.x, y = outOtherSegment.y;
     bool clamped = false;
 
-    if (x < spanSegment.y && y > spanSegment.y) { x = spanSegment.y; clamped = true; }
     if (y > spanSegment.x && x < spanSegment.x) { y = spanSegment.x; clamped = true; }
+    if (x < spanSegment.y && y > spanSegment.y) { x = spanSegment.y; clamped = true; }
     outOtherSegment = Vector2Int(x, y);
     return clamped;
 }
