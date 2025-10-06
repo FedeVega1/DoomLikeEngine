@@ -239,10 +239,10 @@ void FileManager::GetWallFromFile(std::ifstream* stream, const bool& isLittleEnd
 	wall.isConnection = (portalFlags & 0b10) == 0b10;
 
 	stream->read((char*) intBuffer, intSize);
-	wall.portalTargetSectorID = ByteArrayToInt(intBuffer, isLittleEndian);
+	unsigned int portalSectorID = ByteArrayToInt(intBuffer, isLittleEndian);
 
-	stream->read((char*) intBuffer, intSize);
-	wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+	stream->read((char*)idBuffer, idSize);
+	wall.portalWallTargetID = ByteArrayToULL(idBuffer, isLittleEndian);
 
 	stream->read((char*) idBuffer, idSize);
 	wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
@@ -252,13 +252,17 @@ void FileManager::GetWallFromFile(std::ifstream* stream, const bool& isLittleEnd
 
 	for (int i = 0; i < mapData.numberOfSectors; i++)
 	{
+		if (portalSectorID != 0xFFFFFFFF && portalSectorID == mapData.sectorData[i].sectorID)
+			wall.portalTargetSector = &mapData.sectorData[i];
+
 		if (sectorID != mapData.sectorData[i].sectorID) continue;
 		wall.parentSector = &mapData.sectorData[i];
 		mapData.sectorData[i].sectorWalls.push_back(wall);
 		mapData.sectorData[i].sectorCenter = mapData.sectorData[i].CalculateSectorCentroid();
-		return;
+		continue;
 	}
 
+	if (wall.parentSector != nullptr) return;
 	OLOG_CF("Couldn't find sector ID {0}", sectorID);
 	throw std::system_error(1, std::generic_category());
 }

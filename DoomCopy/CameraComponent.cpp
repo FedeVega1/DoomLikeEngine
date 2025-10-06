@@ -84,8 +84,8 @@ void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vecto
 			subSector->subSectorWalls[i].leftPoint, subSector->subSectorWalls[i].rightPoint,
 			subSector->subSectorWalls[i].topColor, subSector->subSectorWalls[i].inColor, subSector->subSectorWalls[i].btmColor,
 			subSector->subSectorWalls[i].isPortal, subSector->subSectorWalls[i].isConnection,
-			subSector->subSectorWalls[i].portalTargetSectorID, subSector->subSectorWalls[i].portalTargetWall,
-			subSector->subSectorWalls[i].parentSector
+			subSector->subSectorWalls[i].portalTargetSector, subSector->subSectorWalls[i].portalTargetWall,
+			subSector->subSectorWalls[i].parentSector,& subSector->subSectorWalls[i]
 		};
 
 		RenderWall(wall, pos, cos, sin);
@@ -135,8 +135,8 @@ void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& s
 				sectorData[i].sectorWalls[j].leftPoint, sectorData[i].sectorWalls[j].rightPoint,
 				sectorData[i].sectorWalls[j].topColor, sectorData[i].sectorWalls[j].inColor, sectorData[i].sectorWalls[j].btmColor,
 				sectorData[i].sectorWalls[j].isPortal, sectorData[i].sectorWalls[j].isConnection,
-				sectorData[i].sectorWalls[j].portalTargetSectorID, sectorData[i].sectorWalls[j].portalTargetWall,
-				sectorData[i].sectorWalls[j].parentSector
+				sectorData[i].sectorWalls[j].portalTargetSector, sectorData[i].sectorWalls[j].portalTargetWall,
+				sectorData[i].sectorWalls[j].parentSector, &sectorData[i].sectorWalls[j]
 			};
 
 			RenderWall(wall, pos, cos, sin);

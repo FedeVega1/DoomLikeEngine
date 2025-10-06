@@ -5,24 +5,25 @@ struct Wall
 	Vector2 leftPoint, rightPoint;
 	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
-	int portalTargetSectorID, portalTargetWall;
-	unsigned long long wallID;
+	unsigned long long wallID, portalWallTargetID;
 	struct Sector* parentSector;
+	struct Sector* portalTargetSector;
+	Wall* portalTargetWall;
 
 	Wall() : leftPoint(), rightPoint(), topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false),
-		isConnection(false), portalTargetSectorID(-1), portalTargetWall(-1), wallID(0ULL), parentSector(nullptr)
+		isConnection(false), wallID(0ULL), portalWallTargetID(0ULL), parentSector(nullptr), portalTargetSector(nullptr), portalTargetWall(nullptr)
 	{
 	}
 
 	Wall(Vector2 lPoint, Vector2 rPoint) : topColor(0, 0, 0), inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false),
-		isConnection(false), portalTargetSectorID(-1), portalTargetWall(-1), wallID(0ULL), parentSector(nullptr)
+		isConnection(false), wallID(0ULL), portalWallTargetID(0ULL), parentSector(nullptr), portalTargetSector(nullptr), portalTargetWall(nullptr)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
 	}
 
-	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, int targetSector,
-		int wall, unsigned long long id, struct Sector* const sector)
+	Wall(Vector2 lPoint, Vector2 rPoint, Color tc, Color ic, Color bc, bool portal, bool connection, unsigned long long id, 
+		unsigned long long wallTargetID, struct Sector* const sector, struct Sector* const portalSector, Wall* wallSector)
 	{
 		leftPoint = lPoint;
 		rightPoint = rPoint;
@@ -31,10 +32,11 @@ struct Wall
 		btmColor = bc;
 		isPortal = portal;
 		isConnection = connection;
-		portalTargetSectorID = targetSector;
-		portalTargetWall = wall;
 		wallID = id;
 		parentSector = sector;
+		portalTargetSector = portalSector;
+		portalTargetWall = wallSector;
+		portalWallTargetID = wallTargetID;
 	}
 
 	Vector2 GetAvrgMiddlePoint() const { return Vector2((leftPoint.x + rightPoint.x) / 2.0f, (leftPoint.y + rightPoint.y) / 2.0f); }
@@ -64,7 +66,6 @@ struct Sector
 	}
 
 	bool HasPortals() const;
-	void GetPortalSectors(std::vector<int>* portalSectors, int ignoreSector) const;
 	float GetAvrgDistanceToPoint(Vector2 point) const;
 	void GetMaxPoints(Vector2& min, Vector2& max) const;
 	bool PointIsInsideSector(Vector2 point) const;

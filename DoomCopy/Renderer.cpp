@@ -72,26 +72,12 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
             // If a connection is found, don't draw the wall and find it's neighbour wall.
             // Render the bottom and top walls from the difference in height between our
             // current sector and its neighbour
+            InPortalRenderData renderData = InPortalRenderData { yPoint, diff, dX, x };
+            OutPortalRenderData outData;
+            RenderPortalWall(wall, renderData, outData);
 
-            //int sectIndx = GetSectorIndexFromID(wall.portalTargetSector, wallPtr, numbWalls);
-            //if (sectIndx == -1) continue;
-            //const ProcessedSector& prevSector =  sectorPtr[sectIndx];
-
-            //if (sector.bottomPoint < prevSector.bottomPoint)
-            //{
-            //    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
-            //    int prevDYBtm = prevSWall.leftBtmPoint.y - prevSWall.rightBtmPoint.y;
-            //    int prevYPoint = ((prevDYBtm * diff) / dX) + prevSWall.rightBtmPoint.y;
-            //    for (int y = yPoint.x; y < prevYPoint; y++) DrawPixel(x, y, sWall.btmColor);
-            //}
-
-            //if (sector.topPoint > prevSector.topPoint)
-            //{
-            //    ScreenSpaceWall prevSWall = GetScreenSpaceWall(prevSector.sectorWalls[sector.sectorWalls[i].portalTargetWall]);
-            //    int prevDYTop = prevSWall.leftTopPoint.y - prevSWall.rightTopPoint.y;
-            //    int prevYPoint = ((prevDYTop * diff) / dX) + prevSWall.rightTopPoint.y;
-            //    for (int y = prevYPoint; y < yPoint.y; y++) DrawPixel(x, y, sWall.topColor);
-            //}
+            if (outData.hasDrawnC) currentSpan.ceilPoints[x] = outData.newCeillingY;
+            if (outData.hasDrawnF) currentSpan.floorPoints[x] = outData.newFloorY;
         }
         else
         {
@@ -163,4 +149,42 @@ bool ScreenSpan::ClampToSpan(Vector2Int& outOtherSegment) const
     if (x < spanSegment.y && y > spanSegment.y) { x = spanSegment.y; clamped = true; }
     outOtherSegment = Vector2Int(x, y);
     return clamped;
+}
+
+ProcessedWall* Renderer::GetProcessedWallPortalByID(unsigned long long wallID)
+{
+    for (size_t i = 0; i < walls.size(); i++)
+    {
+        if (walls[i].referenceWall->wallID == wallID)
+            return &walls[i];
+    }
+
+    return nullptr;
+}
+
+void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderData& data, OutPortalRenderData& outData)
+{
+    if (!wall.portalTargetWall) return;
+    ProcessedWall* portalWall = GetProcessedWallPortalByID(wall.portalTargetWall->wallID);
+    if (!portalWall) return;
+
+    if (wall.parentSector->bottomPoint < portalWall->parentSector->bottomPoint)
+    {
+        ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
+        int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
+        int prevYPoint = ((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y;
+        outData.newFloorY = prevYPoint;
+        for (int y = data.yPoint.x; y < prevYPoint; y++) DrawPixel(data.x, y, wall.btmColor);
+        outData.hasDrawnF = true;
+    }
+
+    if (wall.parentSector->topPoint > portalWall->parentSector->topPoint)
+    {
+        ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
+        int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
+        int prevYPoint = ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y;
+        outData.newCeillingY = prevYPoint;
+        for (int y = prevYPoint; y < data.yPoint.y; y++) DrawPixel(data.x, y, wall.topColor);
+        outData.hasDrawnC = true;
+    }
 }

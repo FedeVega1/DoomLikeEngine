@@ -1,11 +1,8 @@
-﻿using System.IO;
-using Windows.Globalization.DateTimeFormatting;
-
-namespace LevelEditor
+﻿namespace LevelEditor
 {
     internal class FileManager
     {
-        const string MAPVersion = "v00.04", BSPVersion = "v00.07";
+        const string MAPVersion = "v00.05", BSPVersion = "v00.07";
 
         public string CurrentOpenedFile { get; private set; }
 
@@ -83,8 +80,8 @@ namespace LevelEditor
         {
             sectors = new List<Sector>();
 
-            int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(byte) * 3;
-            byte[] intBuffer = new byte[intSize], pointBuffer = new byte[pointSize], colorBuffer = new byte[colorSize];
+            int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(byte) * 3, idSize = sizeof(ulong);
+            byte[] intBuffer = new byte[intSize], pointBuffer = new byte[pointSize], colorBuffer = new byte[colorSize], idBuffer = new byte[idSize];
 
             COLoggerImport.LogNormal("Loading File {0}", fileName);
 
@@ -147,14 +144,14 @@ namespace LevelEditor
                         wall.colors[2] = ByteArrayToColor(colorBuffer);
 
                         int portalFlag = fileStream.ReadByte();
-                        wall.isPortal = (portalFlag & 0b1) == 0b1;
-                        wall.isConnection = (portalFlag & 0b10) == 0b10;
+                        wall.isPortal = (portalFlag & 0b10) == 0b10;
+                        wall.isConnection = (portalFlag & 0b1) == 0b1;
 
                         fileStream.Read(intBuffer, 0, intSize);
-                        wall.portalTargetSector = ByteArrayToInt(intBuffer, isLittleEndian);
+                        wall.portalTargetSector = ByteArrayToUInt(intBuffer, isLittleEndian);
 
-                        fileStream.Read(intBuffer, 0, intSize);
-                        wall.portalTargetWall = ByteArrayToInt(intBuffer, isLittleEndian);
+                        fileStream.Read(idBuffer, 0, idSize);
+                        wall.portalTargetWall = ByteArrayToULong(idBuffer, isLittleEndian);
 
                         sector.walls.Add(wall);
                     }
@@ -486,6 +483,22 @@ namespace LevelEditor
         {
             if (isLittleEndian) return ((uint)dataToConvert[3] << 24) | ((uint)dataToConvert[2] << 16) | ((uint)dataToConvert[1] << 8) | ((uint)dataToConvert[0]);
             return ((uint)dataToConvert[0] << 24) | ((uint)dataToConvert[1] << 16) | ((uint)dataToConvert[2] << 8) | ((uint)dataToConvert[3]);
+        }
+
+        static ulong ByteArrayToULong(byte[] dataToConvert, bool isLittleEndian)
+        {
+            uint high, low;
+
+            if (isLittleEndian)
+            {
+                high = ((uint) dataToConvert[7] << 24) | ((uint) dataToConvert[6] << 16) | ((uint) dataToConvert[5] << 8) | ((uint) dataToConvert[4]);
+                low = ((uint) dataToConvert[3] << 24) | ((uint) dataToConvert[2] << 16) | ((uint) dataToConvert[1] << 8) | ((uint) dataToConvert[0]);
+                return ((ulong) high | (ulong) low);
+            }
+
+            high = ((uint) dataToConvert[0] << 24) | ((uint) dataToConvert[1] << 16) | ((uint) dataToConvert[2] << 8) | ((uint) dataToConvert[3]);
+            low = ((uint) dataToConvert[4] << 24) | ((uint) dataToConvert[5] << 16) | ((uint) dataToConvert[6] << 8) | ((uint) dataToConvert[7]);
+            return ((ulong) high | (ulong) low);
         }
 
         static Point ByteArrayToPoint(byte[] dataToConvert, bool isLittleEndian)

@@ -6,16 +6,18 @@ struct ProcessedWall
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
 	Color topColor, inColor, btmColor;
 	bool isPortal, isConnection;
-	int portalTargetSector, portalTargetWall;
 	struct Sector* parentSector;
+	struct Sector* portalTargetSector;
+	struct Wall* portalTargetWall;
+	const struct Wall* referenceWall;
 
 	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), topColor(0, 0, 0), 
-		inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(-1), 
-		portalTargetWall(-1), parentSector(nullptr)
+		inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(nullptr), 
+		portalTargetWall(nullptr), parentSector(nullptr), referenceWall(nullptr)
 	{ }
 
 	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color tc, Color ic, Color bc,
-		bool portal, bool connection, int targetSector, int wall, struct Sector* const sector)
+		bool portal, bool connection, struct Sector* const targetSector, struct Wall* const wall, struct Sector* const sector, const struct Wall* const refWall)
 	{ 
 		leftTopPoint = ltPoint;
 		rightTopPoint = rtPoint;
@@ -29,6 +31,7 @@ struct ProcessedWall
 		portalTargetSector = targetSector;
 		portalTargetWall = wall;
 		parentSector = sector;
+		referenceWall = refWall;
 	}
 };
 

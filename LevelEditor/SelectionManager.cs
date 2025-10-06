@@ -162,11 +162,14 @@ namespace LevelEditor
 
                         if (wall.isPortal && wall.isConnection)
                         {
-                            int connPrevIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall - 1);
-                            int connNextIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall + 1);
-                            Wall connectedWall = ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall];
-                            Wall prevConnWall = ActiveSectors[wall.portalTargetSector].walls[connPrevIndex];
-                            Wall nextConnWall = ActiveSectors[wall.portalTargetSector].walls[connNextIndex];
+                            int sectorIndx = FindSectorIndx(wall.portalTargetSector);
+                            int wallIndx = FindWallIndx(wall.portalTargetWall, sectorIndx);
+
+                            int connPrevIndex = ClampWallIndex(sectorIndx, wallIndx - 1);
+                            int connNextIndex = ClampWallIndex(sectorIndx, wallIndx + 1);
+                            Wall connectedWall = ActiveSectors[sectorIndx].walls[wallIndx];
+                            Wall prevConnWall = ActiveSectors[sectorIndx].walls[connPrevIndex];
+                            Wall nextConnWall = ActiveSectors[sectorIndx].walls[connNextIndex];
 
                             connectedWall.rightPoint = wall.leftPoint;
                             connectedWall.leftPoint = wall.rightPoint;
@@ -177,9 +180,9 @@ namespace LevelEditor
                             prevConnWall.UpdateMiddleAndNormal();
                             nextConnWall.UpdateMiddleAndNormal();
 
-                            ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall] = connectedWall;
-                            ActiveSectors[wall.portalTargetSector].walls[connPrevIndex] = prevConnWall;
-                            ActiveSectors[wall.portalTargetSector].walls[connNextIndex] = nextConnWall;
+                            ActiveSectors[sectorIndx].walls[wallIndx] = connectedWall;
+                            ActiveSectors[sectorIndx].walls[connPrevIndex] = prevConnWall;
+                            ActiveSectors[sectorIndx].walls[connNextIndex] = nextConnWall;
                         }
 
                         ActiveSectors[i].walls[laterWallIndex] = prevWall;
@@ -226,17 +229,20 @@ namespace LevelEditor
 
             if (wall.isPortal && wall.isConnection)
             {
-                int otherConnIndex = ClampWallIndex(wall.portalTargetSector, wall.portalTargetWall + 1);
-                Wall connectedWall = ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall];
-                Wall otherConnWall = ActiveSectors[wall.portalTargetSector].walls[otherConnIndex];
+                int sectorIndx = FindSectorIndx(wall.portalTargetSector);
+                int wallIndx = FindWallIndx(wall.portalTargetWall, sectorIndx);
+
+                int otherConnIndex = ClampWallIndex(sectorIndx, wallIndx + 1);
+                Wall connectedWall = ActiveSectors[sectorIndx].walls[wallIndx];
+                Wall otherConnWall = ActiveSectors[sectorIndx].walls[otherConnIndex];
 
                 otherConnWall.leftPoint = connectedWall.rightPoint = wall.leftPoint;
 
                 connectedWall.UpdateMiddleAndNormal();
                 otherConnWall.UpdateMiddleAndNormal();
 
-                ActiveSectors[wall.portalTargetSector].walls[wall.portalTargetWall] = connectedWall;
-                ActiveSectors[wall.portalTargetSector].walls[otherConnIndex] = otherConnWall;
+                ActiveSectors[sectorIndx].walls[wallIndx] = connectedWall;
+                ActiveSectors[sectorIndx].walls[otherConnIndex] = otherConnWall;
             }
 
             if (otherWall.isPortal && otherWall.isConnection)
@@ -419,6 +425,48 @@ namespace LevelEditor
             }
 
             currentSelection.Clear();
+        }
+
+        int FindSectorIndx(uint sectorID)
+        {
+            int size = ActiveSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                if (ActiveSectors[i].SectorID == sectorID)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        int FindWallIndx(ulong wallID)
+        {
+            int size = ActiveSectors.Count;
+            for (int i = 0; i < size; i++)
+            {
+                int wallCount = ActiveSectors[i].walls.Count;
+                for (int j = 0; j < wallCount; j++)
+                {
+                    if (ActiveSectors[i].walls[j].wallID == wallID)
+                        return j;
+                }
+            }
+
+            return -1;
+        }
+
+        int FindWallIndx(ulong wallID, int sectorIndx)
+        {
+            if (sectorIndx < 0 || sectorIndx > ActiveSectors.Count) return -1;
+
+            int wallCount = ActiveSectors[sectorIndx].walls.Count;
+            for (int i = 0; i < wallCount; i++)
+            {
+                if (ActiveSectors[sectorIndx].walls[i].wallID == wallID)
+                    return i;
+            }
+
+            return -1;
         }
     }
 }

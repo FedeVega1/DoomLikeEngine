@@ -31,4 +31,5 @@ private:
 	int maxNumberOfWalls;
 
 	void CountTotalNumberOfWalls();
+	void FindWallsPortal();
 };

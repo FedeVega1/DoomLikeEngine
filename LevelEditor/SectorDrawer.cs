@@ -35,7 +35,8 @@
         public WallColors colors;
         public PointF middle, normal;
         public bool isPortal, isConnection;
-        public int portalTargetSector, portalTargetWall;
+        public uint portalTargetSector;
+        public ulong portalTargetWall;
         public readonly ulong wallID;
         
         public Sector Sector { get; private set; }
@@ -45,10 +46,10 @@
             leftPoint = rightPoint = Point.Empty;
             colors = new WallColors();
             isPortal = false;
-            portalTargetSector = -1;
-            portalTargetWall = -1;
             wallID = WallCounter++;
             Sector = s;
+            portalTargetSector = 0xFFFFFFFF;
+            portalTargetWall = 0xFFFFFFFFFFFFFFFF;
         }
 
         public Wall(Point left, Point right, Color[] c, Sector s)
@@ -61,8 +62,8 @@
             colors[2] = c[2];
 
             isPortal = false;
-            portalTargetSector = -1;
-            portalTargetWall = -1;
+            portalTargetSector = 0xFFFFFFFF;
+            portalTargetWall = 0xFFFFFFFFFFFFFFFF;
 
             Sector = s;
 
@@ -108,7 +109,7 @@
             normal = GetNormalFromPoints(leftPoint, rightPoint);
         }
 
-        public Wall MakePortal(int sector, int wall, bool isConnection = false)
+        public Wall MakePortal(uint sector, ulong wall, bool isConnection = false)
         {
             portalTargetSector = sector;
             portalTargetWall = wall;
@@ -580,19 +581,32 @@
         void ConnectWall_SameS_SameW(Wall newWall, (int, int) w1, (int, int) w2)
         {
             COLoggerImport.LogNormal("CONNECT! - Same Sector & wall");
+            uint sectorID;
+            ulong wallID;
 
             Wall splicedWall = sectors[w1.Item1].walls[w1.Item2];
             if ((newWall.leftPoint == splicedWall.leftPoint || newWall.leftPoint == splicedWall.rightPoint) && 
                 (newWall.rightPoint == splicedWall.leftPoint || newWall.rightPoint == splicedWall.rightPoint))
             {
-                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(w2.Item1, w2.Item2, true);
-                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2, true);
+                sectorID = sectors[w2.Item1].SectorID;
+                wallID = sectors[w2.Item1].walls[w2.Item2].wallID;
+                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(sectorID, wallID, true);
+
+                sectorID = sectors[w1.Item1].SectorID;
+                wallID = sectors[w1.Item1].walls[w1.Item2].wallID;
+                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(sectorID, wallID, true);
                 return;
             }
 
+            sectorID = sectors[w1.Item1].SectorID;
+            wallID = sectors[w1.Item1].walls[w1.Item2 + 1].wallID;
+
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
-            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(w2.Item1, w2.Item2, true);
+            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(sectorID, wallID, true);
+
+            sectorID = sectors[w2.Item1].SectorID;
+            wallID = sectors[w2.Item1].walls[w2.Item2].wallID;
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(sectorID, wallID, true);
 
             sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);
@@ -602,19 +616,33 @@
         void ConnectWall_SameS_DiffW(Wall newWall, (int, int) w1, (int, int) w2)
         {
             COLoggerImport.LogNormal("CONNECT! - Same Sector, Different Wall");
+            uint sectorID;
+            ulong wallID;
 
             Wall splicedWall = sectors[w1.Item1].walls[w1.Item2];
             if ((newWall.leftPoint == splicedWall.leftPoint || newWall.leftPoint == splicedWall.rightPoint) &&
                 (newWall.rightPoint == splicedWall.leftPoint || newWall.rightPoint == splicedWall.rightPoint))
             {
-                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(w2.Item1, w2.Item2, true);
-                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2, true);
+                sectorID = sectors[w2.Item1].SectorID;
+                wallID = sectors[w2.Item1].walls[w2.Item2].wallID;
+
+                sectors[w1.Item1].walls[w1.Item2] = sectors[w1.Item1].walls[w1.Item2].MakePortal(sectorID, wallID, true);
+
+                sectorID = sectors[w1.Item1].SectorID;
+                wallID = sectors[w1.Item1].walls[w1.Item2].wallID;
+                sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(sectorID, wallID, true);
                 return;
             }
 
+            sectorID = sectors[w1.Item1].SectorID;
+            wallID = sectors[w1.Item1].walls[w1.Item2 + 1].wallID;
+
             sectors[w1.Item1].walls.RemoveAt(w1.Item2);
-            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(w1.Item1, w1.Item2 + 1, true);
-            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(w2.Item1, w2.Item2, true);
+            sectors[w2.Item1].walls[w2.Item2] = sectors[w2.Item1].walls[w2.Item2].MakePortal(sectorID, wallID, true);
+
+            sectorID = sectors[w2.Item1].SectorID;
+            wallID = sectors[w2.Item1].walls[w2.Item2].wallID;
+            Wall portalWall = new Wall(newWall.rightPoint, newWall.leftPoint, splicedWall.GetColors(), sectors[w1.Item1]).MakePortal(sectorID, wallID, true);
 
             sectors[w1.Item1].walls.Insert(w1.Item2, new Wall(newWall.leftPoint, splicedWall.rightPoint, splicedWall.GetColors(), sectors[w1.Item1]));
             sectors[w1.Item1].walls.Insert(w1.Item2, portalWall);

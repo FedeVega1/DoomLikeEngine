@@ -17,6 +17,7 @@ World::World(Game* const gameRef, const std::string& mapFileName) : Entity(gameR
 	maxNumberOfSubSectors = data.numberOfSubSectors;
 
 	CountTotalNumberOfWalls();
+	FindWallsPortal();
 }
 
 World::~World()
@@ -39,6 +40,25 @@ void World::CountTotalNumberOfWalls()
 {
 	for (int i = 0; i < maxNumberOfSubSectors; i++)
 		maxNumberOfWalls += subSectorData[i].subSectorWalls.size();
+}
+
+void World::FindWallsPortal()
+{
+	int wallIndx, sectorIndx;
+	for (int i = 0; i < maxNumberOfSubSectors; i++)
+	{
+		for (size_t j = 0; j < subSectorData[i].subSectorWalls.size(); j++)
+		{
+			if (subSectorData[i].subSectorWalls[j].portalWallTargetID == 0xFFFFFFFFFFFFFFFFULL) continue;
+			if (!FindWallByID(subSectorData[i].subSectorWalls[j].portalWallTargetID, wallIndx, sectorIndx))
+			{
+				OLOG_EF("Couldn't find Wall Portal {i}", subSectorData[i].subSectorWalls[j].portalWallTargetID);
+				continue;
+			}
+
+			subSectorData[i].subSectorWalls[j].portalTargetWall = &sectorData[sectorIndx].sectorWalls[wallIndx];
+		}
+	}
 }
 
 bool World::CheckIfPositionInsideSector(const Vector3& pos, int sector) const
@@ -69,15 +89,6 @@ bool Sector::HasPortals() const
 	}
 
 	return false;
-}
-
-void Sector::GetPortalSectors(std::vector<int>*portalSectors, int ignoreSector) const
-{
-	for (size_t i = 0; i < sectorWalls.size(); i++)
-	{
-		if (!sectorWalls[i].isPortal || sectorWalls[i].portalTargetSectorID == ignoreSector) continue;
-		portalSectors->push_back(sectorWalls[i].portalTargetSectorID);
-	}
 }
 
 float Sector::GetAvrgDistanceToPoint(Vector2 point) const

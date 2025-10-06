@@ -54,6 +54,21 @@ struct SpanResult
 	SpanResult() : connectionIndx(-1), segment() { }
 };
 
+struct InPortalRenderData
+{
+	Vector2Int yPoint;
+	int diff, dX, x;
+};
+
+
+struct OutPortalRenderData
+{
+	int newCeillingY, newFloorY;
+	bool hasDrawnC, hasDrawnF;
+
+	OutPortalRenderData() : newCeillingY(0), newFloorY(0), hasDrawnC(false), hasDrawnF(false) { }
+};
+
 class Renderer
 {
 public:
@@ -79,4 +94,6 @@ protected:
 	virtual void ProcessWall(const ProcessedWall& wall);
 	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall);
 	bool IsWallOccluded(Vector2Int wallSegment, SpanResult& result);
+	ProcessedWall* GetProcessedWallPortalByID(unsigned long long wallID);
+	void RenderPortalWall(const ProcessedWall& portal, const InPortalRenderData& data, OutPortalRenderData& outData);
 };
