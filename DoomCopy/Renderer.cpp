@@ -22,6 +22,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
     if (wall.isPortal) { }
 
+    Color pixelColor;
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
     SpanResult res;
 
@@ -44,6 +45,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     for (int x = sWall.leftTopPoint.x; x < sWall.rightTopPoint.x; x++)
     {
         drawn = true;
+
         // Get the Y position of each pixel across their ΔY
 
         int diff = x - startX + .5f;
@@ -61,18 +63,25 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
             ceillingEnd = spans[res.connectionIndx].ceilPoints[x];
         }
 
+        //float darkDiffX = 1 - ((float)(DEFAULT_BUFFER_WIDTH - x) / (float)DEFAULT_BUFFER_WIDTH);
+        float darkDiffY = 1 - ((float) (DEFAULT_BUFFER_HEIGHT - yPoint.x) / (float) DEFAULT_BUFFER_HEIGHT);
+        BYTE darkValue = (BYTE) std::round(darkDiffY * darkStep);
+
         currentSpan.floorPoints[x] = yPoint.x;
         currentSpan.ceilPoints[x] = yPoint.y;
 
-        for (int y = floorStart; y < yPoint.x; y++) DrawPixel(x, y, wall.parentSector->floorColor);
-        for (int y = yPoint.y; y < ceillingEnd; y++) DrawPixel(x, y, wall.parentSector->ceillingColor);
+        pixelColor = DarkenPixelColor(wall.parentSector->floorColor, darkValue);
+        for (int y = floorStart; y < yPoint.x; y++) DrawPixel(x, y, pixelColor);
+
+        pixelColor = DarkenPixelColor(wall.parentSector->ceillingColor, darkValue);
+        for (int y = yPoint.y; y < ceillingEnd; y++) DrawPixel(x, y, pixelColor);
 
         if (wall.isConnection)
         {
             // If a connection is found, don't draw the wall and find it's neighbour wall.
             // Render the bottom and top walls from the difference in height between our
             // current sector and its neighbour
-            InPortalRenderData renderData = InPortalRenderData { yPoint, diff, dX, x };
+            InPortalRenderData renderData = InPortalRenderData { yPoint, diff, dX, x, darkValue };
             OutPortalRenderData outData;
             RenderPortalWall(wall, renderData, outData);
 
@@ -81,9 +90,10 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
         }
         else
         {
+            pixelColor = DarkenPixelColor(sWall.inColor, darkValue);
+
             // Render the actual wall
-            for (int y = yPoint.x; y < yPoint.y; y++)
-                DrawPixel(x, y, sWall.inColor);
+            for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, pixelColor);
         }
 
         if (debugStepDraw) Sleep(1);
@@ -91,6 +101,25 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
 
     if (!drawn) return;
     spans.push_back(currentSpan);
+}
+
+Color Renderer::DarkenPixelColor(const Color& color, const BYTE& value) const
+{
+    Color newColor = color;
+
+    BYTE diff = newColor.r - value;
+    if (newColor.r >= diff) newColor.r = diff;
+    else newColor.r = minDarkValue;
+
+    diff = newColor.g - value;
+    if (newColor.g > minDarkValue) newColor.g = diff;
+    else newColor.g = minDarkValue;
+
+    diff = newColor.b - value;
+    if (newColor.b > minDarkValue) newColor.b = diff;
+    else newColor.b = minDarkValue;
+
+    return newColor;
 }
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
@@ -173,8 +202,12 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
         int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
         int prevYPoint = ((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y;
+        prevYPoint = std::clamp(prevYPoint, 0, DEFAULT_BUFFER_HEIGHT);
+
+        Color pixelColor = DarkenPixelColor(wall.btmColor, data.darkValue);
         outData.newFloorY = prevYPoint;
-        for (int y = data.yPoint.x; y < prevYPoint; y++) DrawPixel(data.x, y, wall.btmColor);
+
+        for (int y = data.yPoint.x; y < prevYPoint; y++) DrawPixel(data.x, y, pixelColor);
         outData.hasDrawnF = true;
     }
 
@@ -183,8 +216,12 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
         int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
         int prevYPoint = ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y;
+        prevYPoint = std::clamp(prevYPoint, 0, DEFAULT_BUFFER_HEIGHT);
+
+        Color pixelColor = DarkenPixelColor(wall.topColor, data.darkValue);
         outData.newCeillingY = prevYPoint;
-        for (int y = prevYPoint; y < data.yPoint.y; y++) DrawPixel(data.x, y, wall.topColor);
+
+        for (int y = prevYPoint; y < data.yPoint.y; y++) DrawPixel(data.x, y, pixelColor);
         outData.hasDrawnC = true;
     }
 }

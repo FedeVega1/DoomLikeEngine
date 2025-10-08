@@ -58,6 +58,7 @@ struct InPortalRenderData
 {
 	Vector2Int yPoint;
 	int diff, dX, x;
+	BYTE darkValue;
 };
 
 
@@ -78,7 +79,7 @@ public:
 	virtual void PaintScreen(Color color) = 0;
 	virtual void ProcessGame(Game* const game);
 
-	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans() { }
+	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans(), darkStep(200), minDarkValue(5) { }
 
 protected:
 	HWND hwnd;
@@ -86,6 +87,8 @@ protected:
 	DWORD* screenBuffer;
 	DWORD* drawBuffer;
 	bool debugStepDraw;
+
+	BYTE darkStep, minDarkValue;
 
 	std::vector<struct ProcessedWall> walls;
 	std::vector<struct ScreenSpan> spans;
@@ -96,4 +99,5 @@ protected:
 	bool IsWallOccluded(Vector2Int wallSegment, SpanResult& result);
 	ProcessedWall* GetProcessedWallPortalByID(unsigned long long wallID);
 	void RenderPortalWall(const ProcessedWall& portal, const InPortalRenderData& data, OutPortalRenderData& outData);
+	Color DarkenPixelColor(const Color& color, const BYTE& value) const;
 };

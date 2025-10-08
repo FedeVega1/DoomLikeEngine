@@ -44,21 +44,42 @@ void World::CountTotalNumberOfWalls()
 
 void World::FindWallsPortal()
 {
-	int wallIndx, sectorIndx;
+	int wallIndx, subSectorIndx;
 	for (int i = 0; i < maxNumberOfSubSectors; i++)
 	{
 		for (size_t j = 0; j < subSectorData[i].subSectorWalls.size(); j++)
 		{
 			if (subSectorData[i].subSectorWalls[j].portalWallTargetID == 0xFFFFFFFFFFFFFFFFULL) continue;
-			if (!FindWallByID(subSectorData[i].subSectorWalls[j].portalWallTargetID, wallIndx, sectorIndx))
+
+			if (!FindWallByID(subSectorData[i].subSectorWalls[j].portalWallTargetID, wallIndx, subSectorIndx))
 			{
 				OLOG_EF("Couldn't find Wall Portal {i}", subSectorData[i].subSectorWalls[j].portalWallTargetID);
 				continue;
 			}
 
-			subSectorData[i].subSectorWalls[j].portalTargetWall = &sectorData[sectorIndx].sectorWalls[wallIndx];
+			subSectorData[i].subSectorWalls[j].portalTargetWall = &subSectorData[subSectorIndx].subSectorWalls[wallIndx];
 		}
 	}
+}
+
+bool World::FindWallByID(const unsigned long long& id, int& wallIndx, int& subSectorIndx)
+{
+	for (int i = 0; i < maxNumberOfSubSectors; i++)
+	{
+		for (size_t j = 0; j < subSectorData[i].subSectorWalls.size(); j++)
+		{
+			if (subSectorData[i].subSectorWalls[j].wallID == id)
+			{
+				wallIndx = j;
+				subSectorIndx = i;
+				return true;
+			}
+		}
+	}
+
+	wallIndx = -1;
+	subSectorIndx = -1;
+	return false;
 }
 
 bool World::CheckIfPositionInsideSector(const Vector3& pos, int sector) const
@@ -153,7 +174,7 @@ bool Wall::VectorInFrontWall(Vector2 vector) const
 
 bool Splitter::VectorInFront(Vector2 vector) const { return vector.x * segment.y < segment.x * vector.y; }
 
-bool World::FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) const
+bool World::FindWallByIDSector(unsigned long long id, int& wallIndx, int& sectorIndx) const
 {
 	for (int s = 0; s < numberOfSectors; s++)
 	{

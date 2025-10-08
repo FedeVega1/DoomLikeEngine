@@ -10,7 +10,8 @@ public:
 	bool CheckIfPositionInsideSector(const Vector3& pos, int sector) const;
 	bool CheckIfPositionInsideSector(const Vector3& pos, int* const sector) const;
 
-	bool FindWallByID(unsigned long long id, int& wallIndx, int& sectorIndx) const;
+	bool FindWallByID(const unsigned long long& id, int& wallIndx, int& subSectorIndx);
+	bool FindWallByIDSector(unsigned long long id, int& wallIndx, int& sectorIndx) const;
 	bool FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& wallIndx) const;
 
 	Sector GetSectorData(int sectorIndx) const { return sectorData[sectorIndx]; }
