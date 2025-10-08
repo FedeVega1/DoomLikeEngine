@@ -4,6 +4,7 @@
 #include <bit>
 #include <filesystem>
 #include "WorldDataTypes.h"
+#include "RenderingDataTypes.h"
 #include "FileManager.h"
 
 FileManager::FileManager() : intBuffer(0), pointBuffer(0), colorBuffer(0), idBuffer(0), pointFBuffer(0)
@@ -293,6 +294,11 @@ void FileManager::ReadSubSectorData(std::ifstream* stream, const bool& isLittleE
 	}
 
 	OLOG_L("Loaded all SubSectors correct!");
+}
+
+void FileManager::GetTexture(const std::wstring& textureName, BaseTexture& outTexture)
+{
+
 }
 
 int FileManager::ByteArrayToInt(const unsigned char* const byteArray, const bool& isLittleEndian) const

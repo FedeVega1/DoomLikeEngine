@@ -15,6 +15,7 @@ public:
 	~FileManager();
 
 	void GetMapData(const std::string& mapName, MapData& outMapData);
+	void GetTexture(const std::wstring& textureName, struct BaseTexture& outTexture);
 
 private:
 	static const int intSize = sizeof(int), pointSize = intSize * 2, colorSize = sizeof(char) * 3, idSize = sizeof(unsigned long long), pointFSize = sizeof(float) * 2;
@@ -30,6 +31,7 @@ private:
 	unsigned long long ByteArrayToULL(const unsigned char* byteArray, const bool& isLittleEndian) const;
 	Vector2 ByteArrayToVector2(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 	float ByteArrayToFloat(const unsigned char* const byteArray, const bool& isLittleEndian) const;
+
 	void ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData);
 	void GetWallFromFile(std::ifstream* stream, const bool& isLittleEndian, Wall& wall, const MapData& mapData) const;
 	void ReadSubSectorData(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData);

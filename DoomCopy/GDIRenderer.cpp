@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "Game.h"
-#include "Renderer.h"
 #include "GameObjects.h"
 #include "VectorMath.h"
 #include "CameraComponent.h"
 #include "World.h"
+#include "Renderer.h"
 #include "GDIRenderer.h"
 
 HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
@@ -18,6 +18,8 @@ HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
     HDC hDesktop = GetDC(hwnd);
     memHDC = CreateCompatibleDC(hDesktop);
     hbmp = CreateCompatibleBitmap(hDesktop, DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT);
+
+    loadedTexturesMap = std::map<std::wstring, BaseTexture>();
 
     bitmapInfo = BITMAPINFO { 
         BITMAPINFOHEADER 
@@ -33,6 +35,8 @@ HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
     };
 
     SelectObject(memHDC, hbmp);
+
+    LoadTexture(L"test.bmp");
     return S_OK;
 }
 
@@ -80,12 +84,59 @@ void GDIRenderer::DrawPixel(int x, int y, Color color)
     }
 }
 
+void GDIRenderer::LoadTexture(const std::wstring& texName)
+{
+    HBITMAP hbmp = (HBITMAP)LoadImage(nullptr, texName.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    if (!hbmp)
+    {
+        OLOG_E("Failed to load Texture: {0}. Texture source was not found!");
+        return;
+    }
+
+    BITMAP bmp;
+    GetObject(hbmp, sizeof(BITMAP), &bmp);
+
+    loadedTexturesMap.insert(std::pair(texName, BaseTexture{
+        texName,
+        bmp.bmWidth,
+        bmp.bmHeight,
+        1.0f,
+        new DWORD[bmp.bmWidth * bmp.bmHeight]
+        }));
+
+    BITMAPINFO bmpInfo = BITMAPINFO
+    {
+        sizeof(BITMAPINFOHEADER),
+        bmp.bmWidth,
+        -bmp.bmHeight,
+        1,
+        bmp.bmBitsPixel,
+        BI_RGB
+    };
+
+    if (!GetDIBits(memHDC, hbmp, 0, bmp.bmHeight, loadedTexturesMap[texName].textureBuffer, &bmpInfo, DIB_RGB_COLORS))
+        OLOG_E("Falied to load texture: {0}");
+
+    OLOG_L("Loaded texture: {0}");
+    DeleteObject(hbmp);
+}
+
+void GDIRenderer::GetTextureMap(const std::wstring& texName, BaseTexture& texture)
+{
+    if (!loadedTexturesMap.contains(texName)) return;
+    texture = loadedTexturesMap[texName];
+}
+
 GDIRenderer::GDIRenderer() : bitmapInfo(), hbmp(nullptr), memHDC(nullptr)
 { }
 
 GDIRenderer::~GDIRenderer()
 {
     DeleteObject(hbmp);
+
+    for (std::pair<std::wstring, BaseTexture> iterator : loadedTexturesMap)
+        delete[] iterator.second.textureBuffer;
+
     delete[] screenBuffer;
     delete[] drawBuffer;
 }

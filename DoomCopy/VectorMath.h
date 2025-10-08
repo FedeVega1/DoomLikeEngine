@@ -99,6 +99,15 @@ struct Vector2
 
 	bool operator==(Vector2 other) const { return Equals(other); }
 
+	static Vector2 Normalize(Vector2 vector)
+	{
+		float magnitude = vector.Magnitude();
+		if (magnitude > kEpsilon) return vector / magnitude;
+		return Vector2();
+	}
+
+	float Magnitude() const { return std::sqrtf(x * x + y * y); }
+
 	static float Distance(Vector2 a, Vector2 b)
 	{
 		Vector2 diff = Vector2(a.x - b.x, a.y - b.y);

@@ -33,6 +33,8 @@ struct ProcessedWall
 		parentSector = sector;
 		referenceWall = refWall;
 	}
+
+	Vector2 FromScreenToWorldSpace(float interp) const;
 };
 
 class Camera : public BaseComponent
@@ -53,6 +55,7 @@ public:
 
 	 void GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const;
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
+	 Vector2 GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
 
 protected:
 	virtual void OnDestroy() override;

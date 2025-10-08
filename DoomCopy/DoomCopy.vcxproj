@@ -164,6 +164,7 @@
     <ClInclude Include="GDIRenderer.h" />
     <ClInclude Include="GameObjects.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RenderingDataTypes.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GameTime.h" />
     <ClInclude Include="TransformComponent.h" />

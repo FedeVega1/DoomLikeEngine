@@ -11,12 +11,14 @@ void Renderer::ProcessGame(Game* const game)
     PaintScreen(Color(0, 0, 0));
     spans.clear();
 
-    game->GetMainCamera()->GetProcessedWalls(walls);
-    for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i]);
+    Camera* const camera = game->GetMainCamera();
+    camera->GetProcessedWalls(walls);
+
+    for (size_t i = 0; i < walls.size(); i++) ProcessWall(walls[i], camera);
     std::swap(drawBuffer, screenBuffer);
 }
 
-void Renderer::ProcessWall(const ProcessedWall& wall)
+void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
 {
     if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
 
@@ -25,6 +27,9 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
     Color pixelColor;
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
     SpanResult res;
+
+    BaseTexture text;
+    GetTextureMap(L"test.bmp", text);
 
     if (IsWallOccluded(sWall.GetSegment(), res)) return;
     ScreenSpan currentSpan = ScreenSpan(res.segment, wall.isConnection);
@@ -90,10 +95,17 @@ void Renderer::ProcessWall(const ProcessedWall& wall)
         }
         else
         {
-            pixelColor = DarkenPixelColor(sWall.inColor, darkValue);
+            Vector2 worldPoint = camera->GetWorldPointFromRay(x, DEFAULT_BUFFER_WIDTH, wall);
+            Vector2 dir = Vector2::Normalize(wall.referenceWall->rightPoint - wall.referenceWall->leftPoint);
+            Vector2 offset = worldPoint - wall.referenceWall->leftPoint;
+            float dWall = offset.x * dir.x + offset.y * dir.y;
+
+            if (x == 0 && wall.referenceWall->wallID == 1ULL)
+                OLOG_LF("{0}", dWall);
 
             // Render the actual wall
-            for (int y = yPoint.x; y < yPoint.y; y++) DrawPixel(x, y, pixelColor);
+            for (int y = yPoint.x; y < yPoint.y; y++)
+                DrawPixel(x, y, text.MapTexturePoint(dWall, y, (float) (yPoint.x - yPoint.y), sWall.rightBtmPoint.x - sWall.leftBtmPoint.x));
         }
 
         if (debugStepDraw) Sleep(1);

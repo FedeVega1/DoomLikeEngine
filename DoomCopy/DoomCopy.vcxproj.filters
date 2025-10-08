@@ -62,6 +62,9 @@
     <ClInclude Include="WorldDataTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderingDataTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DoomCopy.cpp">

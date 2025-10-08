@@ -2,10 +2,10 @@
 #include "GameObjects.h"
 #include "Component.h"
 #include "TransformComponent.h"
-#include "CameraComponent.h"
 #include "World.h"
 #include "Inputs.h"
 #include "GameTime.h"
+#include "CameraComponent.h"
 
 void Camera::Start()
 {
@@ -226,4 +226,30 @@ void Camera::DebugToggleBSPRendering()
 {
 	toggleBSPRendering = !toggleBSPRendering;
 	OLOG_LF("BSP Rendering is: {0}", toggleBSPRendering);
+}
+
+Vector2 Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
+{
+	float cameraX = 2.0f * screenX / (float) screenWidth - 1.0f;
+
+	Vector3 camDir = GetTransform()->GetForwardVector();
+	Vector3 camRight = -GetTransform()->GetLeftVector();
+	Vector3 camPos = GetTransform()->GetPos();
+
+	Vector3 rayDir = camDir + camRight * cameraX;
+	Vector2 segDir = wall.referenceWall->rightPoint - wall.referenceWall->leftPoint;
+
+	float det = rayDir.x * (-segDir.y) + rayDir.y * segDir.x;
+	if (std::abs(det) < kEpsilon) return wall.referenceWall->leftPoint;
+
+	Vector2 diff = wall.referenceWall->leftPoint - camPos.XY();
+	float u = (rayDir.x * diff.y - rayDir.y * diff.x) / det;
+	u = std::clamp(u, 0.0f, 1.0f);
+
+	return wall.referenceWall->leftPoint + (segDir * u);
+}
+
+Vector2 ProcessedWall::FromScreenToWorldSpace(float interp) const
+{
+	return referenceWall->leftPoint + ((referenceWall->rightPoint - referenceWall->leftPoint) * interp);
 }
