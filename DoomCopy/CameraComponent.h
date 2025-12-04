@@ -62,6 +62,7 @@ public:
 	 void GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const;
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
 	 CameraRayHit GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
+	 Vector2 GetFloorCeilingHitPoint(const Vector2& screenCoords, const Vector2& screenSize, const float& planeHeight);
 
 protected:
 	virtual void OnDestroy() override;

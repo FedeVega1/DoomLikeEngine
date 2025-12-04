@@ -28,8 +28,10 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
     SpanResult res;
 
-    BaseTexture text;
-    GetTextureMap(L"test.bmp", text);
+    BaseTexture wallText, ceillingText, floorText;
+    GetTextureMap(L"test Wall.bmp", wallText);
+    GetTextureMap(L"test Ceilling.bmp", ceillingText);
+    GetTextureMap(L"test Floor.bmp", floorText);
 
     if (IsWallOccluded(sWall.GetSegment(), res)) return;
     ScreenSpan currentSpan = ScreenSpan(res.segment, wall.isConnection);
@@ -55,7 +57,6 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
 
         int diff = x - startX + .5f;
         Vector2Int yPoint = Vector2Int(((dYBtm * diff) / dX) + sWall.leftBtmPoint.y, ((dYTop * diff) / dX) + sWall.leftTopPoint.y);
-
         Vector2Int originalYPoint = yPoint;
 
         yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
@@ -77,18 +78,28 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         currentSpan.floorPoints[x] = yPoint.x;
         currentSpan.ceilPoints[x] = yPoint.y;
 
-        pixelColor = DarkenPixelColor(wall.parentSector->floorColor, darkValue);
-        for (int y = floorStart; y < yPoint.x; y++) DrawPixel(x, y, pixelColor);
+        Vector2Int screenSize = Vector2Int(DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT);
 
-        pixelColor = DarkenPixelColor(wall.parentSector->ceillingColor, darkValue);
-        for (int y = yPoint.y; y < ceillingEnd; y++) DrawPixel(x, y, pixelColor);
+        // Render floor with texture
+        for (int y = floorStart; y < yPoint.x; y++) 
+        {
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(Vector2Int(x, y), screenSize, wall.parentSector->bottomPoint);
+            DrawPixel(x, y, floorText.MapFloorCeilingTexturePoint(hitPoint));
+        }
+
+        // Render ceiling with texture
+        for (int y = yPoint.y; y < ceillingEnd; y++) 
+        {
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(Vector2Int(x, y), screenSize, wall.parentSector->topPoint);
+            DrawPixel(x, y, ceillingText.MapFloorCeilingTexturePoint(hitPoint));
+        }
 
         if (wall.isConnection)
         {
             // If a connection is found, don't draw the wall and find it's neighbour wall.
             // Render the bottom and top walls from the difference in height between our
             // current sector and its neighbour
-            InPortalRenderData renderData = InPortalRenderData { yPoint, diff, dX, x, darkValue };
+            InPortalRenderData renderData = InPortalRenderData { yPoint, diff, dX, x, darkValue, camera, &wallText };
             OutPortalRenderData outData;
             RenderPortalWall(wall, renderData, outData);
 
@@ -108,7 +119,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             {
                 int relativeY = originalYPoint.y - y - 1;
                 float wallHeight = (float) (originalYPoint.y - originalYPoint.x);
-                DrawPixel(x, y, text.MapTexturePoint(dWall, relativeY, wallHeight, worldWallLength));
+                DrawPixel(x, y, wallText.MapWallTexturePoint(dWall, relativeY, wallHeight, worldWallLength));
             }
         }
 
@@ -217,27 +228,63 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
     {
         ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
         int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
-        int prevYPoint = ((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y;
-        prevYPoint = std::clamp(prevYPoint, 0, DEFAULT_BUFFER_HEIGHT);
+        int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
+
+        Vector2Int prevYPoint = Vector2Int(((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y, ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y);
+        Vector2Int originalPrevYPoint = prevYPoint;
+        
+        prevYPoint.x = std::clamp(prevYPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
+        prevYPoint.y = std::clamp(prevYPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
         Color pixelColor = DarkenPixelColor(wall.btmColor, data.darkValue);
-        outData.newFloorY = prevYPoint;
+        outData.newFloorY = prevYPoint.x;
 
-        for (int y = data.yPoint.x; y < prevYPoint; y++) DrawPixel(data.x, y, pixelColor);
+        CameraRayHit rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
+        Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
+        Vector2 offset = rayHit.hitPoint - portalWall->referenceWall->leftPoint;
+
+        float dWall = offset.x * dir.x + offset.y * dir.y;
+        float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
+
+        for (int y = data.yPoint.x; y < prevYPoint.x; y++)
+        {
+            int relativeY = originalPrevYPoint.y - y - 1;
+            float wallHeight = (float) (originalPrevYPoint.y - originalPrevYPoint.x);
+            DrawPixel(data.x, y, data.textureRef->MapWallTexturePoint(dWall, relativeY, wallHeight, worldWallLength));
+        }
+
         outData.hasDrawnF = true;
     }
 
     if (wall.parentSector->topPoint > portalWall->parentSector->topPoint)
     {
         ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
+        int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
         int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
-        int prevYPoint = ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y;
-        prevYPoint = std::clamp(prevYPoint, 0, DEFAULT_BUFFER_HEIGHT);
+
+        Vector2Int prevYPoint = Vector2Int(((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y, ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y);
+        Vector2Int originalPrevYPoint = prevYPoint;
+
+        prevYPoint.x = std::clamp(prevYPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
+        prevYPoint.y = std::clamp(prevYPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
         Color pixelColor = DarkenPixelColor(wall.topColor, data.darkValue);
-        outData.newCeillingY = prevYPoint;
+        outData.newCeillingY = prevYPoint.y;
 
-        for (int y = prevYPoint; y < data.yPoint.y; y++) DrawPixel(data.x, y, pixelColor);
+        CameraRayHit rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
+        Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
+        Vector2 offset = rayHit.hitPoint - portalWall->referenceWall->leftPoint;
+
+        float dWall = offset.x * dir.x + offset.y * dir.y;
+        float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
+
+        for (int y = prevYPoint.y; y < data.yPoint.y; y++)
+        {
+            int relativeY = originalPrevYPoint.y - y - 1;
+            float wallHeight = (float) (originalPrevYPoint.y - originalPrevYPoint.x);
+            DrawPixel(data.x, y, data.textureRef->MapWallTexturePoint(dWall, relativeY, wallHeight, worldWallLength));
+        }
+
         outData.hasDrawnC = true;
     }
 }

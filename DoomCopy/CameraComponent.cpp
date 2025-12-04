@@ -251,6 +251,25 @@ CameraRayHit Camera::GetWorldPointFromRay(int screenX, int screenWidth, const Pr
 	return CameraRayHit{ wall.referenceWall->leftPoint + (segDir * u), wall.parentSector->bottomPoint, wall.parentSector->topPoint };
 }
 
+Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& screenCoords, const Vector2& screenSize, const float& planeHeight)
+{
+	float cameraX = (2.0f * screenCoords.x / screenSize.x) - 1.0f;
+	float cameraY = 1.0f - (2.0f * screenCoords.y / screenSize.y);
+
+	Vector3 camDir = GetTransform()->GetForwardVector();
+	Vector3 camRight = -GetTransform()->GetLeftVector();
+	Vector3 camUp = Vector3::Cross(camRight, camDir);
+	Vector3 cameraPos = GetTransform()->GetPos();
+
+	Vector3 rayDir = Vector3::Normalize(camDir + camRight * cameraX + camUp * cameraY);
+	
+	float t = (planeHeight - cameraPos.z) / rayDir.z;
+	if (t <= 0) return Vector2(0, 0); // Behind camera
+	
+	Vector3 hitPoint = cameraPos + rayDir * t;
+	return hitPoint.XY();
+}
+
 Vector2 ProcessedWall::FromScreenToWorldSpace(float interp) const
 {
 	return referenceWall->leftPoint + ((referenceWall->rightPoint - referenceWall->leftPoint) * interp);

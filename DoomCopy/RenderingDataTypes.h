@@ -57,6 +57,8 @@ struct InPortalRenderData
 	Vector2Int yPoint;
 	int diff, dX, x;
 	BYTE darkValue;
+	struct Camera* const cameraRef;
+	struct BaseTexture* const textureRef;
 };
 
 
@@ -75,7 +77,7 @@ struct BaseTexture
 	float tilling;
 	DWORD* textureBuffer;
 
-	Color MapTexturePoint(float dWall, int relativeY, float wallHeight, float wallLength) const
+	Color MapWallTexturePoint(const float& dWall, const int& relativeY, const float& wallHeight, const float& wallLength) const
 	{
 		if (!textureBuffer) return COLOR_WHITE;
 
@@ -84,6 +86,26 @@ struct BaseTexture
 		float step = (float) height / wallHeight;
 		int texX = (int) std::floor(u * width);
 		int texY = ((int) std::floor(relativeY * step)) & (height - 1);
+
+		return Color(textureBuffer[texX + (texY * width)], false);
+	}
+
+	Color MapFloorCeilingTexturePoint(const Vector2& worldPos) const
+	{
+		if (!textureBuffer) return COLOR_WHITE;
+
+		float u = Wrap(worldPos.x / width * tilling);
+		float v = Wrap(worldPos.y / height * tilling);
+		
+		int texX = (int) std::floor(u * width);
+		int texY = (int) std::floor(v * height);
+
+		static bool logged = false;
+		if (!logged) {
+			OLOG_LF("Floor/Ceiling: worldPos=({0},{1}), u={2}, v={3}, texX={4}, texY={5}, width={6}, height={7}", 
+				worldPos.x, worldPos.y, u, v, texX, texY, width, height);
+			logged = true;
+		}
 
 		return Color(textureBuffer[texX + (texY * width)], false);
 	}

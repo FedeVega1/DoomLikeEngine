@@ -36,7 +36,9 @@ HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
 
     SelectObject(memHDC, hbmp);
 
-    LoadTexture(L"test.bmp");
+    LoadTexture(L"test Wall.bmp");
+    LoadTexture(L"test Ceilling.bmp");
+    LoadTexture(L"test Floor.bmp");
     return S_OK;
 }
 
@@ -96,13 +98,14 @@ void GDIRenderer::LoadTexture(const std::wstring& texName)
     BITMAP bmp;
     GetObject(hbmp, sizeof(BITMAP), &bmp);
 
-    loadedTexturesMap.insert(std::pair(texName, BaseTexture{
+    loadedTexturesMap.insert(std::pair(texName, BaseTexture
+    {
         texName,
         bmp.bmWidth,
         bmp.bmHeight,
         1.0f,
         new DWORD[bmp.bmWidth * bmp.bmHeight]
-        }));
+    }));
 
     BITMAPINFO bmpInfo = BITMAPINFO
     {
