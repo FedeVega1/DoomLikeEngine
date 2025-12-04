@@ -56,6 +56,8 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         int diff = x - startX + .5f;
         Vector2Int yPoint = Vector2Int(((dYBtm * diff) / dX) + sWall.leftBtmPoint.y, ((dYTop * diff) / dX) + sWall.leftTopPoint.y);
 
+        Vector2Int originalYPoint = yPoint;
+
         yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
         yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
@@ -95,17 +97,19 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         }
         else
         {
-            Vector2 worldPoint = camera->GetWorldPointFromRay(x, DEFAULT_BUFFER_WIDTH, wall);
+            CameraRayHit rayHit = camera->GetWorldPointFromRay(x, DEFAULT_BUFFER_WIDTH, wall);
             Vector2 dir = Vector2::Normalize(wall.referenceWall->rightPoint - wall.referenceWall->leftPoint);
-            Vector2 offset = worldPoint - wall.referenceWall->leftPoint;
+            Vector2 offset = rayHit.hitPoint - wall.referenceWall->leftPoint;
+
             float dWall = offset.x * dir.x + offset.y * dir.y;
-
-            if (x == 0 && wall.referenceWall->wallID == 1ULL)
-                OLOG_LF("{0}", dWall);
-
-            // Render the actual wall
+            float worldWallLength = Vector2::Distance(wall.referenceWall->leftPoint, wall.referenceWall->rightPoint);
+            
             for (int y = yPoint.x; y < yPoint.y; y++)
-                DrawPixel(x, y, text.MapTexturePoint(dWall, y, (float) (yPoint.x - yPoint.y), sWall.rightBtmPoint.x - sWall.leftBtmPoint.x));
+            {
+                int relativeY = originalYPoint.y - y - 1;
+                float wallHeight = (float) (originalYPoint.y - originalYPoint.x);
+                DrawPixel(x, y, text.MapTexturePoint(dWall, relativeY, wallHeight, worldWallLength));
+            }
         }
 
         if (debugStepDraw) Sleep(1);
@@ -136,7 +140,7 @@ Color Renderer::DarkenPixelColor(const Color& color, const BYTE& value) const
 
 ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
 {
-    float fov = 200;
+    float fov = HALF_WIDTH;
     return ScreenSpaceWall
     {
         Vector2Int((int) std::roundf(((wall.leftTopPoint.x * fov) / wall.leftTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftTopPoint.z * fov) / wall.leftTopPoint.y) + HALF_HEIGHT)),

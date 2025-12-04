@@ -75,15 +75,15 @@ struct BaseTexture
 	float tilling;
 	DWORD* textureBuffer;
 
-	Color MapTexturePoint(float dWall, int y, float yDiff, float wallLength) const
+	Color MapTexturePoint(float dWall, int relativeY, float wallHeight, float wallLength) const
 	{
 		if (!textureBuffer) return COLOR_WHITE;
 
-		float u = Wrap(dWall / (wallLength * tilling));
+		float u = Wrap(dWall / width * tilling);
 
-		float step = (float) height / yDiff;
+		float step = (float) height / wallHeight;
 		int texX = (int) std::floor(u * width);
-		int texY = ((int) std::floor(y * step)) & (height - 1);
+		int texY = ((int) std::floor(relativeY * step)) & (height - 1);
 
 		return Color(textureBuffer[texX + (texY * width)], false);
 	}

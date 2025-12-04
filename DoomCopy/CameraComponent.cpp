@@ -228,7 +228,7 @@ void Camera::DebugToggleBSPRendering()
 	OLOG_LF("BSP Rendering is: {0}", toggleBSPRendering);
 }
 
-Vector2 Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
+CameraRayHit Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
 {
 	float cameraX = 2.0f * screenX / (float) screenWidth - 1.0f;
 
@@ -239,14 +239,16 @@ Vector2 Camera::GetWorldPointFromRay(int screenX, int screenWidth, const Process
 	Vector3 rayDir = camDir + camRight * cameraX;
 	Vector2 segDir = wall.referenceWall->rightPoint - wall.referenceWall->leftPoint;
 
-	float det = rayDir.x * (-segDir.y) + rayDir.y * segDir.x;
-	if (std::abs(det) < kEpsilon) return wall.referenceWall->leftPoint;
+	float det = rayDir.y * segDir.x - rayDir.x * segDir.y;
+	
+	if (std::abs(det) < kEpsilon) return CameraRayHit{ wall.referenceWall->leftPoint, wall.parentSector->bottomPoint, wall.parentSector->topPoint };
 
-	Vector2 diff = wall.referenceWall->leftPoint - camPos.XY();
-	float u = (rayDir.x * diff.y - rayDir.y * diff.x) / det;
+	Vector2 diff = camPos.XY() - wall.referenceWall->leftPoint;
+	float u = (diff.x * rayDir.y  - diff.y * rayDir.x) / det;
+	
 	u = std::clamp(u, 0.0f, 1.0f);
 
-	return wall.referenceWall->leftPoint + (segDir * u);
+	return CameraRayHit{ wall.referenceWall->leftPoint + (segDir * u), wall.parentSector->bottomPoint, wall.parentSector->topPoint };
 }
 
 Vector2 ProcessedWall::FromScreenToWorldSpace(float interp) const
