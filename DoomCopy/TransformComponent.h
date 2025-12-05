@@ -32,6 +32,8 @@ public:
 		return Vector3((float) -SCTABLE.cos[currentRot], (float) SCTABLE.sin[currentRot], 0);
 	}
 
+	Vector3 GetUpVector() const { return Vector3::Cross(GetForwardVector(), -GetLeftVector()); }
+
 	int GetCurrentSector() const { return currentSector; }
 
 	Transform();

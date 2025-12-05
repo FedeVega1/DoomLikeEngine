@@ -100,13 +100,6 @@ struct BaseTexture
 		int texX = (int) std::floor(u * width);
 		int texY = (int) std::floor(v * height);
 
-		static bool logged = false;
-		if (!logged) {
-			OLOG_LF("Floor/Ceiling: worldPos=({0},{1}), u={2}, v={3}, texX={4}, texY={5}, width={6}, height={7}", 
-				worldPos.x, worldPos.y, u, v, texX, texY, width, height);
-			logged = true;
-		}
-
 		return Color(textureBuffer[texX + (texY * width)], false);
 	}
 

@@ -37,8 +37,8 @@ HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
     SelectObject(memHDC, hbmp);
 
     LoadTexture(L"test Wall.bmp");
-    LoadTexture(L"test Ceilling.bmp");
-    LoadTexture(L"test Floor.bmp");
+    LoadTexture(L"test Ceilling.bmp", 2);
+    LoadTexture(L"test Floor.bmp", 2);
     return S_OK;
 }
 
@@ -86,7 +86,7 @@ void GDIRenderer::DrawPixel(int x, int y, Color color)
     }
 }
 
-void GDIRenderer::LoadTexture(const std::wstring& texName)
+void GDIRenderer::LoadTexture(const std::wstring& texName, const float& tilling)
 {
     HBITMAP hbmp = (HBITMAP)LoadImage(nullptr, texName.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     if (!hbmp)
@@ -103,7 +103,7 @@ void GDIRenderer::LoadTexture(const std::wstring& texName)
         texName,
         bmp.bmWidth,
         bmp.bmHeight,
-        1.0f,
+        tilling,
         new DWORD[bmp.bmWidth * bmp.bmHeight]
     }));
 

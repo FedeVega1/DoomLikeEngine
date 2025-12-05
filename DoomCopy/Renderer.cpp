@@ -78,19 +78,25 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         currentSpan.floorPoints[x] = yPoint.x;
         currentSpan.ceilPoints[x] = yPoint.y;
 
-        Vector2Int screenSize = Vector2Int(DEFAULT_BUFFER_WIDTH, DEFAULT_BUFFER_HEIGHT);
+        Vector2 screenSize = Vector2(static_cast<float>(DEFAULT_BUFFER_WIDTH), static_cast<float>(DEFAULT_BUFFER_HEIGHT));
 
         // Render floor with texture
         for (int y = floorStart; y < yPoint.x; y++) 
         {
-            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(Vector2Int(x, y), screenSize, wall.parentSector->bottomPoint);
+            Vector2 screenCoords = Vector2(static_cast<float>(x), static_cast<float>(y));
+            Vector2 normalizedScreenCoords = Vector2(screenCoords.x / screenSize.x, screenCoords.y / screenSize.y);
+
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->bottomPoint);
             DrawPixel(x, y, floorText.MapFloorCeilingTexturePoint(hitPoint));
         }
 
         // Render ceiling with texture
         for (int y = yPoint.y; y < ceillingEnd; y++) 
         {
-            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(Vector2Int(x, y), screenSize, wall.parentSector->topPoint);
+            Vector2 screenCoords = Vector2(static_cast<float>(x), static_cast<float>(y));
+            Vector2 normalizedScreenCoords = Vector2(screenCoords.x / screenSize.x, screenCoords.y / screenSize.y);
+
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->topPoint);
             DrawPixel(x, y, ceillingText.MapFloorCeilingTexturePoint(hitPoint));
         }
 
@@ -108,9 +114,9 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         }
         else
         {
-            CameraRayHit rayHit = camera->GetWorldPointFromRay(x, DEFAULT_BUFFER_WIDTH, wall);
+            Vector2 rayHit = camera->GetWorldPointFromRay(x, DEFAULT_BUFFER_WIDTH, wall);
             Vector2 dir = Vector2::Normalize(wall.referenceWall->rightPoint - wall.referenceWall->leftPoint);
-            Vector2 offset = rayHit.hitPoint - wall.referenceWall->leftPoint;
+            Vector2 offset = rayHit - wall.referenceWall->leftPoint;
 
             float dWall = offset.x * dir.x + offset.y * dir.y;
             float worldWallLength = Vector2::Distance(wall.referenceWall->leftPoint, wall.referenceWall->rightPoint);
@@ -239,9 +245,9 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         Color pixelColor = DarkenPixelColor(wall.btmColor, data.darkValue);
         outData.newFloorY = prevYPoint.x;
 
-        CameraRayHit rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
+        Vector2 rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
         Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
-        Vector2 offset = rayHit.hitPoint - portalWall->referenceWall->leftPoint;
+        Vector2 offset = rayHit - portalWall->referenceWall->leftPoint;
 
         float dWall = offset.x * dir.x + offset.y * dir.y;
         float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
@@ -271,9 +277,9 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         Color pixelColor = DarkenPixelColor(wall.topColor, data.darkValue);
         outData.newCeillingY = prevYPoint.y;
 
-        CameraRayHit rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
+        Vector2 rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
         Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
-        Vector2 offset = rayHit.hitPoint - portalWall->referenceWall->leftPoint;
+        Vector2 offset = rayHit - portalWall->referenceWall->leftPoint;
 
         float dWall = offset.x * dir.x + offset.y * dir.y;
         float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);

@@ -18,7 +18,7 @@ public:
 	void ToggleStepDraw(bool toggle) { debugStepDraw = toggle; }
 
 protected:
-	virtual void LoadTexture(const std::wstring& texName) override;
+	virtual void LoadTexture(const std::wstring& texName, const float& tilling = 1.0f) override;
 	virtual void GetTextureMap(const std::wstring& texName, BaseTexture& texture) override;
 
 private:

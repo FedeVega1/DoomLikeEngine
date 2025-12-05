@@ -28,7 +28,7 @@ protected:
 
 	std::map<std::wstring, BaseTexture> loadedTexturesMap;
 
-	virtual void LoadTexture(const std::wstring& texName) = 0;
+	virtual void LoadTexture(const std::wstring& texName, const float& tilling = 1.0f) = 0;
 	virtual void GetTextureMap(const std::wstring& texName, BaseTexture& texture) = 0;
 
 	Vector3 GetWallNormal(Vector3 pointA, Vector3 pointB);

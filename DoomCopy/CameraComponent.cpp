@@ -228,7 +228,7 @@ void Camera::DebugToggleBSPRendering()
 	OLOG_LF("BSP Rendering is: {0}", toggleBSPRendering);
 }
 
-CameraRayHit Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
+Vector2 Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
 {
 	float cameraX = 2.0f * screenX / (float) screenWidth - 1.0f;
 
@@ -241,30 +241,29 @@ CameraRayHit Camera::GetWorldPointFromRay(int screenX, int screenWidth, const Pr
 
 	float det = rayDir.y * segDir.x - rayDir.x * segDir.y;
 	
-	if (std::abs(det) < kEpsilon) return CameraRayHit{ wall.referenceWall->leftPoint, wall.parentSector->bottomPoint, wall.parentSector->topPoint };
+	if (std::abs(det) < kEpsilon) return wall.referenceWall->leftPoint;
 
 	Vector2 diff = camPos.XY() - wall.referenceWall->leftPoint;
-	float u = (diff.x * rayDir.y  - diff.y * rayDir.x) / det;
-	
-	u = std::clamp(u, 0.0f, 1.0f);
+	float u = std::clamp((diff.x * rayDir.y  - diff.y * rayDir.x) / det, 0.0f, 1.0f);
 
-	return CameraRayHit{ wall.referenceWall->leftPoint + (segDir * u), wall.parentSector->bottomPoint, wall.parentSector->topPoint };
+	return wall.referenceWall->leftPoint + (segDir * u);
 }
 
-Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& screenCoords, const Vector2& screenSize, const float& planeHeight)
+Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, const float& planeHeight)
 {
-	float cameraX = (2.0f * screenCoords.x / screenSize.x) - 1.0f;
-	float cameraY = 1.0f - (2.0f * screenCoords.y / screenSize.y);
+	Vector2 frustrum = Vector2((2.0f * normalizedScreenCoords.x) - 1.0f, 1.0f - (2.0f * normalizedScreenCoords.y));
 
 	Vector3 camDir = GetTransform()->GetForwardVector();
 	Vector3 camRight = -GetTransform()->GetLeftVector();
-	Vector3 camUp = Vector3::Cross(camRight, camDir);
-	Vector3 cameraPos = GetTransform()->GetPos();
+	Vector3 camUp = GetTransform()->GetUpVector();;
 
-	Vector3 rayDir = Vector3::Normalize(camDir + camRight * cameraX + camUp * cameraY);
+	Vector3 cameraPos = GetTransform()->GetPos();
+	cameraPos.z += cameraZOffset;
+
+	Vector3 rayDir = Vector3::Normalize(camDir + (camRight * frustrum.x) + (camUp * frustrum.y));
 	
 	float t = (planeHeight - cameraPos.z) / rayDir.z;
-	if (t <= 0) return Vector2(0, 0); // Behind camera
+	if (t < 0) return Vector2(0, 0);
 	
 	Vector3 hitPoint = cameraPos + rayDir * t;
 	return hitPoint.XY();

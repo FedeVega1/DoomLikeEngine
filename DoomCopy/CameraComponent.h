@@ -37,12 +37,6 @@ struct ProcessedWall
 	Vector2 FromScreenToWorldSpace(float interp) const;
 };
 
-struct CameraRayHit
-{
-	Vector2 hitPoint;
-	float hitBtmPoint, hitTopPoint;
-};
-
 class Camera : public BaseComponent
 {
 	friend class Game;
@@ -61,8 +55,8 @@ public:
 
 	 void GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const;
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
-	 CameraRayHit GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
-	 Vector2 GetFloorCeilingHitPoint(const Vector2& screenCoords, const Vector2& screenSize, const float& planeHeight);
+	 Vector2 GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
+	 Vector2 GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, const float& planeHeight);
 
 protected:
 	virtual void OnDestroy() override;
