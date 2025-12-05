@@ -56,11 +56,9 @@ struct InPortalRenderData
 {
 	Vector2Int yPoint;
 	int diff, dX, x;
-	BYTE darkValue;
 	struct Camera* const cameraRef;
 	struct BaseTexture* const textureRef;
 };
-
 
 struct OutPortalRenderData
 {
@@ -82,29 +80,22 @@ struct BaseTexture
 		if (!textureBuffer) return COLOR_WHITE;
 
 		float u = Wrap(dWall / width * tilling);
+		float step = static_cast<float>(height) / wallHeight;
 
-		float step = (float) height / wallHeight;
-		int texX = (int) std::floor(u * width);
-		int texY = ((int) std::floor(relativeY * step)) & (height - 1);
-
-		return Color(textureBuffer[texX + (texY * width)], false);
+		Vector2Int tex = Vector2Int((int) std::floor(u * width), ((int) std::floor(relativeY * step)) & (height - 1));
+		return Color(textureBuffer[tex.x + (tex.y * width)], false);
 	}
 
 	Color MapFloorCeilingTexturePoint(const Vector2& worldPos) const
 	{
 		if (!textureBuffer) return COLOR_WHITE;
 
-		float u = Wrap(worldPos.x / width * tilling);
-		float v = Wrap(worldPos.y / height * tilling);
+		float u = Wrap(-worldPos.x / width * tilling);
+		float v = Wrap(-worldPos.y / height * tilling);
 		
-		int texX = (int) std::floor(u * width);
-		int texY = (int) std::floor(v * height);
-
-		return Color(textureBuffer[texX + (texY * width)], false);
+		Vector2Int tex = Vector2Int(static_cast<int>(std::floor(u * width)), static_cast<int>(std::floor(v * height)));
+		return Color(textureBuffer[tex.x + (tex.y * width)], false);
 	}
-
-	int GetXPoint(const float& dx) const { return static_cast<int>(std::floor(dx * width)); }
-	int GetYPoint(const float& dy) const { return static_cast<int>(std::floor(dy * height)); }
 
 	float Wrap(float value) const { return value - std::floor(value); }
 };

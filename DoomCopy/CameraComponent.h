@@ -57,6 +57,7 @@ public:
 	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
 	 Vector2 GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
 	 Vector2 GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, const float& planeHeight);
+	 float GetDistanceToPoint(const Vector2& worldPoint);
 
 protected:
 	virtual void OnDestroy() override;

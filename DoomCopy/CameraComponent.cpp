@@ -261,12 +261,19 @@ Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, c
 	cameraPos.z += cameraZOffset;
 
 	Vector3 rayDir = Vector3::Normalize(camDir + (camRight * frustrum.x) + (camUp * frustrum.y));
+	if (std::abs(rayDir.z) < kEpsilon) return Vector2(0, 0);
 	
 	float t = (planeHeight - cameraPos.z) / rayDir.z;
-	if (t < 0) return Vector2(0, 0);
+	if (t < 0 || t > 10000.0f) return Vector2(0, 0);
 	
 	Vector3 hitPoint = cameraPos + rayDir * t;
 	return hitPoint.XY();
+}
+
+float Camera::GetDistanceToPoint(const Vector2& worldPoint)
+{
+	Vector3 cameraPos = GetTransform()->GetPos();
+	return Vector2::Distance(cameraPos.XY(), worldPoint);
 }
 
 Vector2 ProcessedWall::FromScreenToWorldSpace(float interp) const

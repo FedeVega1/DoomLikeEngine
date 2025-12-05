@@ -12,7 +12,7 @@ public:
 	virtual void PaintScreen(Color color) = 0;
 	virtual void ProcessGame(Game* const game);
 
-	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans(), darkStep(200), minDarkValue(5) { }
+	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans(), brightnessDistanceFalloff(450.0f) { }
 
 protected:
 	HWND hwnd;
@@ -21,7 +21,7 @@ protected:
 	DWORD* drawBuffer;
 	bool debugStepDraw;
 
-	BYTE darkStep, minDarkValue;
+	float brightnessDistanceFalloff;
 
 	std::vector<struct ProcessedWall> walls;
 	std::vector<struct ScreenSpan> spans;
@@ -37,5 +37,5 @@ protected:
 	bool IsWallOccluded(Vector2Int wallSegment, SpanResult& result);
 	ProcessedWall* GetProcessedWallPortalByID(unsigned long long wallID);
 	void RenderPortalWall(const ProcessedWall& portal, const InPortalRenderData& data, OutPortalRenderData& outData);
-	Color DarkenPixelColor(const Color& color, const BYTE& value) const;
+	Color DarkenPixelColor(const Color& color, const float& value) const;
 };
