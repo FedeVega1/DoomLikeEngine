@@ -41,4 +41,20 @@
 # Executables
 *.exe
 *.out
-*.app
+
+# Valid VS Code folder
+.vscode/
+
+# Visual Studio / MSBuild
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+
+# CMake
+/build/
+/out/
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
