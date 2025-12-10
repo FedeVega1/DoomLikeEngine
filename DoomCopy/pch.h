@@ -14,21 +14,20 @@
 #include <array>
 #include <functional>
 
-typedef struct _sinCosTable
+ struct SinCosTable
 {
 	double cos[360];
 	double sin[360];
 
-	_sinCosTable()
+	SinCosTable()
 	{
 		for (int i = 0; i < 360; i++)
 		{
-			cos[i] = std::cos(i / 180.0 * std::numbers::pi);
-			sin[i] = std::sin(i / 180.0 * std::numbers::pi);
+			cos[i] = std::cos(static_cast<double>(i) / 180.0 * std::numbers::pi);
+			sin[i] = std::sin(static_cast<double>(i) / 180.0 * std::numbers::pi);
 		}
 	}
-
-} SinCosTable;
+};
 
 struct Color
 {
@@ -38,7 +37,7 @@ struct Color
 	Color() : r(0), g(0), b(0), isLittleEndian(false)
 	{ }
 
-	Color(BYTE r, BYTE g, BYTE b)
+	Color(const BYTE& r, const BYTE& g, const BYTE& b)
 	{
 		this->r = r;
 		this->g = g;
@@ -46,7 +45,7 @@ struct Color
 		isLittleEndian = false;
 	}
 
-	Color(DWORD rgb, bool littleEndian)
+	Color(const DWORD& rgb, const bool& littleEndian)
 	{
 		isLittleEndian = littleEndian;
 
@@ -66,10 +65,10 @@ struct Color
 	bool operator==(Color other) const { return other.r == r && other.g == g && other.b == b && other.isLittleEndian == isLittleEndian; }
 	bool operator==(DWORD other) const { return other == ToDWORD(isLittleEndian); }
 
-	DWORD ToDWORD(bool littleEndian) const
+	DWORD ToDWORD(const bool& littleEndian) const
 	{
-		if (littleEndian) return (((DWORD) r) << 16) | (((DWORD) g) << 8) | ((DWORD) b);
-		return (((DWORD) b) << 16) | (((DWORD) g) << 8) | ((DWORD) r);
+		if (littleEndian) return ((static_cast<DWORD>(r)) << 16) | ((static_cast<DWORD>(g)) << 8) | (static_cast<DWORD>(b));
+		return ((static_cast<DWORD>(b)) << 16) | ((static_cast<DWORD>(g)) << 8) | (static_cast<DWORD>(r));
 	}
 
 	std::string ToString() const { return "(R = " + std::to_string(r) + ", G = " + std::to_string(g) + ", B = " + std::to_string(b) + ")"; }

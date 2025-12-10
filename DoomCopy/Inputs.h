@@ -147,7 +147,7 @@ private:
 	Vector2 mouseMov;
 
 	void ProcessInputs();
-	void GetKeyPress(KeyCode key);
-	void GetKeyRelease(KeyCode key);
-	void InitCallbackMapForKey(KeyCode key);
+	void GetKeyPress(const KeyCode& key);
+	void GetKeyRelease(const KeyCode& key);
+	void InitCallbackMapForKey(const KeyCode& key);
 };

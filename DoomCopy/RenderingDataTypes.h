@@ -31,7 +31,7 @@ struct ScreenSpan
 
 	ScreenSpan() : spanSegment(), isConnection(false), ceilPoints(), floorPoints() {}
 
-	ScreenSpan(Vector2Int segment, bool isConn)
+	ScreenSpan(const Vector2Int& segment, const bool& isConn)
 	{
 		spanSegment = segment;
 		isConnection = isConn;
@@ -97,5 +97,5 @@ struct BaseTexture
 		return Color(textureBuffer[tex.x + (tex.y * width)], false);
 	}
 
-	float Wrap(float value) const { return value - std::floor(value); }
+	float Wrap(const float& value) const { return value - std::floor(value); }
 };

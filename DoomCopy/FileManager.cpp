@@ -29,11 +29,11 @@ void FileManager::GetMapData(const std::string& mapFileName, MapData& outMapData
 		mapFile.open(mapFileName, std::ios_base::in | std::ios_base::binary);
 		OLOG_LF("Reading Map: {0}", mapFileName);
 
-		mapFile.read((char*) intBuffer, intSize);
+		mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 		bool isLittleEndian = intBuffer[0] == 0x1;
 
-		unsigned char versionSize;
-		mapFile.read((char*) &versionSize, 1);
+		unsigned char versionSize = 0;
+		mapFile.read(reinterpret_cast<char*>(&versionSize), 1);
 
 		if (versionSize != BSPVersionSize)
 		{
@@ -42,7 +42,7 @@ void FileManager::GetMapData(const std::string& mapFileName, MapData& outMapData
 		}
 
 		unsigned char* versionArray = new unsigned char[versionSize];
-		mapFile.read((char*) versionArray, versionSize);
+		mapFile.read(reinterpret_cast<char*>(versionArray), versionSize);
 
 		for (int i = 0; i < versionSize; i++)
 		{
@@ -54,7 +54,7 @@ void FileManager::GetMapData(const std::string& mapFileName, MapData& outMapData
 		delete[] versionArray;
 		OLOG_L("BSP version Correct!");
 
-		mapFile.read((char*) intBuffer, intSize);
+		mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 		outMapData.numberOfSectors = ByteArrayToInt(intBuffer, isLittleEndian);
 		OLOG_LF("Number of Sectors: {0}", outMapData.numberOfSectors);
 
@@ -63,36 +63,36 @@ void FileManager::GetMapData(const std::string& mapFileName, MapData& outMapData
 		{
 			Sector& sector = outMapData.sectorData[i] = Sector();
 
-			mapFile.read((char*) intBuffer, intSize);
+			mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 			sector.sectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
 			OLOG_LF("Loading Sector: {0}", sector.sectorID);
 
-			mapFile.read((char*) intBuffer, intSize);
+			mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 			sector.topPoint = static_cast<float>(ByteArrayToInt(intBuffer, isLittleEndian));
 
-			mapFile.read((char*) intBuffer, intSize);
+			mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 			sector.bottomPoint = static_cast<float>(ByteArrayToInt(intBuffer, isLittleEndian));
 
-			mapFile.read((char*) colorBuffer, colorSize);
+			mapFile.read(reinterpret_cast<char*>(colorBuffer), colorSize);
 			sector.floorColor = ByteArrayToColor(colorBuffer);
 
-			mapFile.read((char*) colorBuffer, colorSize);
+			mapFile.read(reinterpret_cast<char*>(colorBuffer), colorSize);
 			sector.ceillingColor = ByteArrayToColor(colorBuffer);
 
 			OLOG_LF("Loaded Sector: {0} Correct", sector.sectorID);
 		}
 
 		OLOG_L("Loaded all Sectors Correct!");
-		mapFile.read((char*) intBuffer, intSize);
+		mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 
-		mapFile.read((char*) intBuffer, intSize);
+		mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 		outMapData.numberOfSubSectors = ByteArrayToInt(intBuffer, isLittleEndian);
 
 		OLOG_LF("Reading SubSector Data, number of sub sectors: {0}", outMapData.numberOfSubSectors);
 		ReadSubSectorData(&mapFile, isLittleEndian, outMapData);
 
-		mapFile.read((char*) intBuffer, intSize);
+		mapFile.read(reinterpret_cast<char*>(intBuffer), intSize);
 		outMapData.numberOfBSPNodes = ByteArrayToInt(intBuffer, isLittleEndian);
 
 		OLOG_LF("Reading BSP Data, number of nodes: {0}", outMapData.numberOfBSPNodes);
@@ -113,45 +113,45 @@ void FileManager::GetMapData(const std::string& mapFileName, MapData& outMapData
 	}
 }
 
-void FileManager::ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData)
+void FileManager::ReadBSPNode(std::ifstream* const stream, const bool& isLittleEndian, MapData& mapData)
 {
-	unsigned char singleByte;
+	unsigned char singleByte = 0;
 	BSPNode** nodeArray = new BSPNode*[mapData.numberOfBSPNodes];
 
 	for (int i = 0; i < mapData.numberOfBSPNodes; i++)
 	{
 		BSPNode& node = *(nodeArray[i] = new BSPNode());
 
-		stream->read((char*) &singleByte, 1);
+		stream->read(reinterpret_cast<char*>(&singleByte), 1);
 		node.childFlag = singleByte;
 
-		stream->read((char*) intBuffer, intSize);
+		stream->read(reinterpret_cast<char*>(intBuffer), intSize);
 		node.nodeID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
 		Splitter splitter;
 
-		stream->read((char*) pointBuffer, pointSize);
+		stream->read(reinterpret_cast<char*>(pointBuffer), pointSize);
 		splitter.startPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-		stream->read((char*) pointBuffer, pointSize);
+		stream->read(reinterpret_cast<char*>(pointBuffer), pointSize);
 		splitter.segment = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-		stream->read((char*) pointFBuffer, pointFSize);
+		stream->read(reinterpret_cast<char*>(pointFBuffer), pointFSize);
 		splitter.dir = ByteArrayToVector2(pointFBuffer, isLittleEndian);
 
 		node.splitter = splitter;
 
-		stream->read((char*) intBuffer, intSize);
+		stream->read(reinterpret_cast<char*>(intBuffer), intSize);
 		node.parentID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
-		stream->read((char*) intBuffer, intSize);
+		stream->read(reinterpret_cast<char*>(intBuffer), intSize);
 		node.subSectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
 		BoundingBox bBox;
-		stream->read((char*) pointBuffer, pointSize);
+		stream->read(reinterpret_cast<char*>(pointBuffer), pointSize);
 		bBox.topPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-		stream->read((char*) pointBuffer, pointSize);
+		stream->read(reinterpret_cast<char*>(pointBuffer), pointSize);
 		bBox.bottomPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
 		OLOG_LF("Loaded Node {0} with parentID {1} and childFlag {2}", node.nodeID, node.parentID, node.childFlag);
@@ -214,41 +214,41 @@ SubSector* FileManager::GetSubSector(const unsigned int& subSectorID, const MapD
 	return nullptr;
 }
 
-void FileManager::GetWallFromFile(std::ifstream* stream, const bool& isLittleEndian, Wall& wall, const MapData& mapData) const
+void FileManager::GetWallFromFile(std::ifstream* const stream, const bool& isLittleEndian, Wall& wall, const MapData& mapData) const
 {
 	wall = Wall();
 
-	stream->read((char*) pointBuffer, pointSize);
+	stream->read(Cast_Data(pointBuffer), pointSize);
 	wall.leftPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-	stream->read((char*) pointBuffer, pointSize);
+	stream->read(Cast_Data(pointBuffer), pointSize);
 	wall.rightPoint = ByteArrayToVector2Int(pointBuffer, isLittleEndian);
 
-	stream->read((char*) colorBuffer, colorSize);
+	stream->read(Cast_Data(colorBuffer), colorSize);
 	wall.topColor = ByteArrayToColor(colorBuffer);
 
-	stream->read((char*) colorBuffer, colorSize);
+	stream->read(Cast_Data(colorBuffer), colorSize);
 	wall.inColor = ByteArrayToColor(colorBuffer);
 
-	stream->read((char*) colorBuffer, colorSize);
+	stream->read(Cast_Data(colorBuffer), colorSize);
 	wall.btmColor = ByteArrayToColor(colorBuffer);
 
-	unsigned char portalFlags;
-	stream->read((char*) &portalFlags, 1);
+	unsigned char portalFlags = 0;
+	stream->read(Cast_Data(&portalFlags), 1);
 
 	wall.isPortal = (portalFlags & 0b1) == 0b1;
 	wall.isConnection = (portalFlags & 0b10) == 0b10;
 
-	stream->read((char*) intBuffer, intSize);
+	stream->read(Cast_Data(intBuffer), intSize);
 	unsigned int portalSectorID = ByteArrayToInt(intBuffer, isLittleEndian);
 
-	stream->read((char*)idBuffer, idSize);
+	stream->read(Cast_Data(idBuffer), idSize);
 	wall.portalWallTargetID = ByteArrayToULL(idBuffer, isLittleEndian);
 
-	stream->read((char*) idBuffer, idSize);
+	stream->read(Cast_Data(idBuffer), idSize);
 	wall.wallID = ByteArrayToULL(idBuffer, isLittleEndian);
 
-	stream->read((char*) intBuffer, intSize);
+	stream->read(Cast_Data(intBuffer), intSize);
 	unsigned int sectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
 	for (int i = 0; i < mapData.numberOfSectors; i++)
@@ -268,7 +268,7 @@ void FileManager::GetWallFromFile(std::ifstream* stream, const bool& isLittleEnd
 	throw std::system_error(1, std::generic_category());
 }
 
-void FileManager::ReadSubSectorData(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData)
+void FileManager::ReadSubSectorData(std::ifstream* const stream, const bool& isLittleEndian, MapData& mapData)
 {
 	mapData.subSectorData = new SubSector[mapData.numberOfSubSectors];
 
@@ -276,10 +276,10 @@ void FileManager::ReadSubSectorData(std::ifstream* stream, const bool& isLittleE
 	{ 
 		SubSector newSector;
 
-		stream->read((char*) intBuffer, intSize);
+		stream->read(Cast_Data(intBuffer), intSize);
 		newSector.subSectorID = ByteArrayToUInt(intBuffer, isLittleEndian);
 
-		stream->read((char*) intBuffer, intSize);
+		stream->read(Cast_Data(intBuffer), intSize);
 		int numberOfWalls = ByteArrayToInt(intBuffer, isLittleEndian);
 
 		for (int w = 0; w < numberOfWalls; w++)
@@ -313,18 +313,18 @@ unsigned int FileManager::ByteArrayToUInt(const unsigned char* const byteArray, 
 	return (static_cast<unsigned int>(byteArray[0]) << 24) | (static_cast<unsigned int>(byteArray[1]) << 16) | (static_cast<unsigned int>(byteArray[2]) << 8) | static_cast<unsigned int>(byteArray[3]);
 }
 
-unsigned long long FileManager::ByteArrayToULL(const unsigned char* byteArray, const bool& isLittleEndian) const
+unsigned long long FileManager::ByteArrayToULL(const unsigned char* const byteArray, const bool& isLittleEndian) const
 {
 	if (isLittleEndian)
 	{
 		int high = (static_cast<int>(byteArray[7]) << 24) | (static_cast<int>(byteArray[6]) << 16) | (static_cast<int>(byteArray[5]) << 8) | static_cast<int>(byteArray[4]);
 		int low = (static_cast<int>(byteArray[3]) << 24) | (static_cast<int>(byteArray[2]) << 16) | (static_cast<int>(byteArray[1]) << 8) | static_cast<int>(byteArray[0]);
-		return ((unsigned long long) high) | ((unsigned long long) low);
+		return (static_cast<unsigned long long>(high)) | (static_cast<unsigned long long>(low));
 	}
 
 	int high = (static_cast<int>(byteArray[0]) << 24) | (static_cast<int>(byteArray[1]) << 16) | (static_cast<int>(byteArray[2]) << 8) | static_cast<int>(byteArray[3]);
 	int low = (static_cast<int>(byteArray[4]) << 24) | (static_cast<int>(byteArray[5]) << 16) | (static_cast<int>(byteArray[6]) << 8) | static_cast<int>(byteArray[7]);
-	return ((unsigned long long) high) | ((unsigned long long) low);
+	return (static_cast<unsigned long long>(high)) | (static_cast<unsigned long long>(low));
 }
 
 Vector2Int FileManager::ByteArrayToVector2Int(const unsigned char* const byteArray, const bool& isLittleEndian) const

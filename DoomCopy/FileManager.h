@@ -8,6 +8,8 @@ struct MapData
 	class BSPNode* rootNode;
 };
 
+#define Cast_Data(X) reinterpret_cast<char*>(const_cast<unsigned char*>(X))
+
 class FileManager
 {
 public:
@@ -28,13 +30,13 @@ private:
 	unsigned int ByteArrayToUInt(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 	Vector2Int ByteArrayToVector2Int(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 	Color ByteArrayToColor(const unsigned char* const byteArray) const;
-	unsigned long long ByteArrayToULL(const unsigned char* byteArray, const bool& isLittleEndian) const;
+	unsigned long long ByteArrayToULL(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 	Vector2 ByteArrayToVector2(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 	float ByteArrayToFloat(const unsigned char* const byteArray, const bool& isLittleEndian) const;
 
-	void ReadBSPNode(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData);
-	void GetWallFromFile(std::ifstream* stream, const bool& isLittleEndian, Wall& wall, const MapData& mapData) const;
-	void ReadSubSectorData(std::ifstream* stream, const bool& isLittleEndian, MapData& mapData);
+	void ReadBSPNode(std::ifstream* const stream, const bool& isLittleEndian, MapData& mapData);
+	void GetWallFromFile(std::ifstream* const stream, const bool& isLittleEndian, Wall& wall, const MapData& mapData) const;
+	void ReadSubSectorData(std::ifstream* const stream, const bool& isLittleEndian, MapData& mapData);
 	SubSector* GetSubSector(const unsigned int& subSectorID, const MapData& mapData) const;
 };
 

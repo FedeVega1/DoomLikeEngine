@@ -40,7 +40,7 @@ struct Wall
 	}
 
 	Vector2 GetAvrgMiddlePoint() const { return Vector2((leftPoint.x + rightPoint.x) / 2.0f, (leftPoint.y + rightPoint.y) / 2.0f); }
-	bool VectorInFrontWall(Vector2 vector) const;
+	bool VectorInFrontWall(const Vector2& vector) const;
 };
 
 struct Sector
@@ -66,9 +66,9 @@ struct Sector
 	}
 
 	bool HasPortals() const;
-	float GetAvrgDistanceToPoint(Vector2 point) const;
+	float GetAvrgDistanceToPoint(const Vector2& point) const;
 	void GetMaxPoints(Vector2& min, Vector2& max) const;
-	bool PointIsInsideSector(Vector2 point) const;
+	bool PointIsInsideSector(const Vector2& point) const;
 	Vector2 CalculateSectorCentroid() const;
 };
 
@@ -90,7 +90,7 @@ struct Splitter
 	{
 	}
 
-	bool VectorInFront(Vector2 vector) const;
+	bool VectorInFront(const Vector2& vector) const;
 };
 
 struct SubSector

@@ -37,7 +37,7 @@ void Input::ProcessInputs()
 	lastMousePosition = mousePosition;
 }
 
-void Input::GetKeyPress(KeyCode key)
+void Input::GetKeyPress(const KeyCode& key)
 {
 	if (currentKeys.contains(key)) return;
 	currentKeys[key] = true;
@@ -48,7 +48,7 @@ void Input::GetKeyPress(KeyCode key)
 	for (size_t i = 0; i < vecSize; i++) (vec[i].component->*vec[i].callback)();
 }
 
-void Input::GetKeyRelease(KeyCode key)
+void Input::GetKeyRelease(const KeyCode& key)
 {
 	if (!currentKeys.contains(key)) return;
 	currentKeys.erase(key);
@@ -59,7 +59,7 @@ void Input::GetKeyRelease(KeyCode key)
 	for (size_t i = 0; i < vecSize; i++) (vec[i].component->*vec[i].callback)();
 }
 
-void Input::InitCallbackMapForKey(KeyCode key)
+void Input::InitCallbackMapForKey(const KeyCode& key)
 {
 	keyCallbacks[key][0] = std::vector<InputCallbackContainer>();
 	keyCallbacks[key][1] = std::vector<InputCallbackContainer>();

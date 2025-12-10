@@ -48,7 +48,7 @@ void Camera::AfterTick()
 	if (processedWalls.size() == 0) OLOG_E("Can't find the camera anywhere inside the level!");
 }
 
-void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* startNode, const double& cos, const double& sin)
+void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* const startNode, const double& cos, const double& sin)
 {
 	if (!startNode) return;
 
@@ -144,7 +144,7 @@ void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& s
 	}
 }
 
-void Camera::RenderWall(ProcessedWall& wall, Vector3 pos, const double& cos, const double& sin)
+void Camera::RenderWall(ProcessedWall& wall, const Vector3& pos, const double& cos, const double& sin)
 {
 	wall.leftBtmPoint.AddXY(-pos.x, -pos.y);
 	wall.rightBtmPoint.AddXY(-pos.x, -pos.y);
@@ -228,9 +228,9 @@ void Camera::DebugToggleBSPRendering()
 	OLOG_LF("BSP Rendering is: {0}", toggleBSPRendering);
 }
 
-Vector2 Camera::GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall)
+Vector2 Camera::GetWorldPointFromRay(const int& screenX, const int& screenWidth, const ProcessedWall& wall)
 {
-	float cameraX = 2.0f * screenX / (float) screenWidth - 1.0f;
+	float cameraX = 2.0f * screenX / static_cast<float>(screenWidth) - 1.0f;
 
 	Vector3 camDir = GetTransform()->GetForwardVector();
 	Vector3 camRight = -GetTransform()->GetLeftVector();
@@ -274,9 +274,4 @@ float Camera::GetDistanceToPoint(const Vector2& worldPoint)
 {
 	Vector3 cameraPos = GetTransform()->GetPos();
 	return Vector2::Distance(cameraPos.XY(), worldPoint);
-}
-
-Vector2 ProcessedWall::FromScreenToWorldSpace(float interp) const
-{
-	return referenceWall->leftPoint + ((referenceWall->rightPoint - referenceWall->leftPoint) * interp);
 }

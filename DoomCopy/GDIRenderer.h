@@ -8,9 +8,9 @@ class GDIRenderer : public Renderer
 {
 public:
 	virtual void RenderScreen() override;
-	virtual HRESULT InitRenderer(HWND hwnd) override;
-	virtual void DrawPixel(int x, int y, Color color) override;
-	virtual void PaintScreen(Color color) override;
+	virtual HRESULT InitRenderer(const HWND const hwnd) override;
+	virtual void DrawPixel(int x, int y, const Color& color) override;
+	virtual void PaintScreen(const Color& color) override;
 
 	GDIRenderer();
 	~GDIRenderer();

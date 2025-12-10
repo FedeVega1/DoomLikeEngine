@@ -85,7 +85,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->bottomPoint);
             
             float distance = camera->GetDistanceToPoint(hitPoint) / brightnessDistanceFalloff;
-            DrawPixel(x, y, DarkenPixelColor(ceillingText.MapFloorCeilingTexturePoint(hitPoint), distance));
+            DrawPixel(x, y, DarkenPixelColor(floorText.MapFloorCeilingTexturePoint(hitPoint), distance));
         }
 
         // Render ceiling with texture
@@ -149,19 +149,12 @@ ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
     float fov = HALF_WIDTH;
     return ScreenSpaceWall
     {
-        Vector2Int((int) std::roundf(((wall.leftTopPoint.x * fov) / wall.leftTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftTopPoint.z * fov) / wall.leftTopPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.rightTopPoint.x * fov) / wall.rightTopPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightTopPoint.z * fov) / wall.rightTopPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.leftBtmPoint.x * fov) / wall.leftBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.leftBtmPoint.z * fov) / wall.leftBtmPoint.y) + HALF_HEIGHT)),
-        Vector2Int((int) std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH), (int) std::roundf(((wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT)),
+        Vector2Int(static_cast<int>(std::roundf(((wall.leftTopPoint.x * fov) / wall.leftTopPoint.y) + HALF_WIDTH)), static_cast<int>(std::roundf(((wall.leftTopPoint.z * fov) / wall.leftTopPoint.y) + HALF_HEIGHT))),
+        Vector2Int(static_cast<int>(std::roundf(((wall.rightTopPoint.x * fov) / wall.rightTopPoint.y) + HALF_WIDTH)),static_cast<int>(std::roundf(((wall.rightTopPoint.z * fov) / wall.rightTopPoint.y) + HALF_HEIGHT))),
+        Vector2Int(static_cast<int>(std::roundf(((wall.leftBtmPoint.x * fov) / wall.leftBtmPoint.y) + HALF_WIDTH)), static_cast<int>(std::roundf(((wall.leftBtmPoint.z * fov) / wall.leftBtmPoint.y) + HALF_HEIGHT))),
+        Vector2Int(static_cast<int>(std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH)), static_cast<int>(std::roundf(((wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT))),
         wall.topColor, wall.inColor, wall.btmColor,
     };
-}
-
-Vector3 Renderer::GetWallNormal(Vector3 pointA, Vector3 pointB) 
-{
-    Vector3 dir1 = Vector3::Normalize(pointB - pointA);
-    Vector3 dir2 = Vector3::Normalize(pointA - pointB);
-    return Vector3::Cross(dir1, dir2);
 }
 
 bool Renderer::IsWallOccluded(Vector2Int wallSegment, SpanResult& result)
@@ -202,7 +195,7 @@ bool ScreenSpan::ClampToSpan(Vector2Int& outOtherSegment) const
     return clamped;
 }
 
-ProcessedWall* Renderer::GetProcessedWallPortalByID(unsigned long long wallID)
+ProcessedWall* Renderer::GetProcessedWallPortalByID(const unsigned long long& wallID)
 {
     for (size_t i = 0; i < walls.size(); i++)
     {
@@ -219,30 +212,30 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
     ProcessedWall* portalWall = GetProcessedWallPortalByID(wall.portalTargetWall->wallID);
     if (!portalWall) return;
 
+    ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
+    int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
+    int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
+
+    Vector2Int prevYPoint = Vector2Int(((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y, ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y);
+    Vector2Int originalPrevYPoint = prevYPoint;
+
+    prevYPoint.x = std::clamp(prevYPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
+    prevYPoint.y = std::clamp(prevYPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
+
+    Vector2 rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
+    Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
+    Vector2 offset = rayHit - portalWall->referenceWall->leftPoint;
+
+    float dWall = offset.x * dir.x + offset.y * dir.y;
+    float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
+
     if (wall.parentSector->bottomPoint < portalWall->parentSector->bottomPoint)
     {
-        ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
-        int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
-        int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
-
-        Vector2Int prevYPoint = Vector2Int(((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y, ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y);
-        Vector2Int originalPrevYPoint = prevYPoint;
-        
-        prevYPoint.x = std::clamp(prevYPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
-        prevYPoint.y = std::clamp(prevYPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
         outData.newFloorY = prevYPoint.x;
-
-        Vector2 rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
-        Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
-        Vector2 offset = rayHit - portalWall->referenceWall->leftPoint;
-
-        float dWall = offset.x * dir.x + offset.y * dir.y;
-        float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
-
         for (int y = data.yPoint.x; y < prevYPoint.x; y++)
         {
             int relativeY = originalPrevYPoint.y - y - 1;
-            float wallHeight = (float) (originalPrevYPoint.y - originalPrevYPoint.x);
+            float wallHeight = static_cast<float>(originalPrevYPoint.y - originalPrevYPoint.x);
 
             float distance = data.cameraRef->GetDistanceToPoint(rayHit) / brightnessDistanceFalloff;
             DrawPixel(data.x, y, DarkenPixelColor(data.textureRef->MapWallTexturePoint(dWall, relativeY, wallHeight, worldWallLength), distance));
@@ -253,28 +246,11 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
 
     if (wall.parentSector->topPoint > portalWall->parentSector->topPoint)
     {
-        ScreenSpaceWall sWall = GetScreenSpaceWall(*portalWall);
-        int prevDYBtm = sWall.leftBtmPoint.y - sWall.rightBtmPoint.y;
-        int prevDYTop = sWall.leftTopPoint.y - sWall.rightTopPoint.y;
-
-        Vector2Int prevYPoint = Vector2Int(((prevDYBtm * data.diff) / data.dX) + sWall.rightBtmPoint.y, ((prevDYTop * data.diff) / data.dX) + sWall.rightTopPoint.y);
-        Vector2Int originalPrevYPoint = prevYPoint;
-
-        prevYPoint.x = std::clamp(prevYPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
-        prevYPoint.y = std::clamp(prevYPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
         outData.newCeillingY = prevYPoint.y;
-
-        Vector2 rayHit = data.cameraRef->GetWorldPointFromRay(data.x, DEFAULT_BUFFER_WIDTH, *portalWall);
-        Vector2 dir = Vector2::Normalize(portalWall->referenceWall->rightPoint - portalWall->referenceWall->leftPoint);
-        Vector2 offset = rayHit - portalWall->referenceWall->leftPoint;
-
-        float dWall = offset.x * dir.x + offset.y * dir.y;
-        float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
-
         for (int y = prevYPoint.y; y < data.yPoint.y; y++)
         {
             int relativeY = originalPrevYPoint.y - y - 1;
-            float wallHeight = (float) (originalPrevYPoint.y - originalPrevYPoint.x);
+            float wallHeight = static_cast<float>(originalPrevYPoint.y - originalPrevYPoint.x);
 
             float distance = data.cameraRef->GetDistanceToPoint(rayHit) / brightnessDistanceFalloff;
             DrawPixel(data.x, y, DarkenPixelColor(data.textureRef->MapWallTexturePoint(dWall, relativeY, wallHeight, worldWallLength), distance));

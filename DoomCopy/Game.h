@@ -58,7 +58,7 @@ private:
 
 	std::string mapToOpen = "asd.bsp";
 
-	struct Sector* GetSector(int sectorIndx) const;
-	Vector2 GetSectorCenter(int sectorIndx) const;
-	float GetSectorFloorHeight(int sectorIndx) const;
+	struct Sector* GetSector(const int& sectorIndx) const;
+	Vector2 GetSectorCenter(const int& sectorIndx) const;
+	float GetSectorFloorHeight(const int& sectorIndx) const;
 };

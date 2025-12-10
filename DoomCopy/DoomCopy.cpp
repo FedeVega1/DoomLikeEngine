@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "DoomCopy.h"
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 #ifdef GDI_RENDER
     renderer = GDIRenderer();
@@ -20,7 +20,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     return MainLoop();
 }
 
-BOOL SetupAndCreateWindow(HINSTANCE hInstance, int nCmdShow)
+BOOL SetupAndCreateWindow(const HINSTANCE hInstance, const int& nCmdShow)
 {
     WNDCLASSEX wcex = {
         sizeof(WNDCLASSEX),
@@ -77,10 +77,10 @@ int MainLoop()
         renderer.RenderScreen();
     }
 
-    return (int) msg.wParam;
+    return static_cast<int>(msg.wParam);
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(const HWND const hWnd, const UINT message, const WPARAM const wParam, const LPARAM const lParam)
 {
     if (!messageMap.contains(message)) return DefWindowProc(hWnd, message, wParam, lParam);
     if (message == WM_COMMAND)
@@ -173,7 +173,7 @@ void SetupWindowMessages()
 
 void GetClipRect()
 {
-    POINT upperLeft, lowerRight;
+    POINT upperLeft = POINT(), lowerRight = POINT();
 
     GetClientRect(mainHWND, &newCursorClip);
     upperLeft.x = newCursorClip.left;

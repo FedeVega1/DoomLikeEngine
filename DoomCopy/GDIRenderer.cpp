@@ -7,7 +7,7 @@
 #include "Renderer.h"
 #include "GDIRenderer.h"
 
-HRESULT GDIRenderer::InitRenderer(HWND _hwnd)
+HRESULT GDIRenderer::InitRenderer(const HWND const _hwnd)
 {
     screenBuffer = new DWORD[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
     drawBuffer = new DWORD[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
@@ -60,7 +60,7 @@ void GDIRenderer::RenderScreen()
     ReleaseDC(hwnd, hdc);
 }
 
-void GDIRenderer::PaintScreen(Color color)
+void GDIRenderer::PaintScreen(const Color& color)
 {
     for (int y = 0; y < DEFAULT_BUFFER_HEIGHT; y++)
     {
@@ -69,7 +69,7 @@ void GDIRenderer::PaintScreen(Color color)
     }
 }
 
-void GDIRenderer::DrawPixel(int x, int y, Color color)
+void GDIRenderer::DrawPixel(int x, int y, const Color& color)
 {
     x = std::clamp(x, 0, DEFAULT_BUFFER_WIDTH - 1);
     y = std::clamp(y, 0, DEFAULT_BUFFER_HEIGHT - 1);

@@ -112,7 +112,7 @@ bool Sector::HasPortals() const
 	return false;
 }
 
-float Sector::GetAvrgDistanceToPoint(Vector2 point) const
+float Sector::GetAvrgDistanceToPoint(const Vector2& point) const
 {
 	float avrgDistance = 0;
 	for (int i = 0; i < sectorWalls.size(); i++)
@@ -142,7 +142,7 @@ void Sector::GetMaxPoints(Vector2& min, Vector2& max) const
 	}
 }
 
-bool Sector::PointIsInsideSector(Vector2 point) const
+bool Sector::PointIsInsideSector(const Vector2& point) const
 {
 	Vector2 min, max;
 	GetMaxPoints(min, max);
@@ -166,15 +166,15 @@ Vector2 Sector::CalculateSectorCentroid() const
 	return centroid;
 }
 
-bool Wall::VectorInFrontWall(Vector2 vector) const
+bool Wall::VectorInFrontWall(const Vector2& vector) const
 {
 	Vector2 wallVector = rightPoint - leftPoint;
 	return vector.x * wallVector.y < wallVector.x * vector.y;
 }
 
-bool Splitter::VectorInFront(Vector2 vector) const { return vector.x * segment.y < segment.x * vector.y; }
+bool Splitter::VectorInFront(const Vector2& vector) const { return vector.x * segment.y < segment.x * vector.y; }
 
-bool World::FindWallByIDSector(unsigned long long id, int& wallIndx, int& sectorIndx) const
+bool World::FindWallByIDSector(const unsigned long long& id, int& wallIndx, int& sectorIndx) const
 {
 	for (int s = 0; s < numberOfSectors; s++)
 	{
@@ -192,7 +192,7 @@ bool World::FindWallByIDSector(unsigned long long id, int& wallIndx, int& sector
 	return false;
 }
 
-bool World::FindWallByIDWithSector(unsigned long long id, int sectorIndx, int& wallIndx) const
+bool World::FindWallByIDWithSector(const unsigned long long& id, int sectorIndx, int& wallIndx) const
 {
 	for (int w = 0; w < sectorData[sectorIndx].sectorWalls.size(); w++)
 	{

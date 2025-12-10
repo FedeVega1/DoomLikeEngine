@@ -33,8 +33,6 @@ struct ProcessedWall
 		parentSector = sector;
 		referenceWall = refWall;
 	}
-
-	Vector2 FromScreenToWorldSpace(float interp) const;
 };
 
 class Camera : public BaseComponent
@@ -54,8 +52,8 @@ public:
 	}
 
 	 void GetProcessedWalls(std::vector<ProcessedWall>& outProcessedWalls) const;
-	 void SetCameraZOffset(float newOffset) { cameraZOffset = newOffset; }
-	 Vector2 GetWorldPointFromRay(int screenX, int screenWidth, const ProcessedWall& wall);
+	 void SetCameraZOffset(const float& newOffset) { cameraZOffset = newOffset; }
+	 Vector2 GetWorldPointFromRay(const int& screenX, const int& screenWidth, const ProcessedWall& wall);
 	 Vector2 GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, const float& planeHeight);
 	 float GetDistanceToPoint(const Vector2& worldPoint);
 
@@ -74,10 +72,10 @@ private:
 
 	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	
-	void GetWallsFromBSP(const Vector3& pos, class BSPNode* startNode, const double& cos, const double& sin);
+	void GetWallsFromBSP(const Vector3& pos, class BSPNode* const startNode, const double& cos, const double& sin);
 	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const double& cos, const double& sin);
 	void RenderAllSubSectors(Vector3 pos, const double& cos, const double& sin);
-	void RenderWall(ProcessedWall& wall, Vector3 pos, const double& cos, const double& sin);
+	void RenderWall(ProcessedWall& wall, const Vector3& pos, const double& cos, const double& sin);
 
 	void DebugLeftRight(float axis);
 	void DebugForwardBack(float axis);

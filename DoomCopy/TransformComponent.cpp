@@ -42,9 +42,9 @@ void Transform::OnDestroy()
 Transform::Transform() : pos(), rot(0), currentSector(-1)
 { }
 
-void Transform::SetPos(Vector3 newPos) { pos = newPos; }
+void Transform::SetPos(const Vector3& newPos) { pos = newPos; }
 
-void Transform::TeleportTo(Vector3 newPos) { pos += newPos; }
+void Transform::TeleportTo(const Vector3& newPos) { pos += newPos; }
 
 void Transform::Rotate(float angle)
 {
