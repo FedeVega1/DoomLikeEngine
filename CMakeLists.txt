@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(DoomLikeEngine)
 
-
-# Dependencies
 include(FetchContent)
 
 FetchContent_Declare(
@@ -13,6 +11,5 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(COLogger)
 
-# Add subdirectories
 add_subdirectory(DoomCopy)
 add_subdirectory(LevelEditor)

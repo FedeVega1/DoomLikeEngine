@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(LevelEditor LANGUAGES CSharp)
 
-
-# Set default .NET Target Framework for all targets in this directory
 set(CMAKE_DOTNET_TARGET_FRAMEWORK "net8.0-windows10.0.26100.0")
 
 set(SOURCES
@@ -30,10 +28,8 @@ set(SOURCES
     Dependencies/COLoggerImport.cs
 )
 
-# Create the target FIRST, before setting properties on it
 add_executable(LevelEditor ${SOURCES})
 
-# Set .NET Target Framework
 set_property(TARGET LevelEditor PROPERTY VS_DOTNET_TARGET_FRAMEWORK "net8.0-windows10.0.26100.0")
 
 set_target_properties(LevelEditor PROPERTIES
@@ -51,7 +47,6 @@ set_target_properties(LevelEditor PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-# Handle ResX files
 set_source_files_properties(AboutBox1.resx PROPERTIES
     VS_TOOL_OVERRIDE "EmbeddedResource"
     VS_RESOURCE_GENERATOR "ResXFileCodeGenerator"
@@ -80,15 +75,4 @@ set_source_files_properties(Properties/Resources.resx PROPERTIES
     VS_RESOURCE_GENERATOR_FILE "Properties/Resources.Designer.cs"
 )
 
-# Dependencies (Copy local DLL)
-# The code expects Dependencies\COLogger.dll relative to the executable
-# Dependencies
 add_dependencies(LevelEditor COLogger_shared)
-
-# The code expects Dependencies\COLogger.dll relative to the executable
-add_custom_command(TARGET LevelEditor POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:LevelEditor>/Dependencies
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:COLogger_shared>
-        "$<TARGET_FILE_DIR:LevelEditor>/Dependencies/COLogger.dll"
-)

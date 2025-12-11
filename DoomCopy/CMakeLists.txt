@@ -5,7 +5,6 @@ project(DoomCopy)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Source files
 set(SOURCES
     CameraComponent.cpp
     D2Renderer.cpp
@@ -18,10 +17,8 @@ set(SOURCES
     Renderer.cpp
     TransformComponent.cpp
     World.cpp
-    
 )
 
-# Header files (for IDE visibility)
 set(HEADERS
     CameraComponent.h
     Component.h
@@ -43,30 +40,20 @@ set(HEADERS
     WorldDataTypes.h
 )
 
-# Add executable
 add_executable(DoomCopy WIN32 ${SOURCES} ${HEADERS} pch.cpp)
 
-# Include directories
-# Include directories
-# COLogger includes are handled by target_link_libraries
-
-# Precompiled Header Support
 target_precompile_headers(DoomCopy PRIVATE pch.h)
 
-# Compiler Definitions
 target_compile_definitions(DoomCopy PRIVATE _WINDOWS UNICODE _UNICODE)
 target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Release>:NDEBUG>)
 
-# Link Libraries
-# Link Libraries
 target_link_libraries(DoomCopy PRIVATE COLogger_static)
 
 if(WIN32)
     target_link_libraries(DoomCopy PRIVATE d2d1.lib)
 endif()
 
-# Match original specific output directory structure: bin/DoomCopy/[Config]
 set_target_properties(DoomCopy PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/DoomCopy/Debug - x64"
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/DoomCopy/Release - x64"
@@ -75,6 +62,4 @@ set_target_properties(DoomCopy PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-
-# Set startup project properties if using VS generator
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT DoomCopy)
