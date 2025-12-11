@@ -11,6 +11,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     renderer = D2Renderer();
 #endif
 
+#ifdef SDL_RENDER
+    renderer = SDLRenderer;
+#endif
+
     mainGame = Game();
     InitLogSystem(true, false);
     SetupWindowMessages();

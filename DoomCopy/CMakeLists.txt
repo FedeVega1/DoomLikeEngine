@@ -17,6 +17,8 @@ set(SOURCES
     Renderer.cpp
     TransformComponent.cpp
     World.cpp
+    SDLRenderer.cpp
+    Main.cpp
 )
 
 set(HEADERS
@@ -38,6 +40,7 @@ set(HEADERS
     VectorMath.h
     World.h
     WorldDataTypes.h
+    SDLRenderer.h 
 )
 
 add_executable(DoomCopy WIN32 ${SOURCES} ${HEADERS} pch.cpp)
@@ -49,6 +52,7 @@ target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Release>:NDEBUG>)
 
 target_link_libraries(DoomCopy PRIVATE COLogger_static)
+target_link_libraries(DoomCopy PRIVATE SDL3::SDL3)
 
 if(WIN32)
     target_link_libraries(DoomCopy PRIVATE d2d1.lib)

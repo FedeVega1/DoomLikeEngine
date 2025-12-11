@@ -4,6 +4,7 @@
 #include "Renderer.h"
 //#include "D2Renderer.h"
 #include "GDIRenderer.h"
+//#include "SDLRenderer.h"
 
 #define IDM_EXIT 105
 
@@ -19,6 +20,10 @@ GDIRenderer renderer;
 
 #ifdef D2_RENDER
 D2Renderer renderer;
+#endif
+
+#ifdef SDL_RENDER
+SDLRenderer renderer;
 #endif
 
 HWND mainHWND;
