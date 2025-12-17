@@ -4,7 +4,7 @@
 #define SDL_RENDER
 #endif
 
-class SDLRenderer : Renderer
+class SDLRenderer : public Renderer
 {
 public:
 	virtual void RenderScreen() override;

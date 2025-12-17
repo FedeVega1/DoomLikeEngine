@@ -5,6 +5,7 @@
 #include "CameraComponent.h"
 #include "World.h"
 #include "Renderer.h"
+#include "SDL3/SDL_video.h"
 #include "SDLRenderer.h"
 
 HRESULT SDLRenderer::InitRenderer(const HWND const _hwnd)

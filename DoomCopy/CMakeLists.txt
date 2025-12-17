@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     CameraComponent.cpp
     D2Renderer.cpp
-    DoomCopy.cpp
     FileManager.cpp
     Game.cpp
     GameObjects.cpp
@@ -25,7 +24,6 @@ set(HEADERS
     CameraComponent.h
     Component.h
     D2Renderer.h
-    DoomCopy.h
     FileManager.h
     Inputs.h
     pch.h
@@ -41,7 +39,7 @@ set(HEADERS
     World.h
     WorldDataTypes.h
     SDLRenderer.h 
-)
+    Main.h)
 
 add_executable(DoomCopy WIN32 ${SOURCES} ${HEADERS} pch.cpp)
 
@@ -56,6 +54,15 @@ target_link_libraries(DoomCopy PRIVATE SDL3::SDL3)
 
 if(WIN32)
     target_link_libraries(DoomCopy PRIVATE d2d1.lib)
+    
+    # Copy SDL3.dll to output directory
+    # SDL3 DLL is built in the _deps folder by FetchContent
+    add_custom_command(TARGET DoomCopy POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/_deps/sdl-build/$<CONFIG>/SDL3.dll"
+        "$<TARGET_FILE_DIR:DoomCopy>"
+        COMMENT "Copying SDL3.dll to output directory"
+    )
 endif()
 
 set_target_properties(DoomCopy PROPERTIES
