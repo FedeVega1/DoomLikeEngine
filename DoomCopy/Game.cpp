@@ -21,7 +21,6 @@ void Game::InitUpdate()
     mainCamera->world = world;
     entities.push_back(cameraObject);
 
-    //cameraObject->GetTransform()->SetPos(Vector3(0, 0, 0));
     mainCamera->SetCameraZOffset(45);
 }
 
@@ -57,9 +56,11 @@ Game::~Game()
 }
 
 void Game::CaptureKeyPress(unsigned long long keycode)
-{ 
+{
     KeyCode key = static_cast<KeyCode>(keycode);
+#ifndef SDL_RENDER
     if (key == KeyCode::Esc) ReleaseCapture();
+#endif
     Input::INS.GetKeyPress(key);
 }
 
@@ -89,9 +90,9 @@ void Game::CaptureMouseRelease(UINT btn)
     }
 }
 
-void Game::CaptureMouseMovement(const POINTS* const mousePos, bool isClipped)
-{ 
-    Input::INS.mousePosition = Vector2Int(mousePos->x, mousePos->y); 
+void Game::CaptureMouseMovement(int xDelta, int yDelta, bool isClipped)
+{
+    Input::INS.mousePosition = Vector2Int(xDelta, yDelta);
     Input::INS.clippedCursor = isClipped;
 }
 

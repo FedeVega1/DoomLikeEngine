@@ -13,7 +13,7 @@ Input::Input() : clippedCursor(false), senstivity(.4f)
 void Input::ProcessInputs()
 {
 	if (!clippedCursor) mouseMov = V2_ZERO;
-	else mouseMov = Vector2::Clamp(Vector2(mousePosition - lastMousePosition) * senstivity, -1.0f, 1.0f);
+	else mouseMov = Vector2::Clamp(Vector2(mousePosition) * senstivity, -1.0f, 1.0f);
 
 	for (std::pair<KeyCode, bool> pair : currentKeys)
 	{
@@ -27,14 +27,14 @@ void Input::ProcessInputs()
 	{
 		bool key1 = currentKeys.contains(pair.second.key1);
 		bool key2 = currentKeys.contains(pair.second.key2);
-		
+
 		if (!key1 && !key2) (pair.second.component->*pair.second.callback)(0.0f);
 		else if (key1 && key2) (pair.second.component->*pair.second.callback)(0.0f);
 		else if (key1 && !key2) (pair.second.component->*pair.second.callback)(1.0f);
 		else if (!key1 && key2) (pair.second.component->*pair.second.callback)(-1.0f);
 	}
 
-	lastMousePosition = mousePosition;
+	mousePosition = Vector2Int(0, 0);
 }
 
 void Input::GetKeyPress(const KeyCode& key)

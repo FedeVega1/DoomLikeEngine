@@ -12,6 +12,7 @@ Game mainGame;
 SDLRenderer renderer;
 SDL_WindowID wndID;
 SDL_PropertiesID props;
+bool mouseCaptured = false;
 
 void MainLoop();
 bool InitWindow();

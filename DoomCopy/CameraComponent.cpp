@@ -73,8 +73,9 @@ void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* const startNode, const
 
 void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vector3 pos, const double& cos, const double& sin)
 {
+	if (!subSector) return;
+
 	pos.z += cameraZOffset;
-	pos.z *= -1;
 
 	for (size_t i = 0; i < subSector->subSectorWalls.size(); i++)
 	{
@@ -95,7 +96,6 @@ void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vecto
 void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& sin)
 {
 	pos.z += cameraZOffset;
-	pos.z *= -1;
 
 	std::vector<Sector> sectorData = std::vector<Sector>();
 	sectorData.reserve(world->numberOfSectors);
@@ -146,17 +146,19 @@ void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& s
 
 void Camera::RenderWall(ProcessedWall& wall, const Vector3& pos, const double& cos, const double& sin)
 {
+	if (!wall.parentSector) return;
+
 	wall.leftBtmPoint.AddXY(-pos.x, -pos.y);
 	wall.rightBtmPoint.AddXY(-pos.x, -pos.y);
 
-	wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), wall.parentSector->bottomPoint + pos.z);
-	wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), wall.parentSector->bottomPoint + pos.z);
+	wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), wall.parentSector->bottomPoint - pos.z);
+	wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), wall.parentSector->bottomPoint - pos.z);
 
 	wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->topPoint + pos.z);
-	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->topPoint + pos.z);
+	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->topPoint - pos.z);
+	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->topPoint - pos.z);
 
 	wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
@@ -181,7 +183,7 @@ void Camera::RenderWall(ProcessedWall& wall, const Vector3& pos, const double& c
 void Camera::OnDestroy()
 {
 	Input::INS.UnRegisterAxis("CameraForwardBack", this);
-	Input::INS.UnRegisterAxis("CameraRightLeft", this);
+	Input::INS.UnRegisterAxis("CameraLeftRight", this);
 	Input::INS.UnRegisterAxis("CameraUpDown", this);
 	Input::INS.UnRegisterAxis("CameraRotUpDown", this);
 	Input::INS.UnRegisterKeyPress(KeyCode::Number0, &Camera::DebugToggleBSPRendering, this);
@@ -255,7 +257,7 @@ Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, c
 
 	Vector3 camDir = GetTransform()->GetForwardVector();
 	Vector3 camRight = -GetTransform()->GetLeftVector();
-	Vector3 camUp = GetTransform()->GetUpVector();;
+	Vector3 camUp = GetTransform()->GetUpVector();
 
 	Vector3 cameraPos = GetTransform()->GetPos();
 	cameraPos.z += cameraZOffset;

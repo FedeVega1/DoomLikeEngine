@@ -11,6 +11,7 @@
 #include <chrono>
 #include <numbers>
 #include <map>
+#include <unordered_map>
 #include <array>
 #include <functional>
 
@@ -32,12 +33,12 @@
 struct Color
 {
 	bool isLittleEndian;
-	BYTE r, g, b;
+	unsigned char r, g, b;
 
 	Color() : r(0), g(0), b(0), isLittleEndian(false)
 	{ }
 
-	Color(const BYTE& r, const BYTE& g, const BYTE& b)
+	Color(const unsigned char& r, const unsigned char& g, const unsigned char& b)
 	{
 		this->r = r;
 		this->g = g;
@@ -45,7 +46,7 @@ struct Color
 		isLittleEndian = false;
 	}
 
-	Color(const DWORD& rgb, const bool& littleEndian)
+	Color(const unsigned int& rgb, const bool& littleEndian)
 	{
 		isLittleEndian = littleEndian;
 
@@ -65,10 +66,10 @@ struct Color
 	bool operator==(Color other) const { return other.r == r && other.g == g && other.b == b && other.isLittleEndian == isLittleEndian; }
 	bool operator==(DWORD other) const { return other == ToDWORD(isLittleEndian); }
 
-	DWORD ToDWORD(const bool& littleEndian) const
+	unsigned int ToDWORD(const bool& littleEndian) const
 	{
-		if (littleEndian) return ((static_cast<DWORD>(r)) << 16) | ((static_cast<DWORD>(g)) << 8) | (static_cast<DWORD>(b));
-		return ((static_cast<DWORD>(b)) << 16) | ((static_cast<DWORD>(g)) << 8) | (static_cast<DWORD>(r));
+		if (littleEndian) return (0xFF000000) | ((static_cast<unsigned int>(r)) << 16) | ((static_cast<unsigned int>(g)) << 8) | (static_cast<unsigned int>(b));
+		return ((static_cast<unsigned int>(b)) << 16) | ((static_cast<unsigned int>(g)) << 8) | (static_cast<unsigned int>(r)) | (0xFF000000);
 	}
 
 	std::string ToString() const { return "(R = " + std::to_string(r) + ", G = " + std::to_string(g) + ", B = " + std::to_string(b) + ")"; }
@@ -119,6 +120,30 @@ void Quick_Sort(SortData<T>& sortData, int left, int right)
 		if (pivot + 1 < right) Quick_Sort(sortData, pivot + 1, right);
 	}
 }
+
+std::string WStringToString(const std::wstring& wstr);
+
+enum KeyCode
+{
+	None = 0,
+	Backspace, Tab, Enter, Shift, Ctrl, Alt, Pause,
+	CapsLock, Esc, Spacebar, PageUp, PageDown, End, Home,
+	Left, Up, Right, Down, Select, Insert, Del,
+
+	Number0, Number1, Number2, Number3, Number4,
+	Number5, Number6, Number7, Number8, Number9,
+
+	A, B, C, D, E, F, G, H, I, J, K, L, M,
+	N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+
+	Numpad0, Numpad1, Numpad2, Numpad3, Numpad4,
+	Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
+	Mult, Add, Sep, Subs, Decimal, Divide,
+
+	F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+
+	LeftMouse, RightMouse, MiddleMouse, X1Mouse, X2Mouse
+};
 
 static SinCosTable SCTABLE;
 

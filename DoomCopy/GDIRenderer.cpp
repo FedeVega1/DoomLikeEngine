@@ -9,8 +9,8 @@
 
 HRESULT GDIRenderer::InitRenderer(const HWND const _hwnd)
 {
-    screenBuffer = new DWORD[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
-    drawBuffer = new DWORD[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
+    screenBuffer = new unsigned long[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
+    drawBuffer = new unsigned long[DEFAULT_BUFFER_WIDTH * DEFAULT_BUFFER_HEIGHT] {0};
 
     walls = std::vector<ProcessedWall>();
     hwnd = _hwnd;
@@ -142,4 +142,9 @@ GDIRenderer::~GDIRenderer()
 
     delete[] screenBuffer;
     delete[] drawBuffer;
+}
+
+void GDIRenderer::Dispose() 
+{
+
 }

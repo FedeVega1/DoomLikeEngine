@@ -6,6 +6,7 @@
 /DoomCopy/x32/
 /LevelEditor/bin/
 /LevelEditor/obj/
+/[Dd]ocs/
 
 .vs
 *.map
@@ -58,3 +59,6 @@
 CMakeUserPresets.json
 CMakeCache.txt
 CMakeFiles/
+
+.claude
+CLAUDE.MD

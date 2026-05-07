@@ -7,18 +7,20 @@ class Renderer
 {
 public:
 	virtual void RenderScreen() = 0;
-	virtual HRESULT InitRenderer(const HWND const hwnd) = 0;
+	virtual long InitRenderer(const HWND const hwnd) = 0;
+	virtual long InitRenderer_SDL(const unsigned int& windID) = 0;
 	virtual void DrawPixel(int x, int y, const Color& color) = 0;
 	virtual void PaintScreen(const Color& color) = 0;
 	virtual void ProcessGame(Game* const game);
+	virtual void Dispose() = 0;
 
 	Renderer() : debugStepDraw(false), screenBuffer(nullptr), drawBuffer(nullptr), hwnd(), spans(), brightnessDistanceFalloff(450.0f) { }
 
 protected:
 	HWND hwnd;
 
-	DWORD* screenBuffer;
-	DWORD* drawBuffer;
+	unsigned long* screenBuffer;
+	unsigned long* drawBuffer;
 	bool debugStepDraw;
 
 	float brightnessDistanceFalloff;

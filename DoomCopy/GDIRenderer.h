@@ -9,8 +9,10 @@ class GDIRenderer : public Renderer
 public:
 	virtual void RenderScreen() override;
 	virtual HRESULT InitRenderer(const HWND const hwnd) override;
+	virtual long InitRenderer_SDL(const unsigned int& windID) override { return 0L; };
 	virtual void DrawPixel(int x, int y, const Color& color) override;
 	virtual void PaintScreen(const Color& color) override;
+	virtual void Dispose() override;
 
 	GDIRenderer();
 	~GDIRenderer();

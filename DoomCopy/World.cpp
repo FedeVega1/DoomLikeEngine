@@ -24,11 +24,8 @@ World::~World()
 {
 	Entity::~Entity();
 
-	//for (int i = 0; i < numberOfSectors; i++)
-	//{
-	//	delete[] sectorData[i].sectorWalls;
-	//	sectorData[i].sectorWalls = nullptr;
-	//}
+	delete[] subSectorData;
+	subSectorData = nullptr;
 
 	delete[] sectorData;
 	sectorData = nullptr;

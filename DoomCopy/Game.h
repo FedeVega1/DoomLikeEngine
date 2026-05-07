@@ -22,7 +22,7 @@ public:
 
 	void CaptureMousePress(UINT btn);
 	void CaptureMouseRelease(UINT btn);
-	void CaptureMouseMovement(const POINTS* const mousePos, bool isClipped);
+	void CaptureMouseMovement(int xDelta, int yDelta, bool isClipped);
 
 	template<class T>
 	T* CreateGameObjectAtSector(int sector, Vector3 relativePos)
