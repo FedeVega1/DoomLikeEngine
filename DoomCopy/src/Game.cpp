@@ -96,6 +96,6 @@ void Game::CaptureMouseMovement(int xDelta, int yDelta, bool isClipped)
     Input::INS.clippedCursor = isClipped;
 }
 
-Sector* Game::GetSector(const int& sectorIndx) const { return &world->sectorData[sectorIndx]; }
-Vector2 Game::GetSectorCenter(const int& sectorIndx) const { return GetSector(sectorIndx)->sectorCenter; }
-float Game::GetSectorFloorHeight(const int& sectorIndx) const { return GetSector(sectorIndx)->bottomPoint; }
+const Sector& Game::GetSector(const int& sectorIndx) const { return world->GetSector(sectorIndx); }
+Vector2 Game::GetSectorCenter(const int& sectorIndx) const { return GetSector(sectorIndx).center; }
+float Game::GetSectorFloorHeight(const int& sectorIndx) const { return GetSector(sectorIndx).floorHeight; }

@@ -4,28 +4,28 @@ class BaseComponent;
 struct ProcessedWall
 {
 	Vector3 leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
-	Color topColor, inColor, btmColor;
+	Color topColor, innerColor, bottomColor;
 	bool isPortal, isConnection;
-	struct Sector* parentSector;
-	struct Sector* portalTargetSector;
-	struct Wall* portalTargetWall;
-	const struct Wall* referenceWall;
+	const Sector* parentSector;
+	const Sector* portalTargetSector;
+	Wall* portalTargetWall;
+	const Wall* referenceWall;
 
-	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), topColor(0, 0, 0), 
-		inColor(0, 0, 0), btmColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(nullptr), 
+	ProcessedWall() : leftTopPoint(), rightTopPoint(), leftBtmPoint(), rightBtmPoint(), topColor(0, 0, 0),
+		innerColor(0, 0, 0), bottomColor(0, 0, 0), isPortal(false), isConnection(false), portalTargetSector(nullptr),
 		portalTargetWall(nullptr), parentSector(nullptr), referenceWall(nullptr)
 	{ }
 
 	ProcessedWall(Vector3 ltPoint, Vector3 rtPoint, Vector3 lbPoint, Vector3 rbPoint, Color tc, Color ic, Color bc,
-		bool portal, bool connection, struct Sector* const targetSector, struct Wall* const wall, struct Sector* const sector, const struct Wall* const refWall)
-	{ 
+		bool portal, bool connection, const Sector* targetSector, Wall* wall, const Sector* sector, const Wall* refWall)
+	{
 		leftTopPoint = ltPoint;
 		rightTopPoint = rtPoint;
 		leftBtmPoint = lbPoint;
 		rightBtmPoint = rbPoint;
 		topColor = tc;
-		inColor = ic;
-		btmColor = bc;
+		innerColor = ic;
+		bottomColor = bc;
 		isPortal = portal;
 		isConnection = connection;
 		portalTargetSector = targetSector;
@@ -72,7 +72,7 @@ private:
 
 	void ClipBehindCamera(Vector3& outPointA, const Vector3& pointB);
 	
-	void GetWallsFromBSP(const Vector3& pos, class BSPNode* const startNode, const double& cos, const double& sin);
+	void GetWallsFromBSP(const Vector3& pos, BSPNode* const startNode, const double& cos, const double& sin);
 	void ProcessSubSectorFromBSPNode(const struct SubSector* const subSector, Vector3 pos, const double& cos, const double& sin);
 	void RenderAllSubSectors(Vector3 pos, const double& cos, const double& sin);
 	void RenderWall(ProcessedWall& wall, const Vector3& pos, const double& cos, const double& sin);

@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 #include "Game.h"
 #include "GameObjects.h"
-#include "VectorMath.h"
 #include "CameraComponent.h"
 #include "World.h"
 #include "Renderer.h"
@@ -82,7 +81,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             Vector2 screenCoords = Vector2(static_cast<float>(x), static_cast<float>(y));
             Vector2 normalizedScreenCoords = Vector2(screenCoords.x / screenSize.x, screenCoords.y / screenSize.y);
 
-            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->bottomPoint);
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->floorHeight);
 
             float distance = camera->GetDistanceToPoint(hitPoint) / brightnessDistanceFalloff;
             DrawPixel(x, y, DarkenPixelColor(floorText.MapFloorCeilingTexturePoint(hitPoint), distance));
@@ -94,7 +93,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             Vector2 screenCoords = Vector2(static_cast<float>(x), static_cast<float>(y));
             Vector2 normalizedScreenCoords = Vector2(screenCoords.x / screenSize.x, screenCoords.y / screenSize.y);
 
-            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->topPoint);
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->ceillingHeight);
 
             float distance = camera->GetDistanceToPoint(hitPoint) / brightnessDistanceFalloff;
             DrawPixel(x, y, DarkenPixelColor(ceillingText.MapFloorCeilingTexturePoint(hitPoint), distance));
@@ -154,7 +153,7 @@ ScreenSpaceWall Renderer::GetScreenSpaceWall(const ProcessedWall& wall)
         Vector2Int(static_cast<int>(std::roundf(((wall.rightTopPoint.x * fov) / wall.rightTopPoint.y) + HALF_WIDTH)),static_cast<int>(std::roundf(((-wall.rightTopPoint.z * fov) / wall.rightTopPoint.y) + HALF_HEIGHT))),
         Vector2Int(static_cast<int>(std::roundf(((wall.leftBtmPoint.x * fov) / wall.leftBtmPoint.y) + HALF_WIDTH)), static_cast<int>(std::roundf(((-wall.leftBtmPoint.z * fov) / wall.leftBtmPoint.y) + HALF_HEIGHT))),
         Vector2Int(static_cast<int>(std::roundf(((wall.rightBtmPoint.x * fov) / wall.rightBtmPoint.y) + HALF_WIDTH)), static_cast<int>(std::roundf(((-wall.rightBtmPoint.z * fov) / wall.rightBtmPoint.y) + HALF_HEIGHT))),
-        wall.topColor, wall.inColor, wall.btmColor,
+        wall.topColor, wall.innerColor, wall.bottomColor,
     };
 }
 
@@ -230,7 +229,7 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
     float dWall = offset.x * dir.x + offset.y * dir.y;
     float worldWallLength = Vector2::Distance(portalWall->referenceWall->leftPoint, portalWall->referenceWall->rightPoint);
 
-    if (wall.parentSector->bottomPoint < portalWall->parentSector->bottomPoint)
+    if (wall.parentSector->floorHeight < portalWall->parentSector->floorHeight)
     {
         outData.newFloorY = prevYPoint.x;
         for (int y = prevYPoint.x; y < data.yPoint.x; y++)
@@ -245,7 +244,7 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         outData.hasDrawnF = true;
     }
 
-    if (wall.parentSector->topPoint > portalWall->parentSector->topPoint)
+    if (wall.parentSector->ceillingHeight > portalWall->parentSector->ceillingHeight)
     {
         outData.newCeillingY = prevYPoint.y;
         for (int y = data.yPoint.y; y < prevYPoint.y; y++)

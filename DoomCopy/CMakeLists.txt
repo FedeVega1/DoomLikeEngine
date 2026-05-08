@@ -6,51 +6,50 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCES
-    CameraComponent.cpp
-    D2Renderer.cpp
-    FileManager.cpp
-    Game.cpp
-    GameObjects.cpp
-    GDIRenderer.cpp
-    Inputs.cpp
-    Renderer.cpp
-    TransformComponent.cpp
-    World.cpp
-    SDLRenderer.cpp
-    Main.cpp
+    src/CameraComponent.cpp
+    src/D2Renderer.cpp
+    src/Game.cpp
+    src/GameObjects.cpp
+    src/GDIRenderer.cpp
+    src/Inputs.cpp
+    src/Renderer.cpp
+    src/TransformComponent.cpp
+    src/World.cpp
+    src/SDLRenderer.cpp
+    src/Main.cpp
 )
 
 set(HEADERS
-    CameraComponent.h
-    Component.h
-    D2Renderer.h
-    FileManager.h
-    Inputs.h
-    pch.h
-    Game.h
-    GDIRenderer.h
-    GameObjects.h
-    Renderer.h
-    RenderingDataTypes.h
-    targetver.h
-    GameTime.h
-    TransformComponent.h
-    VectorMath.h
-    World.h
-    WorldDataTypes.h
-    SDLRenderer.h 
-    Main.h)
+    include/CameraComponent.h
+    include/Component.h
+    include/D2Renderer.h
+    include/Inputs.h
+    include/pch.h
+    include/Game.h
+    include/GDIRenderer.h
+    include/GameObjects.h
+    include/Renderer.h
+    include/RenderingDataTypes.h
+    include/targetver.h
+    include/GameTime.h
+    include/TransformComponent.h
+    include/World.h
+    include/SDLRenderer.h
+    include/Main.h)
 
-add_executable(DoomCopy WIN32 ${SOURCES} ${HEADERS} pch.cpp)
+add_executable(DoomCopy WIN32 ${SOURCES} ${HEADERS} src/pch.cpp)
 
-target_precompile_headers(DoomCopy PRIVATE pch.h)
+target_include_directories(DoomCopy PRIVATE include/)
+target_precompile_headers(DoomCopy PRIVATE include/pch.h)
 
 target_compile_definitions(DoomCopy PRIVATE _WINDOWS UNICODE _UNICODE)
 target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 target_compile_definitions(DoomCopy PRIVATE $<$<CONFIG:Release>:NDEBUG>)
 
+target_link_libraries(DoomCopy PRIVATE Core)
 target_link_libraries(DoomCopy PRIVATE COLogger_static)
 target_link_libraries(DoomCopy PRIVATE SDL3::SDL3)
+target_link_libraries(DoomCopy PRIVATE ImGui)
 
 if(WIN32)
     target_link_libraries(DoomCopy PRIVATE d2d1.lib)

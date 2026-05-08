@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Game.h"
 #include "GameObjects.h"
-#include "VectorMath.h"
 #include "CameraComponent.h"
 #include "World.h"
 #include "Renderer.h"
@@ -103,7 +102,7 @@ void SDLRenderer::PaintScreen(const Color& color)
 	for (int y = 0; y < DEFAULT_BUFFER_HEIGHT; y++)
 	{
 		for (int x = 0; x < DEFAULT_BUFFER_WIDTH; x++)
-			drawBuffer[PixelPos(x, y)] = color.ToDWORD(true);
+			drawBuffer[PixelPos(x, y)] = ColorToDWORD(color);
 	}
 }
 
@@ -112,7 +111,7 @@ void SDLRenderer::DrawPixel(int x, int y, const Color& color)
 	x = std::clamp(x, 0, DEFAULT_BUFFER_WIDTH - 1);
 	y = std::clamp(y, 0, DEFAULT_BUFFER_HEIGHT - 1);
 
-	drawBuffer[PixelPos(x, y)] = color.ToDWORD(true);
+	drawBuffer[PixelPos(x, y)] = ColorToDWORD(color);
 
 	if (debugStepDraw) DebugUpdateScreen();
 }
@@ -160,7 +159,7 @@ void SDLRenderer::LoadTexture(const std::wstring& texName, const float& tilling)
 	}
 
 	SDL_UnlockSurface(convertedSurface.get());
-	OLOG_L("Loaded Texture: {0}", parsedTexName);
+	OLOG_LF("Loaded Texture: {0}", parsedTexName);
 }
 
 void SDLRenderer::GetTextureMap(const std::wstring& texName, BaseTexture& texture)

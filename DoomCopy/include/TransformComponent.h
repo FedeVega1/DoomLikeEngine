@@ -1,5 +1,4 @@
 #pragma once
-#include "VectorMath.h"
 
 class Transform : public BaseComponent
 {
@@ -23,13 +22,13 @@ public:
 	Vector3 GetForwardVector() const 
 	{
 		int currentRot = (int) std::roundf(rot);
-		return Vector3((float) SCTABLE.sin[currentRot], (float) SCTABLE.cos[currentRot], 0);
+		return Vector3((float) SCTABLE.sinValues[currentRot], (float) SCTABLE.cosValues[currentRot], 0);
 	}
 
 	Vector3 GetLeftVector() const 
 	{ 
 		int currentRot = (int) std::roundf(rot);
-		return Vector3((float) -SCTABLE.cos[currentRot], (float) SCTABLE.sin[currentRot], 0);
+		return Vector3((float) -SCTABLE.cosValues[currentRot], (float) SCTABLE.sinValues[currentRot], 0);
 	}
 
 	Vector3 GetUpVector() const { return Vector3::Cross(GetForwardVector(), GetLeftVector()); }

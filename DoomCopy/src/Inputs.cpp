@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "GameObjects.h"
 #include "Component.h"
-#include "VectorMath.h"
 #include "Inputs.h"
 
 Input::Input() : clippedCursor(false), senstivity(.4f)
@@ -12,7 +11,7 @@ Input::Input() : clippedCursor(false), senstivity(.4f)
 
 void Input::ProcessInputs()
 {
-	if (!clippedCursor) mouseMov = V2_ZERO;
+	if (!clippedCursor) mouseMov = Vector2::ZERO;
 	else mouseMov = Vector2::Clamp(Vector2(mousePosition) * senstivity, -1.0f, 1.0f);
 
 	for (std::pair<KeyCode, bool> pair : currentKeys)

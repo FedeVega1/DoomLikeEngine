@@ -9,10 +9,20 @@
 #define HALF_WIDTH DEFAULT_BUFFER_WIDTH / 2
 #define HALF_HEIGHT DEFAULT_BUFFER_HEIGHT / 2
 
+inline Color ColorFromDWORD(DWORD v)
+{
+	return Color(static_cast<uint8_t>((v >> 16) & 0xFF), static_cast<uint8_t>((v >> 8) & 0xFF), static_cast<uint8_t>(v & 0xFF));
+}
+
+inline unsigned long ColorToDWORD(const Color& c)
+{
+	return 0xFF000000UL | (static_cast<unsigned long>(c.r) << 16) | (static_cast<unsigned long>(c.g) << 8) | static_cast<unsigned long>(c.b);
+}
+
 struct ScreenSpaceWall
 {
 	Vector2Int leftTopPoint, rightTopPoint, leftBtmPoint, rightBtmPoint;
-	Color topColor, inColor, btmColor;
+	Color topColor, innerColor, bottomColor;
 
 	Vector2Int GetSegment() const
 	{
@@ -77,24 +87,24 @@ struct BaseTexture
 
 	Color MapWallTexturePoint(const float& dWall, const int& relativeY, const float& wallHeight, const float& wallLength) const
 	{
-		if (!textureBuffer) return COLOR_WHITE;
+		if (!textureBuffer) return Color::White;
 
 		float u = Wrap(dWall / width * tilling);
 		float step = static_cast<float>(height) / wallHeight;
 
 		Vector2Int tex = Vector2Int((int) std::floor(u * width), ((int) std::floor(relativeY * step)) & (height - 1));
-		return Color(textureBuffer[tex.x + (tex.y * width)], false);
+		return ColorFromDWORD(textureBuffer[tex.x + (tex.y * width)]);
 	}
 
 	Color MapFloorCeilingTexturePoint(const Vector2& worldPos) const
 	{
-		if (!textureBuffer) return COLOR_WHITE;
+		if (!textureBuffer) return Color::White;
 
 		float u = Wrap(-worldPos.x / width * tilling);
 		float v = Wrap(-worldPos.y / height * tilling);
-		
+
 		Vector2Int tex = Vector2Int(static_cast<int>(std::floor(u * width)), static_cast<int>(std::floor(v * height)));
-		return Color(textureBuffer[tex.x + (tex.y * width)], false);
+		return ColorFromDWORD(textureBuffer[tex.x + (tex.y * width)]);
 	}
 
 	float Wrap(const float& value) const { return value - std::floor(value); }

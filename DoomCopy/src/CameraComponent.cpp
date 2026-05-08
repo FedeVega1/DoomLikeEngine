@@ -39,10 +39,10 @@ void Camera::AfterTick()
 	Vector3 currentPos = GetTransform()->GetPos();
 
 	int currentRotation = (int) std::roundf(GetTransform()->GetRot());
-	double cos = SCTABLE.cos[currentRotation];
-	double sin = SCTABLE.sin[currentRotation];
+	double cos = SCTABLE.cosValues[currentRotation];
+	double sin = SCTABLE.sinValues[currentRotation];
 
-	if (toggleBSPRendering) GetWallsFromBSP(currentPos, world->rootNode, cos, sin);
+	if (toggleBSPRendering) GetWallsFromBSP(currentPos, world->bspMap.rootNode.get(), cos, sin);
 	else RenderAllSubSectors(currentPos, cos, sin);
 
 	if (processedWalls.size() == 0) OLOG_E("Can't find the camera anywhere inside the level!");
@@ -62,13 +62,13 @@ void Camera::GetWallsFromBSP(const Vector3& pos, BSPNode* const startNode, const
 
 	if (startNode->splitter.VectorInFront(posToSplitter))
 	{
-		GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
-		GetWallsFromBSP(pos, startNode->backNode, cos, sin);
+		GetWallsFromBSP(pos, startNode->frontNode.get(), cos, sin);
+		GetWallsFromBSP(pos, startNode->backNode.get(), cos, sin);
 		return;
 	}
 
-	GetWallsFromBSP(pos, startNode->backNode, cos, sin);
-	GetWallsFromBSP(pos, startNode->frontNode, cos, sin);
+	GetWallsFromBSP(pos, startNode->backNode.get(), cos, sin);
+	GetWallsFromBSP(pos, startNode->frontNode.get(), cos, sin);
 }
 
 void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vector3 pos, const double& cos, const double& sin)
@@ -77,16 +77,19 @@ void Camera::ProcessSubSectorFromBSPNode(const SubSector* const subSector, Vecto
 
 	pos.z += cameraZOffset;
 
-	for (size_t i = 0; i < subSector->subSectorWalls.size(); i++)
+	for (size_t i = 0; i < subSector->walls.size(); i++)
 	{
+		const Wall& srcWall = subSector->walls[i];
 		ProcessedWall wall = ProcessedWall
 		{
-			V3_ZERO, V3_ZERO,
-			subSector->subSectorWalls[i].leftPoint, subSector->subSectorWalls[i].rightPoint,
-			subSector->subSectorWalls[i].topColor, subSector->subSectorWalls[i].inColor, subSector->subSectorWalls[i].btmColor,
-			subSector->subSectorWalls[i].isPortal, subSector->subSectorWalls[i].isConnection,
-			subSector->subSectorWalls[i].portalTargetSector, subSector->subSectorWalls[i].portalTargetWall,
-			subSector->subSectorWalls[i].parentSector,& subSector->subSectorWalls[i]
+			Vector3::ZERO, Vector3::ZERO,
+			Vector3(srcWall.leftPoint), Vector3(srcWall.rightPoint),
+			srcWall.topColor, srcWall.innerColor, srcWall.bottomColor,
+			srcWall.isPortal, srcWall.isConnection,
+			world->GetSectorByID(srcWall.portalTargetSectorID),
+			srcWall.portalTargetWall,
+			world->GetSectorByID(srcWall.parentSectorID),
+			&srcWall
 		};
 
 		RenderWall(wall, pos, cos, sin);
@@ -97,46 +100,20 @@ void Camera::RenderAllSubSectors(Vector3 pos, const double& cos, const double& s
 {
 	pos.z += cameraZOffset;
 
-	std::vector<Sector> sectorData = std::vector<Sector>();
-	sectorData.reserve(world->numberOfSectors);
-
-	for (int i = 0; i < world->numberOfSectors; i++)
+	for (const auto& subSector : world->bspMap.subSectors)
 	{
-		Sector sector = Sector(world->sectorData[i].sectorID,
-			world->sectorData[i].bottomPoint,
-			world->sectorData[i].topPoint,
-			world->sectorData[i].floorColor,
-			world->sectorData[i].ceillingColor);
-		
-		sector.sectorWalls = std::vector<Wall>();
-		for (size_t j = 0; j < world->sectorData[i].sectorWalls.size(); j++)
-			sector.sectorWalls.push_back(world->sectorData[i].sectorWalls[j]);
-
-		sector.sectorCenter = world->sectorData[i].sectorCenter;
-		sectorData.push_back(sector);
-	}
-
-	SortData data = SortData<Sector>
-	{
-		sectorData.data(),
-		[pos](Sector sector) -> int { return static_cast<int>(std::roundf(Vector2::Distance(sector.sectorCenter, pos.XY()))); },
-		true
-	};
-
-	Quick_Sort(data, 0, world->numberOfSectors - 1);
-
-	for (int i = 0; i < world->numberOfSectors; i++)
-	{
-		for (size_t j = 0; j < sectorData[i].sectorWalls.size(); j++)
+		for (const auto& srcWall : subSector.walls)
 		{
 			ProcessedWall wall = ProcessedWall
 			{
-				V3_ZERO, V3_ZERO,
-				sectorData[i].sectorWalls[j].leftPoint, sectorData[i].sectorWalls[j].rightPoint,
-				sectorData[i].sectorWalls[j].topColor, sectorData[i].sectorWalls[j].inColor, sectorData[i].sectorWalls[j].btmColor,
-				sectorData[i].sectorWalls[j].isPortal, sectorData[i].sectorWalls[j].isConnection,
-				sectorData[i].sectorWalls[j].portalTargetSector, sectorData[i].sectorWalls[j].portalTargetWall,
-				sectorData[i].sectorWalls[j].parentSector, &sectorData[i].sectorWalls[j]
+				Vector3::ZERO, Vector3::ZERO,
+				Vector3(srcWall.leftPoint), Vector3(srcWall.rightPoint),
+				srcWall.topColor, srcWall.innerColor, srcWall.bottomColor,
+				srcWall.isPortal, srcWall.isConnection,
+				world->GetSectorByID(srcWall.portalTargetSectorID),
+				srcWall.portalTargetWall,
+				world->GetSectorByID(srcWall.parentSectorID),
+				&srcWall
 			};
 
 			RenderWall(wall, pos, cos, sin);
@@ -151,14 +128,14 @@ void Camera::RenderWall(ProcessedWall& wall, const Vector3& pos, const double& c
 	wall.leftBtmPoint.AddXY(-pos.x, -pos.y);
 	wall.rightBtmPoint.AddXY(-pos.x, -pos.y);
 
-	wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), wall.parentSector->bottomPoint - pos.z);
-	wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), wall.parentSector->bottomPoint - pos.z);
+	wall.leftBtmPoint = Vector3((wall.leftBtmPoint.x * cos) - (wall.leftBtmPoint.y * sin), (wall.leftBtmPoint.y * cos) + (wall.leftBtmPoint.x * sin), wall.parentSector->floorHeight - pos.z);
+	wall.rightBtmPoint = Vector3((wall.rightBtmPoint.x * cos) - (wall.rightBtmPoint.y * sin), (wall.rightBtmPoint.y * cos) + (wall.rightBtmPoint.x * sin), wall.parentSector->floorHeight - pos.z);
 
 	wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->topPoint - pos.z);
-	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->topPoint - pos.z);
+	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->ceillingHeight - pos.z);
+	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->ceillingHeight - pos.z);
 
 	wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
@@ -216,7 +193,7 @@ void Camera::DebugLeftRight(float axis)
 
 void Camera::DebugUpDown(float axis)
 {
-	GetTransform()->TeleportTo(V3_UP * axis * movSpeed * Time::TimeSlice);
+	GetTransform()->TeleportTo(Vector3::UP * axis * movSpeed * Time::TimeSlice);
 }
 
 void Camera::DebugRotUpDown(float axis)
@@ -243,7 +220,7 @@ Vector2 Camera::GetWorldPointFromRay(const int& screenX, const int& screenWidth,
 
 	float det = rayDir.y * segDir.x - rayDir.x * segDir.y;
 	
-	if (std::abs(det) < kEpsilon) return wall.referenceWall->leftPoint;
+	if (std::abs(det) < K_EPSILON) return wall.referenceWall->leftPoint;
 
 	Vector2 diff = camPos.XY() - wall.referenceWall->leftPoint;
 	float u = std::clamp((diff.x * rayDir.y  - diff.y * rayDir.x) / det, 0.0f, 1.0f);
@@ -263,7 +240,7 @@ Vector2 Camera::GetFloorCeilingHitPoint(const Vector2& normalizedScreenCoords, c
 	cameraPos.z += cameraZOffset;
 
 	Vector3 rayDir = Vector3::Normalize(camDir + (camRight * frustrum.x) + (camUp * frustrum.y));
-	if (std::abs(rayDir.z) < kEpsilon) return Vector2(0, 0);
+	if (std::abs(rayDir.z) < K_EPSILON) return Vector2(0, 0);
 	
 	float t = (planeHeight - cameraPos.z) / rayDir.z;
 	if (t < 0 || t > 10000.0f) return Vector2(0, 0);

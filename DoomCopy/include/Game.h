@@ -1,7 +1,6 @@
 #pragma once
 #include "GameObjects.h"
 #include "Component.h"
-#include "VectorMath.h"
 #include "CameraComponent.h"
 
 #define DEFAULT_TICKS_PER_SECOND 30
@@ -58,7 +57,7 @@ private:
 
 	std::string mapToOpen = "asd.bsp";
 
-	struct Sector* GetSector(const int& sectorIndx) const;
+	const Sector& GetSector(const int& sectorIndx) const;
 	Vector2 GetSectorCenter(const int& sectorIndx) const;
 	float GetSectorFloorHeight(const int& sectorIndx) const;
 };
