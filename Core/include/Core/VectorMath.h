@@ -44,12 +44,12 @@ namespace Core
 
         Vector2() : x(0), y(0) {}
         Vector2(float x, float y) : x(x), y(y) {}
-        Vector2(int x, int y) : x(static_cast<float>(x)), y(static_cast<float>(y)) {}
         explicit Vector2(const Vector2Int& v) : x(static_cast<float>(v.x)), y(static_cast<float>(v.y)) {}
 
         Vector2 operator+(const Vector2& other) const { return Vector2(x + other.x, y + other.y); }
         Vector2 operator-(const Vector2& other) const { return Vector2(x - other.x, y - other.y); }
         Vector2 operator-(const Vector2Int& other) const { return Vector2(x - other.x, y - other.y); }
+        Vector2 operator-() const { return Vector2(-x, -y); }
         Vector2 operator*(float scalar) const { return Vector2(x * scalar, y * scalar); }
         Vector2 operator/(float scalar) const { return Vector2(x / scalar, y / scalar); }
         Vector2& operator+=(const Vector2& other) { x += other.x; y += other.y; return *this; }

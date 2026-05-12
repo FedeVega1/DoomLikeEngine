@@ -1,14 +1,19 @@
 #include "pch.h"
 
 #include <imgui.h>
-#include <SDL3/SDL.h>
 
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
 
 namespace Editor
 {
-    MapView::MapView(SDL_Renderer* renderer) : renderer(renderer) {}
+    MapView::MapView()
+    { 
+        origin = Core::Vector2(0, 0);
+        firstRender = isDrawingLine = isHoveringWindow = false;
+        mapMaxSize = Core::Vector2(DEFAULT_MAX_MAP_SIZE_X, DEFAULT_MAX_MAP_SIZE_Y);
+        grid = std::make_unique<Grid::MapGrid>(mapMaxSize);
+    }
 
     void MapView::Update()
     {
@@ -17,6 +22,14 @@ namespace Editor
 
     void MapView::Render()
     {
+        if (!firstRender)
+        {
+            grid->InitializeGrid();
+            firstRender = true;
+        }
+
+        isHoveringWindow = ImGui::IsWindowHovered();
+
         DrawGrid();
         DrawSectors();
     }
@@ -25,7 +38,7 @@ namespace Editor
     {
         sectors.clear();
         selectedSectorIndex = selectedWallIndex = -1;
-        isDrawingLine = false;
+        isDrawingLine = firstRender = false;
     }
 
     void MapView::LoadSectors(std::vector<EditorSector> loadedSectors)
@@ -50,12 +63,13 @@ namespace Editor
 
     void MapView::HandleInput()
     {
-        // TODO: implement pan, zoom, wall drawing, selection
+        if (!isHoveringWindow) return;
+        grid->HandlePanning();
     }
 
     void MapView::DrawGrid()
     {
-        // TODO: draw world grid using SDL draw calls within an ImGui child window
+        grid->Render();
     }
 
     void MapView::DrawSectors()

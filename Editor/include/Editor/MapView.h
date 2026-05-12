@@ -1,11 +1,16 @@
 #pragma once
 
+#include "Editor/MapGrid.h"
+
 namespace Editor
 {
+    inline constexpr int DEFAULT_MAX_MAP_SIZE_X = 400;
+    inline constexpr int DEFAULT_MAX_MAP_SIZE_Y = 4000;
+
     class MapView
     {
     public:
-        explicit MapView(SDL_Renderer* renderer);
+        MapView();
 
         void Update();
         void Render();
@@ -24,15 +29,13 @@ namespace Editor
         void DrawSector(const EditorSector& sector);
         void DrawWall(const EditorWall& wall);
 
-        SDL_Renderer* renderer;
+        std::unique_ptr<Grid::MapGrid> grid;
 
         std::vector<EditorSector> sectors;
 
-        Core::Vector2 origin;
+        bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f;
-        int gridUnitSize = 20, selectedSectorIndex = -1, selectedWallIndex   = -1;
-
-        bool isDrawingLine;
-        Core::Vector2 lineStart, linePreview;
+        int gridUnitSize = 20, selectedSectorIndex = -1, selectedWallIndex = -1;
+        Core::Vector2 origin, mapMaxSize, lineStart, linePreview;
     };
 }

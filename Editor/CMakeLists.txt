@@ -12,6 +12,7 @@ set(SOURCES
     src/MapFileIO.cpp
     src/BSPCompiler.cpp
     src/PropertiesPanel.cpp
+    src/MapGrid.cpp
 )
 
 set(HEADERS
@@ -22,7 +23,10 @@ set(HEADERS
     include/Editor/PropertiesPanel.h
     include/Editor/EditorTypes.h
     include/Editor/Main.h
+    include/Editor/MapGrid.h
+    include/Editor/EditorTheme.h
     include/pch.h
+    include/imconfig.h
 )
 
 add_executable(Editor ${SOURCES} ${HEADERS} src/pch.cpp)
@@ -40,6 +44,7 @@ endif()
 
 target_compile_definitions(Editor PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 target_compile_definitions(Editor PRIVATE $<$<CONFIG:Release>:NDEBUG>)
+target_compile_definitions(Editor PRIVATE IMGUI_USER_CONFIG="imconfig.h")
 
 if(WIN32)
     add_custom_command(TARGET Editor POST_BUILD

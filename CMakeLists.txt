@@ -53,8 +53,11 @@ add_library(ImGui STATIC
 target_include_directories(ImGui PUBLIC
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/Editor/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/include
 )
 
+target_compile_definitions(ImGui PUBLIC IMGUI_USER_CONFIG="imconfig.h")
 target_link_libraries(ImGui PUBLIC SDL3::SDL3)
 
 add_subdirectory(Core)

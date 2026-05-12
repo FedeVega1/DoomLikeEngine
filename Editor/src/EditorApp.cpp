@@ -14,7 +14,7 @@
 namespace Editor
 {
     EditorApp::EditorApp(const SDL_WindowID& wndID, SDL_Renderer* renderer) : window(window), renderer(renderer),
-        mapView(std::make_unique<MapView>(renderer)), propertiesPanel(std::make_unique<PropertiesPanel>())
+        mapView(std::make_unique<MapView>()), propertiesPanel(std::make_unique<PropertiesPanel>())
     {
     }
 
