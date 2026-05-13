@@ -1,5 +1,8 @@
 #pragma once
 
+#include "PropertiesPanel.h"
+#include "OptionsPanel.h"
+
 namespace Editor
 {
     enum class EditorMode { None, Line, Node, Wall, Sector };
@@ -34,6 +37,7 @@ namespace Editor
 
         std::unique_ptr<MapView> mapView;
         std::unique_ptr<PropertiesPanel> propertiesPanel;
+        std::unique_ptr<Panels::OptionsPanel> optionsPanel;
 
         EditorMode currentMode = EditorMode::None;
         std::string currentFilePath;

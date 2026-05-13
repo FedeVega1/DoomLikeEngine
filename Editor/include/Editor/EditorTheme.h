@@ -2,86 +2,57 @@
 
 struct GridTheme
 {
-	ImVec4 gridOriginHorizontal;
-	ImVec4 gridOriginVertical;
-	ImVec4 gridOddVerticalLine;
-	ImVec4 gridOddHorizontalLine;
-	ImVec4 gridEvenVerticalLine;
-	ImVec4 gridEvenHorizontalLine;
+	ImVec4 gridOriginHorizontal, gridOriginVertical;
+	ImVec4 gridOddVerticalLine, gridOddHorizontalLine;
+	ImVec4 gridEvenVerticalLine, gridEvenHorizontalLine;
 
-	float gridOriginThickness;
-	float gridOddLineThickness;
-	float gridEvenLineThickness;
+	float gridOriginThickness, gridOddLineThickness, gridEvenLineThickness;
 };
 
 struct DrawingLineTheme
 {
-	ImVec4 drawingVectorLine;
-	ImVec4 orphanVectorLine;
-	ImVec4 selectedOrphanVectorLine;
-	ImVec4 hoverOrphanVectorLine;
+	ImVec4 drawingVectorLine, orphanVectorLine;
+	ImVec4 selectedOrphanVectorLine, hoverOrphanVectorLine;
 
-	float drawingLineThickness;
-	float orphanDrawingLineThickness;
-	float selectedDrawingLineThickness;
-	float hoverDrawingLineThickness;
+	float drawingLineThickness, orphanDrawingLineThickness;
+	float selectedDrawingLineThickness, hoverDrawingLineThickness;
 };
 
 struct DrawingPortalTheme
 {
-	ImVec4 portalLine;
-	ImVec4 invalidPortalLine;
-	ImVec4 selectedPortalLine;
-	ImVec4 hoverPortalLine;
+	ImVec4 portalLine, invalidPortalLine;
+	ImVec4 selectedPortalLine, hoverPortalLine;
 
-	float portalLineThickness;
-	float invalidPortalLineThickness;
-	float selectedPortalLineThickness;
-	float hoverPortalLineThickness;
+	float portalLineThickness, invalidPortalLineThickness;
+	float selectedPortalLineThickness, hoverPortalLineThickness;
 
-	ImVec4 portalConnectionLine;
-	ImVec4 selectedPortalConnectionLine;
-	ImVec4 hoverPortalConnectionLine;
+	ImVec4 portalConnectionLine, selectedPortalConnectionLine, hoverPortalConnectionLine;
 
-	float portalConnectionLineThickness;
-	float selectedPortalConnectionLineThickness;
-	float hoverPortalConnectionLineThickness;
+	float portalConnectionLineThickness, selectedPortalConnectionLineThickness, hoverPortalConnectionLineThickness;
 };
 
 struct DrawingWallTheme
 {
-	ImVec4 wallLine;
-	ImVec4 invalidWallLine;
-	ImVec4 selectedWallLine;
-	ImVec4 hoverWallLine;
-	ImVec4 wallNormalLine;
+	ImVec4 wallLine, invalidWallLine, selectedWallLine;
+	ImVec4 hoverWallLine, wallNormalLine;
 
-	float wallLineThickness;
-	float invalidWallLineThickness;
-	float selectedWallLineThickness;
-	float hoverWallLineThickness;
-	float wallNormalLineThickness;
+	float wallLineThickness, invalidWallLineThickness, selectedWallLineThickness;
+	float hoverWallLineThickness, wallNormalLineThickness;
 };
 
 struct DrawingSectorTheme
 {
-	ImVec4 sectorColor;
-	ImVec4 invalidSectorColor;
-	ImVec4 selectedSectorColor;
-	ImVec4 hoverSectorColor;
+	ImVec4 sectorColor, invalidSectorColor;
+	ImVec4 selectedSectorColor, hoverSectorColor;
 };
 
 struct DrawingNodeTheme
 {
-	ImVec4 nodePoint;
-	ImVec4 invalidNodePoint;
-	ImVec4 selectedNodePoint;
-	ImVec4 hoverNodePoint;
+	ImVec4 nodePoint, invalidNodePoint;
+	ImVec4 selectedNodePoint, hoverNodePoint;
 
-	float nodePointThickness;
-	float invalidNodePointThickness;
-	float selectedNodePointThickness;
-	float hoverNodePointThickness;
+	float nodePointThickness, invalidNodePointThickness;
+	float selectedNodePointThickness, hoverNodePointThickness;
 };
 
 struct EditorTheme

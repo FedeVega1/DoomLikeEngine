@@ -7,6 +7,8 @@
 
 namespace Core
 {
+    int FloatToInt(const float& value) { return static_cast<int>(std::round(value)); }
+
     Vector2Int Vector2Int::Clamp(const Vector2Int& vector, const int& min, const int& max)
     {
         return Vector2Int(std::clamp(vector.x, min, max), std::clamp(vector.y, min, max));

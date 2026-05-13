@@ -12,6 +12,7 @@ set(SOURCES
     src/MapFileIO.cpp
     src/BSPCompiler.cpp
     src/PropertiesPanel.cpp
+    src/OptionsPanel.cpp
     src/MapGrid.cpp
 )
 
@@ -25,6 +26,8 @@ set(HEADERS
     include/Editor/Main.h
     include/Editor/MapGrid.h
     include/Editor/EditorTheme.h
+    include/Editor/EditorHotKeys.h
+    include/Editor/OptionsPanel.h
     include/pch.h
     include/imconfig.h
 )

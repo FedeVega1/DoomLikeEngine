@@ -63,8 +63,9 @@ namespace Editor
 
     void MapView::HandleInput()
     {
+        grid->HandleInputsNoFocus();
         if (!isHoveringWindow) return;
-        grid->HandlePanning();
+        grid->HandleInputs();
     }
 
     void MapView::DrawGrid()

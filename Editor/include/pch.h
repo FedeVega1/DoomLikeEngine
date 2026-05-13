@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <map>
 
 #include "Core/VectorMath.h"
 #include "Core/WorldTypes.h"

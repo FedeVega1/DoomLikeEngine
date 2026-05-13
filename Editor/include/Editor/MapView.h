@@ -4,8 +4,8 @@
 
 namespace Editor
 {
-    inline constexpr int DEFAULT_MAX_MAP_SIZE_X = 400;
-    inline constexpr int DEFAULT_MAX_MAP_SIZE_Y = 4000;
+    inline constexpr int DEFAULT_MAX_MAP_SIZE_X = 50;
+    inline constexpr int DEFAULT_MAX_MAP_SIZE_Y = 50;
 
     class MapView
     {
@@ -21,6 +21,9 @@ namespace Editor
 
         EditorSector* GetSelectedSector();
         EditorWall* GetSelectedWall();
+
+        float GetCurrentZoom() const { return grid->GetCurrentZoom(); }
+        int GetCurrentGridSize() const { return grid->GetCurrentGridSize(); }
 
     private:
         void HandleInput();

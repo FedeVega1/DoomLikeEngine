@@ -11,7 +11,6 @@
 
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
-#include "Editor/PropertiesPanel.h"
 #include "Editor/EditorApp.h"
 #include "Editor/Main.h"
 

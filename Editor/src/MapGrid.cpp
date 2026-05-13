@@ -6,6 +6,7 @@
 
 #include "Core/VectorMath.h"
 #include "Editor/EditorTheme.h"
+#include "Editor/EditorHotKeys.h"
 #include "Editor/MapGrid.h"
 
 namespace Editor::Grid
@@ -18,20 +19,38 @@ namespace Editor::Grid
 			return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOriginVertical);
 		}
 
-		if (direction) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenHorizontalLine);
-		return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenVerticalLine);
+		if (direction)
+		{
+			if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenHorizontalLine);
+			return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOddHorizontalLine);
+		}
+
+		if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenVerticalLine);
+		return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOddVerticalLine);
 	}
 
 	int GridLineData::GetLineThickness() const
 	{
 		if (IsOnOrigin()) return MAIN_DEFAULT_THEME.gridTheme.gridOriginThickness;
-		return MAIN_DEFAULT_THEME.gridTheme.gridEvenLineThickness;
+		if ((GetLineIndex() % 2) == 0) return MAIN_DEFAULT_THEME.gridTheme.gridEvenLineThickness;
+		return MAIN_DEFAULT_THEME.gridTheme.gridOddLineThickness;
+	}
+	
+	void MapGrid::HandleInputsNoFocus()
+	{
+		HandleHotKeys();
 	}
 
-	void MapGrid::Update()
+	void MapGrid::HandleInputs()
 	{
-		if (!ImGui::IsWindowHovered()) return;
+		HandleZoom();
 		HandlePanning();
+	}
+
+	void MapGrid::HandleZoom()
+	{
+		float mWheelScroll = ImGui::GetIO().MouseWheel;
+		if (std::abs(mWheelScroll) > Core::K_EPSILON) ZoomGrid(mWheelScroll);
 	}
 
 	void MapGrid::InitializeGrid()
@@ -51,7 +70,26 @@ namespace Editor::Grid
 		if (!ImGui::IsMouseDown(ImGuiMouseButton_Middle)) return;
 
 		Core::Vector2 currentPos = ImGui::GetMousePos();
-		origin = originAtPanStart + (currentPos - panStartPos);
+		MoveGrid(originAtPanStart + (currentPos - panStartPos));
+	}
+
+	void MapGrid::HandleHotKeys()
+	{
+		if (MAIN_DEFAULT_HOTKEYS.mapEditor.grid.increaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize * 2);
+		if (MAIN_DEFAULT_HOTKEYS.mapEditor.grid.decreaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize / 2);
+
+		ZoomGrid(MAIN_DEFAULT_HOTKEYS.mapEditor.grid.zoomAxis.GetAxis(false));
+
+		float x = MAIN_DEFAULT_HOTKEYS.mapEditor.grid.panHorizontal.GetAxis(true);
+		float y = MAIN_DEFAULT_HOTKEYS.mapEditor.grid.panVertical.GetAxis(true);
+		MoveGrid(origin - Core::Vector2(x, y) * hotKeyPanSpeed);
+	}
+
+	void MapGrid::ZoomGrid(float ammount) { zoom = std::clamp(zoom - (ammount * .1f), .1f, 2.f); }
+
+	void MapGrid::MoveGrid(Core::Vector2 ammount)
+	{
+		origin = ammount;
 		ClampOrigin();
 	}
 
@@ -74,13 +112,15 @@ namespace Editor::Grid
 
 		Core::Vector2 roundedOrigin = Core::Vector2(std::round(origin.x), std::round(origin.y));
 
+		float cellSize = GetCellSize();
+
 		float firstLineX = roundedOrigin.x - FloorPointPosition(origin.x - mainWindowData.pos.x);
-		for (float x = firstLineX; x < mainWindowData.pos.x + mainWindowData.size.x; x += GetCellSize())
-			DrawGridLine(drawList, GridLineData { roundedOrigin, Core::Vector2(x, mainWindowData.pos.y), false });
+		for (float x = firstLineX; x < mainWindowData.pos.x + mainWindowData.size.x; x += cellSize)
+			DrawGridLine(drawList, GridLineData { roundedOrigin, Core::Vector2(x, mainWindowData.pos.y), false, cellSize });
 
 		float firstLineY = roundedOrigin.y - FloorPointPosition(origin.y - mainWindowData.pos.y);
-		for (float y = firstLineY; y < mainWindowData.pos.y + mainWindowData.size.y; y += GetCellSize())
-			DrawGridLine(drawList, GridLineData{ roundedOrigin, Core::Vector2(mainWindowData.pos.x, y), true });
+		for (float y = firstLineY; y < mainWindowData.pos.y + mainWindowData.size.y; y += cellSize)
+			DrawGridLine(drawList, GridLineData{ roundedOrigin, Core::Vector2(mainWindowData.pos.x, y), true, cellSize });
 	}
 
 	void MapGrid::DrawGridLine(ImDrawList* const drawList, const GridLineData& lineData) const

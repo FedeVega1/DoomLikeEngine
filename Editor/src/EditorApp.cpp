@@ -2,11 +2,11 @@
 
 #include <imgui.h>
 #include <SDL3/SDL.h>
+#include <format>
 
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
 #include "Editor/BSPCompiler.h"
-#include "Editor/PropertiesPanel.h"
 #include "Editor/MapFileIO.h"
 
 #include "Editor/EditorApp.h"
@@ -14,7 +14,8 @@
 namespace Editor
 {
     EditorApp::EditorApp(const SDL_WindowID& wndID, SDL_Renderer* renderer) : window(window), renderer(renderer),
-        mapView(std::make_unique<MapView>()), propertiesPanel(std::make_unique<PropertiesPanel>())
+        mapView(std::make_unique<MapView>()), propertiesPanel(std::make_unique<PropertiesPanel>()), 
+        optionsPanel(std::make_unique<Panels::OptionsPanel>())
     {
     }
 
@@ -35,6 +36,8 @@ namespace Editor
 
         if (ImGui::Begin("Properties")) propertiesPanel->Render(mapView->GetSelectedSector(), mapView->GetSelectedWall());
         ImGui::End();
+
+        optionsPanel->Render();
     }
 
     void EditorApp::DrawMainMenuBar()
@@ -50,6 +53,9 @@ namespace Editor
             ImGui::Separator();
 
             if (ImGui::MenuItem("Compile Map...")) { /* TODO */ }
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Options")) optionsPanel->Toggle(true);
             ImGui::Separator();
 
             if (ImGui::MenuItem("Quit")) RequestQuit();
@@ -93,6 +99,15 @@ namespace Editor
 
         const char* modeNames[] = { "None", "Line", "Node", "Wall", "Sector" };
         ImGui::Text("Mode: %s  |  %s", modeNames[static_cast<int>(currentMode)], currentFilePath.empty() ? "Untitled" : currentFilePath.c_str());
+
+        ImGui::SameLine();
+
+        Core::Vector2 mousePos = ImGui::GetIO().MousePos;
+        float normalizedZoom = mapView->GetCurrentZoom() / 2.f;
+        std::string gridData = "Zoom: " + std::format("{:.2f}", normalizedZoom) + " | Grid Size : " + std::to_string(mapView->GetCurrentGridSize());
+        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x + ImGui::GetCursorPosX() - ImGui::CalcTextSize(gridData.c_str()).x);
+        ImGui::Text(gridData.c_str());
+
         ImGui::End();
     }
 

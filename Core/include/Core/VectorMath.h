@@ -10,6 +10,8 @@ namespace Core
     struct Vector2;
     struct Vector3;
 
+    int FloatToInt(const float& value);
+
     struct Vector2Int
     {
         int x, y;
