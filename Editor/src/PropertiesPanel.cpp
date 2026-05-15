@@ -3,9 +3,9 @@
 #include <imgui.h>
 
 #include "Editor/EditorTypes.h"
-#include "Editor/PropertiesPanel.h"
+#include "Editor/Panels/PropertiesPanel.h"
 
-namespace Editor
+namespace Editor::Panels
 {
     void PropertiesPanel::Render(EditorSector* selectedSector, EditorWall* selectedWall)
     {

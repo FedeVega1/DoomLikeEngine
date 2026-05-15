@@ -68,4 +68,6 @@ namespace Core
     }
 
     std::string Vector3::ToString() const { return std::format("({}, {}, {})", x, y, z); }
+
+    Vector2 Vector2::Abs(const Vector2& vector) { return Vector2(std::abs(vector.x), std::abs(vector.y)); }
 }

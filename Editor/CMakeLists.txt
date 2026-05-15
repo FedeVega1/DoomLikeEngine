@@ -21,13 +21,14 @@ set(HEADERS
     include/Editor/MapView.h
     include/Editor/MapFileIO.h
     include/Editor/BSPCompiler.h
-    include/Editor/PropertiesPanel.h
+    include/Editor/Panels/PropertiesPanel.h
     include/Editor/EditorTypes.h
     include/Editor/Main.h
     include/Editor/MapGrid.h
-    include/Editor/EditorTheme.h
-    include/Editor/EditorHotKeys.h
-    include/Editor/OptionsPanel.h
+    include/Editor/Config/EditorTheme.h
+    include/Editor/Config/EditorHotKeys.h
+    include/Editor/Config/EditorConfiguration.h
+    include/Editor/Panels/OptionsPanel.h
     include/pch.h
     include/imconfig.h
 )

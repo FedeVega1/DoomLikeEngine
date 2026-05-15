@@ -5,8 +5,9 @@
 #include <SDL3/SDL_render.h>
 
 #include "Core/VectorMath.h"
-#include "Editor/EditorTheme.h"
-#include "Editor/EditorHotKeys.h"
+#include "Editor/Config/EditorTheme.h"
+#include "Editor/Config/EditorHotKeys.h"
+#include "Editor/Config/EditorConfiguration.h"
 #include "Editor/MapGrid.h"
 
 namespace Editor::Grid
@@ -36,6 +37,10 @@ namespace Editor::Grid
 		return MAIN_DEFAULT_THEME.gridTheme.gridOddLineThickness;
 	}
 	
+	MapGrid::MapGrid(Core::Vector2 mapMaxSize) : origin(), zoom(ConfigurationManager::INS.GetGridConfig().defaultZoom * MAX_ZOOM),
+		gridSize(ConfigurationManager::INS.GetGridConfig().defaultGridSize), cellSizeLimit(8.f, 256.f), hotKeyPanSpeed(15.f), 
+		worldMapMaxSize(mapMaxSize) { }
+
 	void MapGrid::HandleInputsNoFocus()
 	{
 		HandleHotKeys();
@@ -85,7 +90,7 @@ namespace Editor::Grid
 		MoveGrid(origin - Core::Vector2(x, y) * hotKeyPanSpeed);
 	}
 
-	void MapGrid::ZoomGrid(float ammount) { zoom = std::clamp(zoom - (ammount * .1f), .1f, 2.f); }
+	void MapGrid::ZoomGrid(float ammount) { zoom = std::clamp(zoom - (ammount * .1f), MIN_ZOOM, MAX_ZOOM); }
 
 	void MapGrid::MoveGrid(Core::Vector2 ammount)
 	{
@@ -111,8 +116,13 @@ namespace Editor::Grid
 		mainWindowData = WindowData { ImGui::GetCursorScreenPos(), ImGui::GetContentRegionAvail() };
 
 		Core::Vector2 roundedOrigin = Core::Vector2(std::round(origin.x), std::round(origin.y));
-
 		float cellSize = GetCellSize();
+
+		if (ConfigurationManager::INS.GetGridConfig().dottedLines)
+		{
+			DrawDottedGrid(drawList, roundedOrigin, cellSize);
+			return;
+		}
 
 		float firstLineX = roundedOrigin.x - FloorPointPosition(origin.x - mainWindowData.pos.x);
 		for (float x = firstLineX; x < mainWindowData.pos.x + mainWindowData.size.x; x += cellSize)
@@ -125,7 +135,27 @@ namespace Editor::Grid
 
 	void MapGrid::DrawGridLine(ImDrawList* const drawList, const GridLineData& lineData) const
 	{
-		drawList->AddLine(lineData.position, lineData.GetLineEndPoint(mainWindowData.size), lineData.GetLineColor(), 
+		drawList->AddLine(lineData.position, lineData.GetLineEndPoint(mainWindowData.size), lineData.GetLineColor(),
 			lineData.GetLineThickness());
+	}
+
+	void MapGrid::DrawDottedGrid(ImDrawList* const drawList, const Core::Vector2& roundedOrigin, float cellSize) const
+	{
+		float startX = roundedOrigin.x - FloorPointPosition(origin.x - mainWindowData.pos.x);
+		float startY = roundedOrigin.y - FloorPointPosition(origin.y - mainWindowData.pos.y);
+		float endX = mainWindowData.pos.x + mainWindowData.size.x;
+		float endY = mainWindowData.pos.y + mainWindowData.size.y;
+
+		for (float x = startX; x < endX; x += cellSize)
+		{
+			GridLineData vertLine { roundedOrigin, Core::Vector2(x, mainWindowData.pos.y), false, cellSize };
+			for (float y = startY; y < endY; y += cellSize)
+			{
+				GridLineData horzLine { roundedOrigin, Core::Vector2(mainWindowData.pos.x, y), true, cellSize };
+				ImU32 color = horzLine.IsOnOrigin() ? horzLine.GetLineColor() : vertLine.GetLineColor();
+				float thickness = static_cast<float>(horzLine.IsOnOrigin() ? horzLine.GetLineThickness() : vertLine.GetLineThickness());
+				drawList->AddRectFilled(Core::Vector2(x, y) - Core::Vector2::RIGHT, Core::Vector2(x, y) + Core::Vector2::RIGHT, color, thickness);
+			}
+		}
 	}
 }

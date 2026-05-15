@@ -2,6 +2,9 @@
 
 namespace Editor::Grid
 {
+	inline constexpr float MAX_ZOOM = 2.f;
+	inline constexpr float MIN_ZOOM = .1f;
+
 	struct WindowData
 	{
 		Core::Vector2 pos;
@@ -16,8 +19,7 @@ namespace Editor::Grid
 		bool direction;
 		float cellSize;
 
-		bool IsOnOrigin() const { return std::abs(position.x - roundedOrigin.x) < Core::K_EPSILON ||
-			std::abs(position.y - roundedOrigin.y) < Core::K_EPSILON; }
+		bool IsOnOrigin() const { return GetLineIndex() == 0; }
 
 		int GetLineIndex() const
 		{
@@ -38,10 +40,8 @@ namespace Editor::Grid
 	class MapGrid
 	{
 	public:
-		MapGrid(Core::Vector2 mapMaxSize) : origin(), zoom(1.f), gridSize(8), cellSizeLimit(8.f, 256.f), hotKeyPanSpeed(15.f),
-			worldMapMaxSize(mapMaxSize) {}
-
-		~MapGrid() {  }
+		MapGrid(Core::Vector2 mapMaxSize);
+		~MapGrid() = default;
 
 		void InitializeGrid();
 
@@ -60,6 +60,7 @@ namespace Editor::Grid
 		void HandleZoom();
 
 		void DrawGridLine(ImDrawList* const drawList, const GridLineData& lineData) const;
+		void DrawDottedGrid(ImDrawList* const drawList, const Core::Vector2& roundedOrigin, float cellSize) const;
 
 		inline float FloorPointPosition(const float& value) const { return std::floor(value / GetCellSize()) * GetCellSize(); }
 		inline float GetCellSize() const { return std::clamp((gridSize * cellSizeLimit.x) / zoom, cellSizeLimit.x, cellSizeLimit.y); }

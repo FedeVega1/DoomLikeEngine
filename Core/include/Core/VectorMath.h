@@ -67,6 +67,7 @@ namespace Core
         static float Distance(const Vector2& a, const Vector2& b);
         static float Cross(const Vector2& a, const Vector2& b) { return a.x * b.y - a.y * b.x; }
         static Vector2 Clamp(const Vector2& vector, const float& min, const float& max);
+        static Vector2 Abs(const Vector2& vector);
 
         static const Vector2 ZERO;
         static const Vector2 ONE;

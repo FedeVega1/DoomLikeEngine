@@ -1,7 +1,7 @@
 #pragma once
 
-#include "PropertiesPanel.h"
-#include "OptionsPanel.h"
+#include "Panels/PropertiesPanel.h"
+#include "Panels/OptionsPanel.h"
 
 namespace Editor
 {
@@ -36,7 +36,7 @@ namespace Editor
         SDL_Renderer* renderer;
 
         std::unique_ptr<MapView> mapView;
-        std::unique_ptr<PropertiesPanel> propertiesPanel;
+        std::unique_ptr<Panels::PropertiesPanel> propertiesPanel;
         std::unique_ptr<Panels::OptionsPanel> optionsPanel;
 
         EditorMode currentMode = EditorMode::None;

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Editor
+namespace Editor::Panels
 {
     class PropertiesPanel
     {
