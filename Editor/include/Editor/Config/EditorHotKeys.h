@@ -41,32 +41,3 @@ struct EditorHotkeys
 {
 	MapEditorHotKeys mapEditor;
 };
-
-
-inline constexpr EditorHotkeys MAIN_DEFAULT_HOTKEYS = EditorHotkeys
-{
-	MapEditorHotKeys
-	{
-		GridHotKeys
-		{
-			EditorMapping { ImGuiKey_KeypadAdd, ImGuiMod_None },
-			EditorMapping { ImGuiKey_KeypadSubtract, ImGuiMod_None },
-
-			EditorAxisMapping
-			{
-				EditorMapping { ImGuiKey_KeypadAdd, ImGuiMod_Ctrl },
-				EditorMapping { ImGuiKey_KeypadSubtract, ImGuiMod_Ctrl }
-			},
-			EditorAxisMapping
-			{
-				EditorMapping { ImGuiKey_LeftArrow, ImGuiMod_None },
-				EditorMapping { ImGuiKey_RightArrow, ImGuiMod_None }
-			},
-			EditorAxisMapping
-			{
-				EditorMapping { ImGuiKey_UpArrow, ImGuiMod_None },
-				EditorMapping { ImGuiKey_DownArrow, ImGuiMod_None }
-			}
-		}
-	}
-};

@@ -6,8 +6,11 @@
 #include <SDL3/SDL_video.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+
+#include <filesystem>
 
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
@@ -90,6 +93,8 @@ bool InitImgGUI()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.IniFilename = "editor_layout.ini";
 
+    needsDefaultLayout = !std::filesystem::exists(io.IniFilename);
+
     ImGui::StyleColorsDark();
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -114,7 +119,12 @@ void MainLoop()
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+        ImGuiID dockspaceID = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+        if (needsDefaultLayout)
+        {
+            SetupDefaultDockLayout(dockspaceID);
+            needsDefaultLayout = false;
+        }
 
         editor->Update();
         editor->Render();
@@ -143,6 +153,27 @@ bool HandleEvents()
     }
 
     return true;
+}
+
+void SetupDefaultDockLayout(ImGuiID dockspaceID)
+{
+    ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
+
+    ImGui::DockBuilderRemoveNode(dockspaceID);
+    ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
+    ImGui::DockBuilderSetNodeSize(dockspaceID, viewportSize);
+
+    ImGuiID toolbarID, workAreaID;
+    ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Up, 62.f / 701.f, &toolbarID, &workAreaID);
+
+    ImGuiID mapViewID, propertiesID;
+    ImGui::DockBuilderSplitNode(workAreaID, ImGuiDir_Left, 1040.f / 1278.f, &mapViewID, &propertiesID);
+
+    ImGui::DockBuilderDockWindow("Tools", toolbarID);
+    ImGui::DockBuilderDockWindow("Map View", mapViewID);
+    ImGui::DockBuilderDockWindow("Properties", propertiesID);
+
+    ImGui::DockBuilderFinish(dockspaceID);
 }
 
 void ClearAndExit()

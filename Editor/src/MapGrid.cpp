@@ -5,8 +5,6 @@
 #include <SDL3/SDL_render.h>
 
 #include "Core/VectorMath.h"
-#include "Editor/Config/EditorTheme.h"
-#include "Editor/Config/EditorHotKeys.h"
 #include "Editor/Config/EditorConfiguration.h"
 #include "Editor/MapGrid.h"
 
@@ -16,29 +14,29 @@ namespace Editor::Grid
 	{
 		if (IsOnOrigin())
 		{
-			if (direction) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOriginHorizontal);
-			return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOriginVertical);
+			if (direction) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOriginHorizontal);
+			return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOriginVertical);
 		}
 
 		if (direction)
 		{
-			if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenHorizontalLine);
-			return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOddHorizontalLine);
+			if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridEvenHorizontalLine);
+			return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOddHorizontalLine);
 		}
 
-		if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridEvenVerticalLine);
-		return ImGui::GetColorU32(MAIN_DEFAULT_THEME.gridTheme.gridOddVerticalLine);
+		if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridEvenVerticalLine);
+		return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOddVerticalLine);
 	}
 
-	int GridLineData::GetLineThickness() const
+	float GridLineData::GetLineThickness() const
 	{
-		if (IsOnOrigin()) return MAIN_DEFAULT_THEME.gridTheme.gridOriginThickness;
-		if ((GetLineIndex() % 2) == 0) return MAIN_DEFAULT_THEME.gridTheme.gridEvenLineThickness;
-		return MAIN_DEFAULT_THEME.gridTheme.gridOddLineThickness;
+		if (IsOnOrigin()) return ConfigurationManager::INS.GetGridTheme().gridOriginThickness;
+		if ((GetLineIndex() % 2) == 0) return ConfigurationManager::INS.GetGridTheme().gridEvenLineThickness;
+		return ConfigurationManager::INS.GetGridTheme().gridOddLineThickness;
 	}
 	
 	MapGrid::MapGrid(Core::Vector2 mapMaxSize) : origin(), zoom(ConfigurationManager::INS.GetGridConfig().defaultZoom * MAX_ZOOM),
-		gridSize(ConfigurationManager::INS.GetGridConfig().defaultGridSize), cellSizeLimit(8.f, 256.f), hotKeyPanSpeed(15.f), 
+		gridSize(ConfigurationManager::INS.GetGridConfig().defaultGridSize), cellSizeLimit(1.f, 512.f), hotKeyPanSpeed(15.f), 
 		worldMapMaxSize(mapMaxSize) { }
 
 	void MapGrid::HandleInputsNoFocus()
@@ -80,13 +78,13 @@ namespace Editor::Grid
 
 	void MapGrid::HandleHotKeys()
 	{
-		if (MAIN_DEFAULT_HOTKEYS.mapEditor.grid.increaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize * 2);
-		if (MAIN_DEFAULT_HOTKEYS.mapEditor.grid.decreaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize / 2);
+		if (ConfigurationManager::INS.GetGridHotKeys().increaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize * 2);
+		if (ConfigurationManager::INS.GetGridHotKeys().decreaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize / 2);
 
-		ZoomGrid(MAIN_DEFAULT_HOTKEYS.mapEditor.grid.zoomAxis.GetAxis(false));
+		ZoomGrid(ConfigurationManager::INS.GetGridHotKeys().zoomAxis.GetAxis(false));
 
-		float x = MAIN_DEFAULT_HOTKEYS.mapEditor.grid.panHorizontal.GetAxis(true);
-		float y = MAIN_DEFAULT_HOTKEYS.mapEditor.grid.panVertical.GetAxis(true);
+		float x = ConfigurationManager::INS.GetGridHotKeys().panHorizontal.GetAxis(true);
+		float y = ConfigurationManager::INS.GetGridHotKeys().panVertical.GetAxis(true);
 		MoveGrid(origin - Core::Vector2(x, y) * hotKeyPanSpeed);
 	}
 
@@ -115,6 +113,9 @@ namespace Editor::Grid
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
 		mainWindowData = WindowData { ImGui::GetCursorScreenPos(), ImGui::GetContentRegionAvail() };
 
+		drawList->AddRectFilled(mainWindowData.pos, mainWindowData.GetScreenSpaceWindowSize(), 
+			ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridBackgrund));
+
 		Core::Vector2 roundedOrigin = Core::Vector2(std::round(origin.x), std::round(origin.y));
 		float cellSize = GetCellSize();
 
@@ -141,19 +142,19 @@ namespace Editor::Grid
 
 	void MapGrid::DrawDottedGrid(ImDrawList* const drawList, const Core::Vector2& roundedOrigin, float cellSize) const
 	{
-		float startX = roundedOrigin.x - FloorPointPosition(origin.x - mainWindowData.pos.x);
-		float startY = roundedOrigin.y - FloorPointPosition(origin.y - mainWindowData.pos.y);
-		float endX = mainWindowData.pos.x + mainWindowData.size.x;
-		float endY = mainWindowData.pos.y + mainWindowData.size.y;
+		Core::Vector2 start = Core::Vector2(roundedOrigin.x - FloorPointPosition(origin.x - mainWindowData.pos.x),
+											roundedOrigin.y - FloorPointPosition(origin.y - mainWindowData.pos.y));
 
-		for (float x = startX; x < endX; x += cellSize)
+		Core::Vector2 end = Core::Vector2(mainWindowData.pos.x + mainWindowData.size.x, mainWindowData.pos.y + mainWindowData.size.y);
+
+		for (float x = start.x; x < end.x; x += cellSize)
 		{
 			GridLineData vertLine { roundedOrigin, Core::Vector2(x, mainWindowData.pos.y), false, cellSize };
-			for (float y = startY; y < endY; y += cellSize)
+			for (float y = start.y; y < end.y; y += cellSize)
 			{
 				GridLineData horzLine { roundedOrigin, Core::Vector2(mainWindowData.pos.x, y), true, cellSize };
 				ImU32 color = horzLine.IsOnOrigin() ? horzLine.GetLineColor() : vertLine.GetLineColor();
-				float thickness = static_cast<float>(horzLine.IsOnOrigin() ? horzLine.GetLineThickness() : vertLine.GetLineThickness());
+				float thickness = horzLine.IsOnOrigin() ? horzLine.GetLineThickness() : vertLine.GetLineThickness();
 				drawList->AddRectFilled(Core::Vector2(x, y) - Core::Vector2::RIGHT, Core::Vector2(x, y) + Core::Vector2::RIGHT, color, thickness);
 			}
 		}

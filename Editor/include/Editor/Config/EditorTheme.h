@@ -5,6 +5,7 @@ struct GridTheme
 	ImVec4 gridOriginHorizontal, gridOriginVertical;
 	ImVec4 gridOddVerticalLine, gridOddHorizontalLine;
 	ImVec4 gridEvenVerticalLine, gridEvenHorizontalLine;
+	ImVec4 gridBackgrund;
 
 	float gridOriginThickness, gridOddLineThickness, gridEvenLineThickness;
 };
@@ -75,6 +76,7 @@ inline constexpr EditorTheme MAIN_DEFAULT_THEME = EditorTheme
 		ImVec4(0.6627451f, 0.6627451f, 0.6627451f, 1.f),
 		ImVec4(0.47f, 0.53f, 0.6f, 1.f),
 		ImVec4(0.18431373f, 0.30980392f, 0.30980392f, 1.f),
+		ImVec4(),
 
 		2.f,
 		2.f,

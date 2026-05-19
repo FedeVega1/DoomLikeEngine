@@ -5,6 +5,11 @@ namespace Editor::Grid
 	inline constexpr float MAX_ZOOM = 2.f;
 	inline constexpr float MIN_ZOOM = .1f;
 
+	inline constexpr int MIN_GRID_SIZE = 1;
+	inline constexpr int MAX_GRID_SIZE = 64;
+
+	inline constexpr int GRID_ZOOM_STEP = 8;
+
 	struct WindowData
 	{
 		Core::Vector2 pos;
@@ -28,7 +33,7 @@ namespace Editor::Grid
 		}
 
 		ImU32 GetLineColor() const;
-		int GetLineThickness() const;
+		float GetLineThickness() const;
 
 		Core::Vector2 GetLineEndPoint(const Core::Vector2& windowSize) const 
 		{ 
@@ -63,9 +68,9 @@ namespace Editor::Grid
 		void DrawDottedGrid(ImDrawList* const drawList, const Core::Vector2& roundedOrigin, float cellSize) const;
 
 		inline float FloorPointPosition(const float& value) const { return std::floor(value / GetCellSize()) * GetCellSize(); }
-		inline float GetCellSize() const { return std::clamp((gridSize * cellSizeLimit.x) / zoom, cellSizeLimit.x, cellSizeLimit.y); }
+		inline float GetCellSize() const { return std::clamp((gridSize * GRID_ZOOM_STEP) / zoom, cellSizeLimit.x, cellSizeLimit.y); }
 
-		inline void UpdateGridSize(const int& newValue) { gridSize = std::clamp(newValue, 1, 32); }
+		inline void UpdateGridSize(const int& newValue) { gridSize = std::clamp(newValue, MIN_GRID_SIZE, MAX_GRID_SIZE); }
 
 		void ClampOrigin();
 		void ZoomGrid(float ammount);

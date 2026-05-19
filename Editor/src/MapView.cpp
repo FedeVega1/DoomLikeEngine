@@ -24,8 +24,12 @@ namespace Editor
     {
         if (!firstRender)
         {
-            grid->InitializeGrid();
-            firstRender = true;
+            ImVec2 avail = ImGui::GetContentRegionAvail();
+            if (avail.x > 1.f && avail.y > 1.f)
+            {
+                grid->InitializeGrid();
+                firstRender = true;
+            }
         }
 
         isHoveringWindow = ImGui::IsWindowHovered();

@@ -2,6 +2,54 @@
 
 namespace Editor::Panels
 {
+	struct HotKeyOption
+	{
+		std::string optionName;
+		ImGuiKey* value, * modifierKey;
+		int selectionIndx, modifierSelectionIndx;
+	};
+
+	class HotKeyOptionsHelper
+	{
+	public:
+		HotKeyOptionsHelper() = default;
+		HotKeyOptionsHelper(std::vector<HotKeyOption> options);
+		~HotKeyOptionsHelper() = default;
+
+		void Render();
+
+	private:
+		void InitializeMaps();
+
+		std::vector<HotKeyOption> options;
+
+		static std::vector<std::string> keyMapStrings;
+		static std::map<std::string, ImGuiKey> keyMap;
+
+		static std::vector<std::string> modifierStrings;
+		static std::map<std::string, ImGuiKey> modifierMap;
+	};
+
+	struct ColorOption
+	{
+		std::string optionName;
+		ImVec4* colorValue;
+	};
+
+	class ColorOptionsHelper
+	{
+	public:
+		ColorOptionsHelper() = default;
+		ColorOptionsHelper(std::vector<ColorOption> options) { this->options = options; }
+		~ColorOptionsHelper() = default;
+		
+		void Render();
+
+	private:
+
+		std::vector<ColorOption> options;
+	};
+
 	class OptionsSection
 	{
 	public:
@@ -37,6 +85,8 @@ namespace Editor::Panels
 		int currentSelectedGridOption;
 
 		std::array<const char*, 9> gridSizeOptions;
+		HotKeyOptionsHelper hotKeyHelper;
+		ColorOptionsHelper colorHelper;
 	};
 
 	enum OptionSectionType { General, Grid };
