@@ -9,6 +9,7 @@ set(SOURCES
     src/Main.cpp
     src/EditorApp.cpp
     src/MapView.cpp
+    src/MapRenderer.cpp
     src/MapFileIO.cpp
     src/BSPCompiler.cpp
     src/PropertiesPanel.cpp
@@ -19,6 +20,7 @@ set(SOURCES
 set(HEADERS
     include/Editor/EditorApp.h
     include/Editor/MapView.h
+    include/Editor/MapRenderer.h
     include/Editor/MapFileIO.h
     include/Editor/BSPCompiler.h
     include/Editor/Panels/PropertiesPanel.h

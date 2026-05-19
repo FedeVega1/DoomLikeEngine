@@ -10,9 +10,10 @@ namespace Editor
 {
     MapView::MapView() : firstRender(false), isDrawingLine(false), isHoveringWindow(false), lineTargetNode(Core::NULL_ID_32),
         currentMapData(std::make_unique<MapData>(0UL, 0UL, 0UL)), lastCreatedWallID(Core::NULL_ID_32), cursorTime(0.f)
-    { 
+    {
         mapMaxSize = Core::Vector2(DEFAULT_MAX_MAP_SIZE_X, DEFAULT_MAX_MAP_SIZE_Y);
         grid = std::make_unique<Grid::MapGrid>(mapMaxSize);
+        mapRenderer = std::make_unique<MapRenderer>(*grid);
     }
 
     void MapView::Update()
@@ -35,7 +36,7 @@ namespace Editor
         isHoveringWindow = ImGui::IsWindowHovered();
 
         grid->Render();
-        DrawMapData();
+        if (currentMapData) mapRenderer->Render(*currentMapData);
         DrawPreviewLine();
         DrawCursor();
     }
@@ -127,108 +128,6 @@ namespace Editor
         return currentMapData->AddWall(wall);
     }
 
-    void MapView::DrawMapData()
-    {
-        if (!currentMapData) return;
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-        currentMapData->ForEachSector([&](const EditorSector& sector) { DrawSector(drawList, sector); });
-        currentMapData->ForEachWall([&](const EditorWall& wall) { DrawWall(drawList, wall); });
-        currentMapData->ForEachNode([&](const EditorNode& node) { DrawNode(drawList, node); });
-    }
-
-    bool MapView::IsInViewport(const Core::Vector2& min, const Core::Vector2& max) const
-    {
-        Core::Vector2 windowMin = ImGui::GetWindowPos();
-        Core::Vector2 windowMax = windowMin + Core::Vector2(ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
-
-        return max.x >= windowMin.x && min.x <= windowMax.x && max.y >= windowMin.y && min.y <= windowMax.y;
-    }
-
-    ImVec4 MapView::GetSectorColor() const
-    {
-        const DrawingSectorTheme& theme = ConfigurationManager::INS.GetSectorTheme();
-        return theme.sectorColor;
-    }
-
-    void MapView::DrawSector(ImDrawList* const drawList, const EditorSector& sector)
-    {
-        if (!IsInViewport(grid->WorldToScreen(sector.min), grid->WorldToScreen(sector.max))) return;
-
-        std::vector<ImVec2> sectorPoints;
-        for (const GUID& wallID : sector.walls)
-        {
-            const EditorWall& wall = currentMapData->GetWall(wallID);
-            const EditorNode& node = currentMapData->GetNode(wall.leftPoint);
-            sectorPoints.push_back(grid->WorldToScreen(node.pos));
-        }
-
-        drawList->AddConvexPolyFilled(sectorPoints.data(), sectorPoints.size(), ImGui::GetColorU32(GetSectorColor()));
-    }
-
-    ImVec4 MapView::GetPortalColor(bool isConnection) const
-    {
-        const DrawingPortalTheme& theme = ConfigurationManager::INS.GetPortalTheme();
-        if (isConnection) return theme.portalConnectionLine;
-        return theme.portalLine;
-    }
-
-    ImVec4 MapView::GetWallColor() const
-    {
-        const DrawingWallTheme& theme = ConfigurationManager::INS.GetWallTheme();
-        return theme.wallLine;
-    }
-
-    float MapView::GetWallThickness() const
-    {
-        const DrawingWallTheme& theme = ConfigurationManager::INS.GetWallTheme();
-        return theme.wallLineThickness;
-    }
-
-    float MapView::GetPortalThickness(bool isConnection) const
-    {
-        const DrawingPortalTheme& theme = ConfigurationManager::INS.GetPortalTheme();
-        if (isConnection) return theme.portalConnectionLineThickness;
-        return theme.portalLineThickness;
-    }
-
-    void MapView::DrawWall(ImDrawList* const drawList, const EditorWall& wall)
-    {
-        if (!IsInViewport(grid->WorldToScreen(wall.min), grid->WorldToScreen(wall.max))) return;
-
-        const EditorNode& leftNode = currentMapData->GetNode(wall.leftPoint);
-        const EditorNode& rightNode = currentMapData->GetNode(wall.rightPoint);
-
-        ImVec4 color = wall.isPortal ? GetPortalColor(wall.isConnection) : GetWallColor();
-        float thickness = wall.isPortal ? GetPortalThickness(wall.isConnection) : GetWallThickness();
-
-        drawList->AddLine(grid->WorldToScreen(leftNode.pos), grid->WorldToScreen(rightNode.pos), ImGui::GetColorU32(color), thickness);
-    }
-
-    ImVec4 MapView::GetNodeColor() const
-    {
-        const DrawingNodeTheme& theme = ConfigurationManager::INS.GetNodeTheme();
-        return theme.nodePoint;
-    }
-
-    float MapView::GetNodeThickness() const
-    {
-        const DrawingNodeTheme& theme = ConfigurationManager::INS.GetNodeTheme();
-        return theme.nodePointThickness;
-    }
-
-    void MapView::DrawNode(ImDrawList* const drawList, const EditorNode& node)
-    {
-        float thickness = GetNodeThickness();
-
-        Core::Vector2 screenPos = grid->WorldToScreen(node.pos), offset = Core::Vector2::ONE * thickness;
-        Core::Vector2 nodeMin = screenPos - offset, nodeMax = screenPos + offset;
-
-        if (!IsInViewport(nodeMin, nodeMax)) return;
-
-        drawList->AddRectFilled(nodeMin, nodeMax, ImGui::GetColorU32(GetNodeColor()));
-    }
-
     void MapView::DrawCursor()
     {
         if (!isHoveringWindow || !isDrawingLine) return;
@@ -271,28 +170,28 @@ namespace Editor
     }
 
     GUID MapData::AddNode(const Core::Vector2& pos)
-    { 
+    {
         EditorNode newNode = { pos, ++nodeCounter };
         nodes.emplace(newNode.nodeID, newNode);
         return newNode.nodeID;
     }
 
     GUID MapData::AddWall(EditorWall& wall)
-    { 
-        wall.wallID = ++wallCounter; 
-        walls.emplace(wall.wallID, wall); 
+    {
+        wall.wallID = ++wallCounter;
+        walls.emplace(wall.wallID, wall);
         return wall.wallID;
     }
 
     GUID MapData::AddSector(EditorSector& sector)
-    { 
-        sector.sectorID = ++sectorCounter; 
-        sectors.emplace(sector.sectorID, sector); 
+    {
+        sector.sectorID = ++sectorCounter;
+        sectors.emplace(sector.sectorID, sector);
         return sector.sectorID;
     }
 
-    void MapData::ForEachNode(const std::function<void(const EditorNode&)>& callback) const 
-    { 
+    void MapData::ForEachNode(const std::function<void(const EditorNode&)>& callback) const
+    {
         for (const auto& [id, node] : nodes)
         {
             if (callback == nullptr) continue;

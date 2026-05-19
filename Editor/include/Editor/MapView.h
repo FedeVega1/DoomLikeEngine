@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Editor/MapGrid.h"
+#include "Editor/MapRenderer.h"
 
 namespace Editor
 {
@@ -30,11 +30,6 @@ namespace Editor
         void HandleInput();
         void HandleHotKeys();
 
-        void DrawMapData();
-        void DrawSector(ImDrawList* const drawList, const EditorSector& sector);
-        void DrawWall(ImDrawList* const drawList, const EditorWall& wall);
-        void DrawNode(ImDrawList* const drawList, const EditorNode& node);
-
         void DrawCursor();
         void DrawPreviewLine();
 
@@ -49,19 +44,10 @@ namespace Editor
         }
 
         Core::Vector2 GetScreenSpaceCursor() const { return grid->WorldToScreen(GetSnappedWorldPos()); }
-        bool IsInViewport(const Core::Vector2& min, const Core::Vector2& max) const;
-
-        ImVec4 GetSectorColor() const;
-        ImVec4 GetPortalColor(bool isConnection) const;
-        ImVec4 GetWallColor() const;
-        ImVec4 GetNodeColor() const;
-
-        float GetPortalThickness(bool isConnection) const;
-        float GetWallThickness() const;
-        float GetNodeThickness() const;
 
         std::unique_ptr<Grid::MapGrid> grid;
         std::unique_ptr<MapData> currentMapData;
+        std::unique_ptr<MapRenderer> mapRenderer;
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f, cursorTime;

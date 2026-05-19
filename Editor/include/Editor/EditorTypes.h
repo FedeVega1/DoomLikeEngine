@@ -58,6 +58,10 @@ namespace Editor
         EditorWall& GetWall(GUID id) { return walls.at(id); }
         EditorSector& GetSector(GUID id) { return sectors.at(id); }
 
+        const EditorNode& GetNode(GUID id) const { return nodes.at(id); }
+        const EditorWall& GetWall(GUID id) const { return walls.at(id); }
+        const EditorSector& GetSector(GUID id) const { return sectors.at(id); }
+
         GUID AddNode(const Core::Vector2& pos);
         GUID AddWall(EditorWall& wall);
         GUID AddSector(EditorSector& sector);
