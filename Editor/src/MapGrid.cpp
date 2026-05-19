@@ -12,27 +12,31 @@ namespace Editor::Grid
 {
 	ImU32 GridLineData::GetLineColor() const
 	{
+		const GridTheme& theme = ConfigurationManager::INS.GetGridTheme();
+
 		if (IsOnOrigin())
 		{
-			if (direction) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOriginHorizontal);
-			return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOriginVertical);
+			if (direction) return ImGui::GetColorU32(theme.gridOriginHorizontal);
+			return ImGui::GetColorU32(theme.gridOriginVertical);
 		}
 
 		if (direction)
 		{
-			if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridEvenHorizontalLine);
-			return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOddHorizontalLine);
+			if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(theme.gridEvenHorizontalLine);
+			return ImGui::GetColorU32(theme.gridOddHorizontalLine);
 		}
 
-		if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridEvenVerticalLine);
-		return ImGui::GetColorU32(ConfigurationManager::INS.GetGridTheme().gridOddVerticalLine);
+		if ((GetLineIndex() % 2) == 0) return ImGui::GetColorU32(theme.gridEvenVerticalLine);
+		return ImGui::GetColorU32(theme.gridOddVerticalLine);
 	}
 
 	float GridLineData::GetLineThickness() const
 	{
-		if (IsOnOrigin()) return ConfigurationManager::INS.GetGridTheme().gridOriginThickness;
-		if ((GetLineIndex() % 2) == 0) return ConfigurationManager::INS.GetGridTheme().gridEvenLineThickness;
-		return ConfigurationManager::INS.GetGridTheme().gridOddLineThickness;
+		const GridTheme& theme = ConfigurationManager::INS.GetGridTheme();
+
+		if (IsOnOrigin()) return theme.gridOriginThickness;
+		if ((GetLineIndex() % 2) == 0) return theme.gridEvenLineThickness;
+		return theme.gridOddLineThickness;
 	}
 	
 	MapGrid::MapGrid(Core::Vector2 mapMaxSize) : origin(), zoom(ConfigurationManager::INS.GetGridConfig().defaultZoom * MAX_ZOOM),
@@ -78,13 +82,15 @@ namespace Editor::Grid
 
 	void MapGrid::HandleHotKeys()
 	{
-		if (ConfigurationManager::INS.GetGridHotKeys().increaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize * 2);
-		if (ConfigurationManager::INS.GetGridHotKeys().decreaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize / 2);
+		const GridHotKeys& hotKeys = ConfigurationManager::INS.GetGridHotKeys();
 
-		ZoomGrid(ConfigurationManager::INS.GetGridHotKeys().zoomAxis.GetAxis(false));
+		if (hotKeys.increaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize * 2);
+		if (hotKeys.decreaseGridSize.IsKeyPressed(false)) UpdateGridSize(gridSize / 2);
 
-		float x = ConfigurationManager::INS.GetGridHotKeys().panHorizontal.GetAxis(true);
-		float y = ConfigurationManager::INS.GetGridHotKeys().panVertical.GetAxis(true);
+		ZoomGrid(hotKeys.zoomAxis.GetAxis(false));
+
+		float x = hotKeys.panHorizontal.GetAxis(true);
+		float y = hotKeys.panVertical.GetAxis(true);
 		MoveGrid(origin - Core::Vector2(x, y) * hotKeyPanSpeed);
 	}
 

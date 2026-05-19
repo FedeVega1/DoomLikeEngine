@@ -59,6 +59,9 @@ namespace Editor::Grid
 		int GetCurrentGridSize() const { return gridSize; }
 		Core::Vector2 GetCurrentOriginPos() const { return origin; }
 
+		Core::Vector2 WorldToScreen(const Core::Vector2& worldPos) const { return origin + worldPos * (GetCellSize() / static_cast<float>(gridSize)); }
+		Core::Vector2 ScreenToWorld(const Core::Vector2& screenPos) const { return (screenPos - origin) / (GetCellSize() / static_cast<float>(gridSize)); }
+
 	private:
 		void HandlePanning();
 		void HandleHotKeys();

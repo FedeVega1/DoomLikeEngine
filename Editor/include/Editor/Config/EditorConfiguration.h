@@ -15,7 +15,11 @@ struct GridConfig
 
 struct MapEditorConfig
 {
-
+	DrawingLineTheme lineTheme;
+	DrawingNodeTheme nodeTheme;
+	DrawingWallTheme wallTheme;
+	DrawingPortalTheme portalTheme;
+	DrawingSectorTheme sectorTheme;
 };
 
 struct EditorConfiguration
@@ -72,7 +76,69 @@ public:
 			},
 			MapEditorConfig
 			{
+				DrawingLineTheme
+				{
+					ImVec4(1.f, 1.f, 0.f, .5f),
+					ImVec4(8.f, 0.f, 0.f, .5f),
+					ImVec4(1.f, 0.647f, 0.f, .5f),
+					ImVec4(1.f, 0.27f, 0.f, .5f),
 
+					1.f,
+					1.f,
+					2.f,
+					1.f
+				},
+				DrawingNodeTheme
+				{
+					ImVec4(0.98f, 0.922f, 0.843f, 1.f),
+					ImVec4(1.f, 0.f, 0.f, 1.f),
+					ImVec4(0.678f, 0.847f, 0.902f, 1.f),
+					ImVec4(0.f, 0.f, 1.f, 1.f),
+
+					1.f,
+					2.f,
+					1.f
+				},
+				DrawingWallTheme
+				{
+					ImVec4(1.f, 1.f, 0.f, 1.f),
+					ImVec4(8.f, 0.f, 0.f, 1.f),
+					ImVec4(1.f, 0.647f, 0.f, 1.f),
+					ImVec4(1.f, 0.27f, 0.f, 1.f),
+					ImVec4(1.f, 8.f, 0.f, 1.f),
+
+					2.f,
+					2.f,
+					3.f,
+					2.f
+				},
+				DrawingPortalTheme
+				{
+					ImVec4(1.f, .4f, .8f, 1.f),
+					ImVec4(1.f, .4f, 0.f, 1.f),
+					ImVec4(1.f, 0.2f, 0.73f, 1.f),
+					ImVec4(1.f, 0.f, 0.67f, 1.f),
+
+					2.f,
+					2.f,
+					3.f,
+					2.f,
+
+					ImVec4(0.828f, 0.828f, 0.828f, 1.f),
+					ImVec4(1.f, 0.76f, 0.4f, 1.f),
+					ImVec4(1.f, 0.639f, 0.4f, 1.f),
+
+					1.5f,
+					2.f,
+					1.5f,
+				},
+				DrawingSectorTheme
+				{
+					ImVec4(1.f, 1.f, 0.929f, 0.467f),
+					ImVec4(1.f, 0.f, 0.f, 0.467f),
+					ImVec4(0.988f, 0.949f, 0.851f, 0.467f),
+					ImVec4(0.988f, 0.87f, 0.753f, 1.f)
+				}
 			}
 		};
 	}
@@ -82,6 +148,12 @@ public:
 	GridConfig& GetGridConfig() { return currentConfiguration.grid; }
 	GridHotKeys& GetGridHotKeys() { return currentConfiguration.grid.hotKeys; }
 	GridTheme& GetGridTheme() { return currentConfiguration.grid.gridTheme; }
+
+	DrawingLineTheme& GetLineTheme() { return currentConfiguration.mapEditor.lineTheme; }
+	DrawingNodeTheme& GetNodeTheme() { return currentConfiguration.mapEditor.nodeTheme; }
+	DrawingWallTheme& GetWallTheme() { return currentConfiguration.mapEditor.wallTheme; }
+	DrawingPortalTheme& GetPortalTheme() { return currentConfiguration.mapEditor.portalTheme; }
+	DrawingSectorTheme& GetSectorTheme() { return currentConfiguration.mapEditor.sectorTheme; }
 
 	MapEditorConfig& GetMapEditorConfig() { return currentConfiguration.mapEditor; }
 

@@ -35,8 +35,8 @@ namespace Editor
         float lx, ly, rx, ry;
         if (!ReadValue(file, lx) || !ReadValue(file, ly)) return false;
         if (!ReadValue(file, rx) || !ReadValue(file, ry)) return false;
-        wall.leftPoint = Core::Vector2(lx, ly);
-        wall.rightPoint = Core::Vector2(rx, ry);
+        //wall.leftPoint = Core::Vector2(lx, ly);
+        //wall.rightPoint = Core::Vector2(rx, ry);
 
         if (!ReadColor(file, wall.topColor)) return false;
         if (!ReadColor(file, wall.innerColor)) return false;
@@ -66,21 +66,21 @@ namespace Editor
         if (!ReadValue(file, wallCount)) return false;
 
         sector.walls.resize(wallCount);
-        for (EditorWall& wall : sector.walls)
-        {
-            if (!ReadWall(file, wall)) 
-                return false;
-        }
+        //for (EditorWall& wall : sector.walls)
+        //{
+        //    if (!ReadWall(file, wall)) 
+        //        return false;
+        //}
 
         return true;
     }
 
     void MapFileIO::WriteWall(std::ofstream& file, const EditorWall& wall)
     {
-        WriteValue(file, wall.leftPoint.x);
-        WriteValue(file, wall.leftPoint.y);
-        WriteValue(file, wall.rightPoint.x);
-        WriteValue(file, wall.rightPoint.y);
+        //WriteValue(file, wall.leftPoint.x);
+        //WriteValue(file, wall.leftPoint.y);
+        //WriteValue(file, wall.rightPoint.x);
+        //WriteValue(file, wall.rightPoint.y);
         WriteColor(file, wall.topColor);
         WriteColor(file, wall.innerColor);
         WriteColor(file, wall.bottomColor);
@@ -105,10 +105,10 @@ namespace Editor
 
         uint32_t wallCount = static_cast<uint32_t>(sector.walls.size());
         WriteValue(file, wallCount);
-        for (const EditorWall& wall : sector.walls)
-        {
-            WriteWall(file, wall);
-        }
+        //for (const EditorWall& wall : sector.walls)
+        //{
+        //    WriteWall(file, wall);
+        //}
     }
 
     bool MapFileIO::Read(const std::string& filePath, std::vector<EditorSector>& outSectors)

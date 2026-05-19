@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <map>
 #include <array>
+#include <unordered_map>
 
 #include "Core/VectorMath.h"
 #include "Core/WorldTypes.h"

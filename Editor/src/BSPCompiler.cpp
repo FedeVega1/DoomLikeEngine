@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "Core/WorldTypes.h"
 #include "Core/BSPFileIO.h"
 #include "Editor/EditorTypes.h"
 #include "Editor/BSPCompiler.h"
@@ -29,11 +30,11 @@ namespace Editor
         return sector;
     }
 
-    Core::Wall EditorWallToWall(const EditorWall& eWall, const uint32_t& editorSectorID)
+    Core::Wall EditorWallToWall(const EditorWall& eWall, const GUID& editorSectorID)
     {
         Core::Wall wall;
-        wall.leftPoint = eWall.leftPoint;
-        wall.rightPoint = eWall.rightPoint;
+        //wall.leftPoint = eWall.leftPoint;
+        //wall.rightPoint = eWall.rightPoint;
         wall.topColor = eWall.topColor;
         wall.innerColor = eWall.innerColor;
         wall.bottomColor = eWall.bottomColor;
@@ -349,8 +350,8 @@ namespace Editor
         {
             result.sectors.push_back(EditorSectorToSector(editorSector));
 
-            for (const EditorWall& editorWall : editorSector.walls)
-                allWalls.push_back(EditorWallToWall(editorWall, editorSector.sectorID));
+            //for (const EditorWall& editorWall : editorSector.walls)
+            //    allWalls.push_back(EditorWallToWall(editorWall, editorSector.sectorID));
         }
 
         if (allWalls.empty())

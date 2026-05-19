@@ -17,7 +17,7 @@ namespace Editor
 
         void NewMap();
         void LoadSectors(std::vector<EditorSector> sectors);
-        const std::vector<EditorSector>& GetSectors() const { return sectors; }
+        const std::vector<EditorSector>& GetSectors() const { return {}; }
 
         EditorSector* GetSelectedSector();
         EditorWall* GetSelectedWall();
@@ -27,18 +27,29 @@ namespace Editor
 
     private:
         void HandleInput();
-        void DrawGrid();
-        void DrawSectors();
-        void DrawSector(const EditorSector& sector);
-        void DrawWall(const EditorWall& wall);
+        void DrawMapData();
+        void DrawSector(ImDrawList* const drawList, const EditorSector& sector);
+        void DrawWall(ImDrawList* const drawList, const EditorWall& wall);
+        void DrawNode(ImDrawList* const drawList, const EditorNode& node);
+
+        bool IsInViewport(const Core::Vector2& min, const Core::Vector2& max) const;
+
+        ImVec4 GetSectorColor() const;
+        ImVec4 GetPortalColor(bool isConnection) const;
+        ImVec4 GetWallColor() const;
+        ImVec4 GetNodeColor() const;
+
+        float GetPortalThickness(bool isConnection) const;
+        float GetWallThickness() const;
+        float GetNodeThickness() const;
 
         std::unique_ptr<Grid::MapGrid> grid;
-
-        std::vector<EditorSector> sectors;
+        std::unique_ptr<MapData> currentMapData;
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f;
-        int gridUnitSize = 20, selectedSectorIndex = -1, selectedWallIndex = -1;
-        Core::Vector2 origin, mapMaxSize, lineStart, linePreview;
+        int selectedSectorIndex = -1, selectedWallIndex = -1;
+        GUID lineTargetNode;
+        Core::Vector2 mapMaxSize, lineStart, linePreview;
     };
 }

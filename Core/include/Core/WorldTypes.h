@@ -1,9 +1,11 @@
 #pragma once
 
+typedef uint32_t GUID;
+
 namespace Core
 {
     inline constexpr uint64_t NULL_ID_64 = 0xFFFFFFFFFFFFFFFFULL;
-    inline constexpr uint32_t NULL_ID_32 = 0xFFFFFFFFU;
+    inline constexpr GUID NULL_ID_32 = 0xFFFFFFFFU;
 
     struct Color
     {
@@ -32,7 +34,7 @@ namespace Core
         Color topColor, innerColor, bottomColor;
         bool isPortal = false, isConnection = false;
 
-        uint64_t wallID = NULL_ID_64, portalWallTargetID = NULL_ID_64;
+        uint32_t wallID = NULL_ID_32, portalWallTargetID = NULL_ID_32;
         uint32_t parentSectorID = NULL_ID_32, portalTargetSectorID = NULL_ID_32;
 
         Wall* portalTargetWall = nullptr;
