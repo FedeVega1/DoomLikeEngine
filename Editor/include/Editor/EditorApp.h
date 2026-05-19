@@ -5,8 +5,6 @@
 
 namespace Editor
 {
-    enum class EditorMode { None, Line, Node, Wall, Sector };
-
     class EditorApp
     {
     public:

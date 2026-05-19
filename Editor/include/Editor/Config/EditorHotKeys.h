@@ -34,10 +34,5 @@ struct GridHotKeys
 
 struct MapEditorHotKeys
 {
-	GridHotKeys grid;
-};
-
-struct EditorHotkeys
-{
-	MapEditorHotKeys mapEditor;
+	EditorMapping cancelAction;
 };

@@ -58,10 +58,6 @@ struct DrawingNodeTheme
 
 struct EditorTheme
 {
-	GridTheme gridTheme;
-	DrawingLineTheme lineTheme;
-	DrawingWallTheme wallTheme;
-	DrawingPortalTheme portalTheme;
-	DrawingSectorTheme sectorTheme;
-	DrawingNodeTheme nodeTheme;
+	ImVec4 cursorColor;
+	float cursorThickness;
 };

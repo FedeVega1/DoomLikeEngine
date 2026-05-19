@@ -76,6 +76,9 @@ namespace Editor
     {
         ImGui::Begin("Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize);
 
+        if (ImGui::Button("None")) SetMode(EditorMode::None);
+        ImGui::SameLine();
+
         if (ImGui::Button("Line")) SetMode(EditorMode::Line);
         ImGui::SameLine();
 
@@ -146,5 +149,9 @@ namespace Editor
         return compiler.Compile(mapView->GetSectors(), bspFilePath);
     }
 
-    void EditorApp::SetMode(EditorMode mode) { currentMode = mode; }
+    void EditorApp::SetMode(EditorMode mode)
+    { 
+        currentMode = mode; 
+        mapView->ToggleLineDrawMode(mode == EditorMode::Line);
+    }
 }

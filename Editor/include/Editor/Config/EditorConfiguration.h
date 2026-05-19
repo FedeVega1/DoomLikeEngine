@@ -15,11 +15,14 @@ struct GridConfig
 
 struct MapEditorConfig
 {
+	MapEditorHotKeys hotKeys;
+
 	DrawingLineTheme lineTheme;
 	DrawingNodeTheme nodeTheme;
 	DrawingWallTheme wallTheme;
 	DrawingPortalTheme portalTheme;
 	DrawingSectorTheme sectorTheme;
+	EditorTheme editorTheme;
 };
 
 struct EditorConfiguration
@@ -76,6 +79,10 @@ public:
 			},
 			MapEditorConfig
 			{
+				MapEditorHotKeys
+				{
+					EditorMapping { ImGuiKey_Escape, ImGuiKey_None }
+				},
 				DrawingLineTheme
 				{
 					ImVec4(1.f, 1.f, 0.f, .5f),
@@ -83,10 +90,10 @@ public:
 					ImVec4(1.f, 0.647f, 0.f, .5f),
 					ImVec4(1.f, 0.27f, 0.f, .5f),
 
-					1.f,
-					1.f,
-					2.f,
-					1.f
+					3.f,
+					3.f,
+					6.f,
+					3.f
 				},
 				DrawingNodeTheme
 				{
@@ -95,9 +102,9 @@ public:
 					ImVec4(0.678f, 0.847f, 0.902f, 1.f),
 					ImVec4(0.f, 0.f, 1.f, 1.f),
 
-					1.f,
-					2.f,
-					1.f
+					5.f,
+					10.f,
+					5.f
 				},
 				DrawingWallTheme
 				{
@@ -107,10 +114,10 @@ public:
 					ImVec4(1.f, 0.27f, 0.f, 1.f),
 					ImVec4(1.f, 8.f, 0.f, 1.f),
 
-					2.f,
-					2.f,
-					3.f,
-					2.f
+					4.f,
+					4.f,
+					5.f,
+					4.f
 				},
 				DrawingPortalTheme
 				{
@@ -119,18 +126,18 @@ public:
 					ImVec4(1.f, 0.2f, 0.73f, 1.f),
 					ImVec4(1.f, 0.f, 0.67f, 1.f),
 
-					2.f,
-					2.f,
-					3.f,
-					2.f,
+					4.f,
+					4.f,
+					5.f,
+					4.f,
 
 					ImVec4(0.828f, 0.828f, 0.828f, 1.f),
 					ImVec4(1.f, 0.76f, 0.4f, 1.f),
 					ImVec4(1.f, 0.639f, 0.4f, 1.f),
 
-					1.5f,
-					2.f,
-					1.5f,
+					3.5f,
+					4.f,
+					3.5f,
 				},
 				DrawingSectorTheme
 				{
@@ -138,6 +145,11 @@ public:
 					ImVec4(1.f, 0.f, 0.f, 0.467f),
 					ImVec4(0.988f, 0.949f, 0.851f, 0.467f),
 					ImVec4(0.988f, 0.87f, 0.753f, 1.f)
+				},
+				EditorTheme
+				{
+					ImVec4(0.78f, 0.69f, 0.93f, 1.0f),
+					5
 				}
 			}
 		};
@@ -154,7 +166,9 @@ public:
 	DrawingWallTheme& GetWallTheme() { return currentConfiguration.mapEditor.wallTheme; }
 	DrawingPortalTheme& GetPortalTheme() { return currentConfiguration.mapEditor.portalTheme; }
 	DrawingSectorTheme& GetSectorTheme() { return currentConfiguration.mapEditor.sectorTheme; }
+	EditorTheme& GetEditorTheme() { return currentConfiguration.mapEditor.editorTheme; }
 
+	MapEditorHotKeys& GetMapEditorHotKeys() { return currentConfiguration.mapEditor.hotKeys; }
 	MapEditorConfig& GetMapEditorConfig() { return currentConfiguration.mapEditor; }
 
 	static ConfigurationManager INS;

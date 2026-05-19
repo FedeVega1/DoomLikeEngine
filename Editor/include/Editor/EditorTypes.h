@@ -45,12 +45,40 @@ namespace Editor
         }
     };
 
-    struct MapData
+    class MapData
     {
+    public:
+        MapData(GUID initNode, GUID initWall, GUID initSector) : nodes(), walls(), sectors(), nodeCounter(initNode), 
+            wallCounter(initWall), sectorCounter(initSector)
+        { }
+
+        ~MapData() = default;
+
+        EditorNode& GetNode(GUID id) { return nodes.at(id); }
+        EditorWall& GetWall(GUID id) { return walls.at(id); }
+        EditorSector& GetSector(GUID id) { return sectors.at(id); }
+
+        GUID AddNode(const Core::Vector2& pos);
+        GUID AddWall(EditorWall& wall);
+        GUID AddSector(EditorSector& sector);
+
+        void ForEachNode(const std::function<void(const EditorNode&)>& callback) const;
+        void ForEachWall(const std::function<void(const EditorWall&)>& callback) const;
+        void ForEachSector(const std::function<void(const EditorSector&)>& callback) const;
+
+        void RemoveNode(GUID id) { nodes.erase(id); }
+        void RemoveWall(GUID id) { walls.erase(id); }
+        void RemoveSector(GUID id) { sectors.erase(id); }
+
+    private:
         std::unordered_map<GUID, EditorNode> nodes;
         std::unordered_map<GUID, EditorWall> walls;
         std::unordered_map<GUID, EditorSector> sectors;
+
+        GUID nodeCounter, wallCounter, sectorCounter;
     };
+
+    enum class EditorMode { None, Line, Node, Wall, Sector };
 
     Core::Sector EditorSectorToSector(const EditorSector& eSector);
     Core::Wall EditorWallToWall(const EditorWall& eWall, const GUID& editorSectorID);
