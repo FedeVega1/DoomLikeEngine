@@ -15,6 +15,7 @@ set(SOURCES
     src/PropertiesPanel.cpp
     src/OptionsPanel.cpp
     src/MapGrid.cpp
+    src/EditorCommands.cpp
 )
 
 set(HEADERS
@@ -31,6 +32,8 @@ set(HEADERS
     include/Editor/Config/EditorHotKeys.h
     include/Editor/Config/EditorConfiguration.h
     include/Editor/Panels/OptionsPanel.h
+    include/Editor/CommandHistory.h
+    include/Editor/EditorCommands.h
     include/pch.h
     include/imconfig.h
 )

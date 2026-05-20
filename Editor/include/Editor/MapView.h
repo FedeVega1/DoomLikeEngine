@@ -4,6 +4,9 @@
 
 namespace Editor
 {
+    class CommandHistory;
+    class IEditorCommand;
+
     inline constexpr int DEFAULT_MAX_MAP_SIZE_X = 200;
     inline constexpr int DEFAULT_MAX_MAP_SIZE_Y = 200;
 
@@ -19,12 +22,16 @@ namespace Editor
         void LoadSectors(std::vector<EditorSector> sectors);
         const std::vector<EditorSector>& GetSectors() const { return {}; }
 
-        EditorSector* GetSelectedSector();
-        EditorWall* GetSelectedWall();
+        std::optional<std::reference_wrapper<EditorSector>> GetSelectedSector();
+        std::optional<std::reference_wrapper<EditorWall>> GetSelectedWall();
+        MapData& GetMapData() const { return *currentMapData; }
 
         float GetCurrentZoom() const { return grid->GetCurrentZoom(); }
         int GetCurrentGridSize() const { return grid->GetCurrentGridSize(); }
         void ToggleLineDrawMode(bool toggle) { isDrawingLine = toggle; }
+        void SetCommandHistory(CommandHistory* history) { commandHistory = history; }
+        void SyncAfterUndo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd);
+        void SyncAfterRedo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd);
 
     private:
         void HandleInput();
@@ -48,11 +55,12 @@ namespace Editor
         std::unique_ptr<Grid::MapGrid> grid;
         std::unique_ptr<MapData> currentMapData;
         std::unique_ptr<MapRenderer> mapRenderer;
+        CommandHistory* commandHistory;
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f, cursorTime;
         int selectedSectorIndex = -1, selectedWallIndex = -1;
-        GUID lineTargetNode, lastCreatedWallID;
+        std::optional<GUID> lineTargetNode, lastCreatedWallID;
         Core::Vector2 mapMaxSize;
     };
 }

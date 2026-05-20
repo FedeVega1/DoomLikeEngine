@@ -7,9 +7,11 @@
 namespace Editor
 {
     template<typename T>
-    bool MapFileIO::ReadValue(std::ifstream& file, T& value)
+    std::optional<T> MapFileIO::ReadValue(std::ifstream& file)
     {
-        return static_cast<bool>(file.read(reinterpret_cast<char*>(&value), sizeof(T)));
+        T value{};
+        if (!file.read(reinterpret_cast<char*>(&value), sizeof(T))) return std::nullopt;
+        return value;
     }
 
     template<typename T>
@@ -18,9 +20,13 @@ namespace Editor
         file.write(reinterpret_cast<const char*>(&value), sizeof(T));
     }
 
-    bool MapFileIO::ReadColor(std::ifstream& file, Core::Color& outColor)
+    std::optional<Core::Color> MapFileIO::ReadColor(std::ifstream& file)
     {
-        return ReadValue(file, outColor.r) && ReadValue(file, outColor.g) && ReadValue(file, outColor.b);
+        auto r = ReadValue<uint8_t>(file);
+        auto g = ReadValue<uint8_t>(file);
+        auto b = ReadValue<uint8_t>(file);
+        if (!r || !g || !b) return std::nullopt;
+        return Core::Color(*r, *g, *b);
     }
 
     void MapFileIO::WriteColor(std::ofstream& file, const Core::Color& color)
@@ -30,49 +36,67 @@ namespace Editor
         WriteValue(file, color.b);
     }
 
-    bool MapFileIO::ReadWall(std::ifstream& file, EditorWall& wall)
+    std::optional<EditorWall> MapFileIO::ReadWall(std::ifstream& file)
     {
-        float lx, ly, rx, ry;
-        if (!ReadValue(file, lx) || !ReadValue(file, ly)) return false;
-        if (!ReadValue(file, rx) || !ReadValue(file, ry)) return false;
-        //wall.leftPoint = Core::Vector2(lx, ly);
-        //wall.rightPoint = Core::Vector2(rx, ry);
+        auto lx = ReadValue<float>(file); auto ly = ReadValue<float>(file);
+        auto rx = ReadValue<float>(file); auto ry = ReadValue<float>(file);
+        if (!lx || !ly || !rx || !ry) return std::nullopt;
 
-        if (!ReadColor(file, wall.topColor)) return false;
-        if (!ReadColor(file, wall.innerColor)) return false;
-        if (!ReadColor(file, wall.bottomColor)) return false;
+        auto topColor = ReadColor(file);
+        auto innerColor = ReadColor(file);
+        auto bottomColor = ReadColor(file);
+        if (!topColor || !innerColor || !bottomColor) return std::nullopt;
 
-        uint8_t flags = 0;
-        if (!ReadValue(file, flags)) return false;
-        wall.isConnection = (flags & MapFormat::FLAG_CONNECTION) != 0;
-        wall.isPortal = (flags & MapFormat::FLAG_PORTAL) != 0;
+        auto flags = ReadValue<uint8_t>(file);
+        if (!flags) return std::nullopt;
 
-        if (!ReadValue(file, wall.portalTargetSectorID)) return false;
-        if (!ReadValue(file, wall.portalWallTargetID)) return false;
-        if (!ReadValue(file, wall.wallID)) return false;
+        auto portalTargetSectorID = ReadValue<GUID>(file);
+        auto portalWallTargetID = ReadValue<GUID>(file);
+        auto wallID = ReadValue<GUID>(file);
+        if (!portalTargetSectorID || !portalWallTargetID || !wallID) return std::nullopt;
 
-        return true;
+        EditorWall wall{};
+        //wall.leftPoint = Core::Vector2(*lx, *ly);
+        //wall.rightPoint = Core::Vector2(*rx, *ry);
+        wall.topColor = *topColor;
+        wall.innerColor = *innerColor;
+        wall.bottomColor = *bottomColor;
+        wall.isConnection = (*flags & MapFormat::FLAG_CONNECTION) != 0;
+        wall.isPortal = (*flags & MapFormat::FLAG_PORTAL) != 0;
+        wall.portalTargetSectorID = *portalTargetSectorID;
+        wall.portalWallTargetID = *portalWallTargetID;
+        wall.wallID = *wallID;
+        return wall;
     }
 
-    bool MapFileIO::ReadSector(std::ifstream& file, EditorSector& sector)
+    std::optional<EditorSector> MapFileIO::ReadSector(std::ifstream& file)
     {
-        if (!ReadValue(file, sector.sectorID)) return false;
-        if (!ReadValue(file, sector.floorHeight)) return false;
-        if (!ReadValue(file, sector.ceillingHeight)) return false;
-        if (!ReadColor(file, sector.floorColor)) return false;
-        if (!ReadColor(file, sector.ceillingColor)) return false;
+        auto sectorID = ReadValue<GUID>(file);
+        auto floorHeight = ReadValue<float>(file);
+        auto ceillingHeight = ReadValue<float>(file);
+        if (!sectorID || !floorHeight || !ceillingHeight) return std::nullopt;
 
-        uint32_t wallCount = 0;
-        if (!ReadValue(file, wallCount)) return false;
+        auto floorColor = ReadColor(file);
+        auto ceillingColor = ReadColor(file);
+        if (!floorColor || !ceillingColor) return std::nullopt;
 
-        sector.walls.resize(wallCount);
-        //for (EditorWall& wall : sector.walls)
+        auto wallCount = ReadValue<uint32_t>(file);
+        if (!wallCount) return std::nullopt;
+
+        EditorSector sector{};
+        sector.sectorID = *sectorID;
+        sector.floorHeight = *floorHeight;
+        sector.ceillingHeight = *ceillingHeight;
+        sector.floorColor = *floorColor;
+        sector.ceillingColor = *ceillingColor;
+        sector.walls.resize(*wallCount);
+        //for (GUID& wallID : sector.walls)
         //{
-        //    if (!ReadWall(file, wall)) 
-        //        return false;
+        //    auto wall = ReadWall(file);
+        //    if (!wall) return std::nullopt;
+        //    wallID = wall->wallID;
         //}
-
-        return true;
+        return sector;
     }
 
     void MapFileIO::WriteWall(std::ofstream& file, const EditorWall& wall)
@@ -121,18 +145,20 @@ namespace Editor
         if (magic[0] != MapFormat::MAGIC[0] || magic[1] != MapFormat::MAGIC[1] || magic[2] != MapFormat::MAGIC[2] || magic[3] != MapFormat::MAGIC[3])
             return false;
 
-        uint8_t vMajor = 0, vMinor = 0;
-        if (!ReadValue(file, vMajor) || !ReadValue(file, vMinor)) return false;
-        if (vMajor != MapFormat::VERSION_MAJOR || vMinor != MapFormat::VERSION_MINOR) return false;
+        auto vMajor = ReadValue<uint8_t>(file);
+        auto vMinor = ReadValue<uint8_t>(file);
+        if (!vMajor || !vMinor) return false;
+        if (*vMajor != MapFormat::VERSION_MAJOR || *vMinor != MapFormat::VERSION_MINOR) return false;
 
-        uint32_t sectorCount = 0;
-        if (!ReadValue(file, sectorCount)) return false;
+        auto sectorCount = ReadValue<uint32_t>(file);
+        if (!sectorCount) return false;
 
-        outSectors.resize(sectorCount);
+        outSectors.resize(*sectorCount);
         for (EditorSector& sector : outSectors)
         {
-            if (!ReadSector(file, sector)) 
-                return false;
+            auto readSector = ReadSector(file);
+            if (!readSector) return false;
+            sector = std::move(*readSector);
         }
 
         return true;

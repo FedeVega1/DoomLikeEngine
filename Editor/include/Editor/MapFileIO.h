@@ -19,19 +19,19 @@ namespace Editor
         bool Write(const std::string& filePath, const std::vector<EditorSector>& sectors);
 
     private:
-        bool ReadSector(std::ifstream& file, EditorSector& outSector);
-        bool ReadWall(std::ifstream& file, EditorWall& outWall);
+        std::optional<EditorSector> ReadSector(std::ifstream& file);
+        std::optional<EditorWall> ReadWall(std::ifstream& file);
 
         void WriteSector(std::ofstream& file, const EditorSector& sector);
         void WriteWall(std::ofstream& file, const EditorWall& wall);
 
         template<typename T>
-        static bool ReadValue(std::ifstream& file, T& value);
+        static std::optional<T> ReadValue(std::ifstream& file);
 
         template<typename T>
         static void WriteValue(std::ofstream& file, const T& value);
 
-        static bool ReadColor(std::ifstream& file, Core::Color& outColor);
+        static std::optional<Core::Color> ReadColor(std::ifstream& file);
         static void WriteColor(std::ofstream& file, const Core::Color& color);
     };
 }

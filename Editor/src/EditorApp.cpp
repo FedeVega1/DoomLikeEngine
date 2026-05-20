@@ -4,6 +4,8 @@
 #include <SDL3/SDL.h>
 #include <format>
 
+#include "Editor/Config/EditorConfiguration.h"
+#include "Editor/CommandHistory.h"
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
 #include "Editor/BSPCompiler.h"
@@ -17,6 +19,7 @@ namespace Editor
         mapView(std::make_unique<MapView>()), propertiesPanel(std::make_unique<Panels::PropertiesPanel>()),
         optionsPanel(std::make_unique<Panels::OptionsPanel>())
     {
+        mapView->SetCommandHistory(&history);
     }
 
     EditorApp::~EditorApp() = default;
@@ -27,6 +30,18 @@ namespace Editor
         DrawToolbar();
         DrawStatusBar();
         mapView->Update();
+
+        const EditorHotKeys& hotkeys = ConfigurationManager::INS.GetEditorHotKeys();
+        if (hotkeys.undo.IsKeyPressed(false))
+        {
+            history.Undo(mapView->GetMapData());
+            mapView->SyncAfterUndo(history.PeekRedo());
+        }
+        if (hotkeys.redo.IsKeyPressed(false))
+        {
+            history.Redo(mapView->GetMapData());
+            mapView->SyncAfterRedo(history.PeekUndo());
+        }
     }
 
     void EditorApp::Render()
@@ -34,7 +49,12 @@ namespace Editor
         if (ImGui::Begin("Map View")) mapView->Render();
         ImGui::End();
 
-        if (ImGui::Begin("Properties")) propertiesPanel->Render(mapView->GetSelectedSector(), mapView->GetSelectedWall());
+        if (ImGui::Begin("Properties"))
+        {
+            propertiesPanel->Render(mapView->GetSelectedSector(), mapView->GetSelectedWall(),
+                [this](std::unique_ptr<IEditorCommand> cmd) { history.Push(std::move(cmd)); });
+        }
+
         ImGui::End();
 
         optionsPanel->Render();
@@ -64,8 +84,16 @@ namespace Editor
 
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* TODO */ }
-            if (ImGui::MenuItem("Redo", "Ctrl+Y")) { /* TODO */ }
+            if (ImGui::MenuItem("Undo", "Ctrl+Z", false, history.CanUndo()))
+            {
+                history.Undo(mapView->GetMapData());
+                mapView->SyncAfterUndo(history.PeekRedo());
+            }
+            if (ImGui::MenuItem("Redo", "Ctrl+Y", false, history.CanRedo()))
+            {
+                history.Redo(mapView->GetMapData());
+                mapView->SyncAfterRedo(history.PeekUndo());
+            }
             ImGui::EndMenu();
         }
 
@@ -117,6 +145,7 @@ namespace Editor
     void EditorApp::NewMap()
     {
         mapView->NewMap();
+        history.Clear();
         currentFilePath.clear();
         unsavedChanges = false;
     }
@@ -128,6 +157,7 @@ namespace Editor
 
         if (!io.Read(filePath, sectors)) return false;
         mapView->LoadSectors(std::move(sectors));
+        history.Clear();
         currentFilePath = filePath;
         unsavedChanges = false;
         return true;

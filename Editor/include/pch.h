@@ -8,6 +8,7 @@
 #include <array>
 #include <unordered_map>
 #include <functional>
+#include <optional>
 
 #include "Core/VectorMath.h"
 #include "Core/WorldTypes.h"

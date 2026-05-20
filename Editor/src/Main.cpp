@@ -12,6 +12,7 @@
 
 #include <filesystem>
 
+#include "Editor/CommandHistory.h"
 #include "Editor/EditorTypes.h"
 #include "Editor/MapView.h"
 #include "Editor/EditorApp.h"

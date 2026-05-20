@@ -8,7 +8,7 @@ struct EditorMapping
 
 	bool IsKeyPressed(bool repeating) const
 	{
-		if (HasModifierKey() && !ImGui::IsKeyPressed(modifier, true)) return false;
+		if (HasModifierKey()) return ImGui::IsKeyChordPressed(modifier | key);
 		return ImGui::IsKeyPressed(key, repeating);
 	}
 };
@@ -35,4 +35,10 @@ struct GridHotKeys
 struct MapEditorHotKeys
 {
 	EditorMapping cancelAction;
+};
+
+struct EditorHotKeys
+{
+	EditorMapping undo, redo;
+	EditorMapping newMap, loadMap, saveMap;
 };

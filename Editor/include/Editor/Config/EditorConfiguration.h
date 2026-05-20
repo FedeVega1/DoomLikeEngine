@@ -27,6 +27,8 @@ struct MapEditorConfig
 
 struct EditorConfiguration
 {
+	EditorHotKeys hotkeys;
+
 	GridConfig grid;
 	MapEditorConfig mapEditor;
 };
@@ -38,6 +40,14 @@ public:
 	{
 		currentConfiguration = EditorConfiguration
 		{
+			EditorHotKeys
+			{
+				EditorMapping { ImGuiKey_Z, ImGuiMod_Ctrl },
+				EditorMapping { ImGuiKey_Y, ImGuiMod_Ctrl },
+				EditorMapping { ImGuiKey_N, ImGuiMod_Ctrl },
+				EditorMapping { ImGuiKey_L, ImGuiMod_Ctrl },
+				EditorMapping { ImGuiKey_S, ImGuiMod_Ctrl }
+			},
 			GridConfig
 			{
 				16,
@@ -81,7 +91,7 @@ public:
 			{
 				MapEditorHotKeys
 				{
-					EditorMapping { ImGuiKey_Escape, ImGuiKey_None }
+					EditorMapping { ImGuiKey_Escape, ImGuiMod_None }
 				},
 				DrawingLineTheme
 				{
@@ -156,6 +166,8 @@ public:
 	}
 
 	~ConfigurationManager() = default;
+
+	EditorHotKeys& GetEditorHotKeys() { return currentConfiguration.hotkeys; }
 
 	GridConfig& GetGridConfig() { return currentConfiguration.grid; }
 	GridHotKeys& GetGridHotKeys() { return currentConfiguration.grid.hotKeys; }

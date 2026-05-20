@@ -74,6 +74,25 @@ namespace Editor
         void RemoveWall(GUID id) { walls.erase(id); }
         void RemoveSector(GUID id) { sectors.erase(id); }
 
+        bool HasNode(GUID id) const { return nodes.count(id) > 0; }
+
+        void ReinsertNode(const EditorNode& node) { nodes.emplace(node.nodeID, node); }
+        void ReinsertWall(const EditorWall& wall) { walls.emplace(wall.wallID, wall); }
+        void ReinsertSector(const EditorSector& sect) { sectors.emplace(sect.sectorID, sect); }
+
+        void RefreshWallBoundsForNode(GUID nodeID)
+        {
+            for (auto& [wallID, wall] : walls)
+            {
+                if (wall.leftPoint == nodeID || wall.rightPoint == nodeID)
+                {
+                    const EditorNode& leftNode = GetNode(wall.leftPoint);
+                    const EditorNode& rightNode = GetNode(wall.rightPoint);
+                    wall.UpdateBounds(leftNode.pos, rightNode.pos);
+                }
+            }
+        }
+
     private:
         std::unordered_map<GUID, EditorNode> nodes;
         std::unordered_map<GUID, EditorWall> walls;
