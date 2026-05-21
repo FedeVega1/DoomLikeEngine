@@ -55,8 +55,8 @@ namespace Editor
 
 		SectorCeilingHeightCommand(GUID id, float old, float new_val) : sectorID(id), oldVal(old), newVal(new_val) {}
 
-		void Execute(MapData& map) override { map.GetSector(sectorID).ceillingHeight = newVal; }
-		void Undo(MapData& map) override { map.GetSector(sectorID).ceillingHeight = oldVal; }
+		void Execute(MapData& map) override { map.GetSector(sectorID).ceilingHeight = newVal; }
+		void Undo(MapData& map) override { map.GetSector(sectorID).ceilingHeight = oldVal; }
 		std::string GetDescription() const override { return "Change Ceiling Height"; }
 	};
 
@@ -79,8 +79,8 @@ namespace Editor
 
 		SectorCeilingColorCommand(GUID id, const Core::Color& old, const Core::Color& new_val) : sectorID(id), oldVal(old), newVal(new_val) {}
 
-		void Execute(MapData& map) override { map.GetSector(sectorID).ceillingColor = newVal; }
-		void Undo(MapData& map) override { map.GetSector(sectorID).ceillingColor = oldVal; }
+		void Execute(MapData& map) override { map.GetSector(sectorID).ceilingColor = newVal; }
+		void Undo(MapData& map) override { map.GetSector(sectorID).ceilingColor = oldVal; }
 		std::string GetDescription() const override { return "Change Ceiling Color"; }
 	};
 

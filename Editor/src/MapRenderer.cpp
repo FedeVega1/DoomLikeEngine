@@ -99,6 +99,7 @@ namespace Editor
 
     void MapRenderer::DrawNode(ImDrawList* drawList, const EditorNode& node)
     {
+        // TODO: check selectionManager->IsSelected(node.nodeID, SelectableType::Node) for highlight color
         float thickness = GetNodeThickness();
 
         Core::Vector2 screenPos = grid.WorldToScreen(node.pos), offset = Core::Vector2::ONE * thickness;

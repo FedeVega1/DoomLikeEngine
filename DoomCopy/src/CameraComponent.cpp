@@ -134,8 +134,8 @@ void Camera::RenderWall(ProcessedWall& wall, const Vector3& pos, const double& c
 	wall.leftBtmPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightBtmPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);
 
-	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->ceillingHeight - pos.z);
-	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->ceillingHeight - pos.z);
+	wall.leftTopPoint = Vector3(wall.leftBtmPoint.x, wall.leftBtmPoint.y, wall.parentSector->ceilingHeight - pos.z);
+	wall.rightTopPoint = Vector3(wall.rightBtmPoint.x, wall.rightBtmPoint.y, wall.parentSector->ceilingHeight - pos.z);
 
 	wall.leftTopPoint.z += (xRotation * wall.leftBtmPoint.y / 32.0f);
 	wall.rightTopPoint.z += (xRotation * wall.rightBtmPoint.y / 32.0f);

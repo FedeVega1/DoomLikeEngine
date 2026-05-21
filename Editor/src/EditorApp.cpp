@@ -5,9 +5,7 @@
 #include <format>
 
 #include "Editor/Config/EditorConfiguration.h"
-#include "Editor/CommandHistory.h"
 #include "Editor/EditorTypes.h"
-#include "Editor/MapView.h"
 #include "Editor/BSPCompiler.h"
 #include "Editor/MapFileIO.h"
 
@@ -17,9 +15,12 @@ namespace Editor
 {
     EditorApp::EditorApp(const SDL_WindowID& wndID, SDL_Renderer* renderer) : window(window), renderer(renderer),
         mapView(std::make_unique<MapView>()), propertiesPanel(std::make_unique<Panels::PropertiesPanel>()),
-        optionsPanel(std::make_unique<Panels::OptionsPanel>())
+        optionsPanel(std::make_unique<Panels::OptionsPanel>()), selectionManager(nullptr)
     {
         mapView->SetCommandHistory(&history);
+
+        selectionManager = std::make_unique<SelectionManager>(mapView->GetMapData(), DEFAULT_CEILING_SECTOR_HEIGHT, 
+            DEFAULT_FLOOR_SECTOR_HEIGHT);
     }
 
     EditorApp::~EditorApp() = default;
@@ -51,7 +52,7 @@ namespace Editor
 
         if (ImGui::Begin("Properties"))
         {
-            propertiesPanel->Render(mapView->GetSelectedSector(), mapView->GetSelectedWall(),
+            propertiesPanel->Render(*selectionManager,
                 [this](std::unique_ptr<IEditorCommand> cmd) { history.Push(std::move(cmd)); });
         }
 
@@ -147,7 +148,12 @@ namespace Editor
         mapView->NewMap();
         history.Clear();
         currentFilePath.clear();
+
         unsavedChanges = false;
+        if (selectionManager != nullptr) selectionManager.release();
+
+        selectionManager = std::make_unique<SelectionManager>(mapView->GetMapData(), DEFAULT_CEILING_SECTOR_HEIGHT,
+            DEFAULT_FLOOR_SECTOR_HEIGHT);
     }
 
     bool EditorApp::OpenMap(const std::string& filePath)
@@ -182,6 +188,8 @@ namespace Editor
     void EditorApp::SetMode(EditorMode mode)
     { 
         currentMode = mode; 
+
         mapView->ToggleLineDrawMode(mode == EditorMode::Line);
+        selectionManager->ToggleDrawingMode(mode == EditorMode::Line);
     }
 }

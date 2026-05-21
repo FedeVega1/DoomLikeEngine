@@ -333,13 +333,13 @@ namespace LevelEditor
             });
         }
 
-        public void UpdateSectorCeillingColor(Color newColor)
+        public void UpdateSectorceilingColor(Color newColor)
         {
             if (CurrentSelectionType != SelectionType.Sector) return;
 
             LoopSectors((int i, Sector sector) =>
             {
-                sector.ceillingColor = newColor;
+                sector.ceilingColor = newColor;
                 ActiveSectors[i] = sector;
             });
         }
@@ -355,13 +355,13 @@ namespace LevelEditor
             });
         }
 
-        public void UpdateSectorCeillingHeight(int newHeight)
+        public void UpdateSectorceilingHeight(int newHeight)
         {
             if (CurrentSelectionType != SelectionType.Sector) return;
 
             LoopSectors((int i, Sector sector) =>
             {
-                sector.ceillingHeight = newHeight;
+                sector.ceilingHeight = newHeight;
                 ActiveSectors[i] = sector;
             });
         }

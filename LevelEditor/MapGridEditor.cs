@@ -4,8 +4,8 @@
     {
         public readonly ToolStripStatusLabel lblCursor, lblOrigin, lblGridSize;
         public readonly ToolStripButton btnWallTopColor, btnWallInColor, btnWallBtmColor;
-        public readonly ToolStripButton btnCeillingColor, btnFloorColor;
-        public readonly ToolStripNumberControl numbCeilling, numbFloor;
+        public readonly ToolStripButton btnceilingColor, btnFloorColor;
+        public readonly ToolStripNumberControl numbceiling, numbFloor;
         public readonly PictureBox imgEditorDraw;
         public readonly ToolStripLabel lblSelectionData;
 
@@ -21,9 +21,9 @@
             btnWallTopColor = wallTopColor;
             btnWallInColor = wallInColor;
             btnWallBtmColor = wallBtmColor;
-            btnCeillingColor = ceilColor;
+            btnceilingColor = ceilColor;
             btnFloorColor = floorColor;
-            numbCeilling = ceilNumb;
+            numbceiling = ceilNumb;
             numbFloor = floorNumb;
             lblSelectionData = selectData;
         }
@@ -376,9 +376,9 @@
 
                 sectors.Add(new Sector(
                     walls,
-                    sectorDrawer.ActiveSectors[i].ceillingHeight,
+                    sectorDrawer.ActiveSectors[i].ceilingHeight,
                     sectorDrawer.ActiveSectors[i].floorHeight,
-                    sectorDrawer.ActiveSectors[i].ceillingColor,
+                    sectorDrawer.ActiveSectors[i].ceilingColor,
                     sectorDrawer.ActiveSectors[i].floorColor,
                     sectorDrawer.ActiveSectors[i].SectorID
                 ));
@@ -446,10 +446,10 @@
             selectionManager.UpdateSectorFloorHeight(newHeight);
         }
 
-        public void ChangedSectorCeillingHeight(int newHeight)
+        public void ChangedSectorceilingHeight(int newHeight)
         {
-            sectorDrawer.UpdateDrawnSectorCeillingHeight(newHeight);
-            selectionManager.UpdateSectorCeillingHeight(newHeight);
+            sectorDrawer.UpdateDrawnSectorceilingHeight(newHeight);
+            selectionManager.UpdateSectorceilingHeight(newHeight);
         }
 
         public void ChangedSectorFloorColor(Color newColor)
@@ -458,10 +458,10 @@
             selectionManager.UpdateSectorFloorColor(newColor);
         }
 
-        public void ChangedSectorCeillingColor(Color newColor)
+        public void ChangedSectorceilingColor(Color newColor)
         {
-            sectorDrawer.UpdateDrawnSectorCeillingColor(newColor);
-            selectionManager.UpdateSectorCeillingColor(newColor);
+            sectorDrawer.UpdateDrawnSectorceilingColor(newColor);
+            selectionManager.UpdateSectorceilingColor(newColor);
         }
 
         PointF GetMouseMovDelta(Point currentPos)
@@ -502,15 +502,15 @@
                     break;
 
                 case SelectionType.Sector:
-                    if (refData.numbFloor.NumericUpDownControl == null || refData.numbCeilling.NumericUpDownControl == null) return;
+                    if (refData.numbFloor.NumericUpDownControl == null || refData.numbceiling.NumericUpDownControl == null) return;
                     if (hasMultipleSelections)
                     {
                         refData.btnWallTopColor.ForeColor = refData.btnWallTopColor.BackColor = Color.Black;
                         refData.btnWallInColor.ForeColor = refData.btnWallInColor.BackColor = Color.Black;
                         refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = Color.Black;
                         refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = Color.Black;
-                        refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = Color.Black;
-                        refData.numbFloor.NumericUpDownControl.Value = refData.numbCeilling.NumericUpDownControl.Value = 0;
+                        refData.btnceilingColor.ForeColor = refData.btnceilingColor.BackColor = Color.Black;
+                        refData.numbFloor.NumericUpDownControl.Value = refData.numbceiling.NumericUpDownControl.Value = 0;
                         refData.lblSelectionData.Enabled = false;
                     }
 
@@ -519,9 +519,9 @@
                     refData.btnWallBtmColor.ForeColor = refData.btnWallBtmColor.BackColor = CheckSectorWallsColor(sectorDrawer.ActiveSectors[data.sectorIndex].walls, 2);
 
                     refData.btnFloorColor.ForeColor = refData.btnFloorColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].floorColor;
-                    refData.btnCeillingColor.ForeColor = refData.btnCeillingColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingColor;
+                    refData.btnceilingColor.ForeColor = refData.btnceilingColor.BackColor = sectorDrawer.ActiveSectors[data.sectorIndex].ceilingColor;
                     refData.numbFloor.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].floorHeight;
-                    refData.numbCeilling.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].ceillingHeight;
+                    refData.numbceiling.NumericUpDownControl.Value = sectorDrawer.ActiveSectors[data.sectorIndex].ceilingHeight;
                     //refData.lblSelectionData.Enabled = true;
                     break;
 

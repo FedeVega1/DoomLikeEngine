@@ -21,10 +21,10 @@ namespace LevelEditor
 
             FormClosed += OnFormClosed;
 
-            if (NumbCeillingHeight.NumericUpDownControl != null)
+            if (NumbceilingHeight.NumericUpDownControl != null)
             {
-                NumbCeillingHeight.NumericUpDownControl.Maximum = int.MaxValue;
-                NumbCeillingHeight.NumericUpDownControl.Minimum = int.MinValue;
+                NumbceilingHeight.NumericUpDownControl.Maximum = int.MaxValue;
+                NumbceilingHeight.NumericUpDownControl.Minimum = int.MinValue;
             }
 
             if (NumbFloorHeight.NumericUpDownControl != null)
@@ -38,8 +38,8 @@ namespace LevelEditor
             COLoggerImport.InitLogSys(true, false);
 
             gridEditor = new MapGridEditor(new GridEditorData(ref LblCursor, ref LblOrigin, ref LblGridSize,
-                ref ImgEditorDraw, ref BtnWallTopColor, ref BtnWallInColor, ref BtnWallBtmColor, ref BtnCeillingColor,
-                ref BtnFloorColor, ref NumbCeillingHeight, ref NumbFloorHeight, ref LblSelectionData));
+                ref ImgEditorDraw, ref BtnWallTopColor, ref BtnWallInColor, ref BtnWallBtmColor, ref BtnceilingColor,
+                ref BtnFloorColor, ref NumbceilingHeight, ref NumbFloorHeight, ref LblSelectionData));
             fileManager = new FileManager();
         }
 
@@ -71,7 +71,7 @@ namespace LevelEditor
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (NumbCeillingHeight.Focused || NumbFloorHeight.Focused)
+            if (NumbceilingHeight.Focused || NumbFloorHeight.Focused)
                 return base.ProcessCmdKey(ref msg, keyData);
 
             Keys processedKeyData = keyData;
@@ -135,13 +135,13 @@ namespace LevelEditor
             fileManager.ResetCurrentFile();
             Text = "Level Editor - NewProject.map";
 
-            if (NumbCeillingHeight.NumericUpDownControl != null) NumbCeillingHeight.NumericUpDownControl.Value = 10;
+            if (NumbceilingHeight.NumericUpDownControl != null) NumbceilingHeight.NumericUpDownControl.Value = 10;
             if (NumbFloorHeight.NumericUpDownControl != null) NumbFloorHeight.NumericUpDownControl.Value = 0;
 
             BtnWallBtmColor.BackColor = Color.Black;
             BtnWallBtmColor.ForeColor = Color.Black;
-            BtnCeillingColor.BackColor = Color.Black;
-            BtnCeillingColor.ForeColor = Color.Black;
+            BtnceilingColor.BackColor = Color.Black;
+            BtnceilingColor.ForeColor = Color.Black;
             BtnFloorColor.BackColor = Color.Black;
             BtnFloorColor.ForeColor = Color.Black;
 
@@ -273,26 +273,26 @@ namespace LevelEditor
 
         }
 
-        void NumbCeillingHeight_ValueChanged(object sender, EventArgs e)
+        void NumbceilingHeight_ValueChanged(object sender, EventArgs e)
         {
-            if (NumbCeillingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
-            int value = (int)NumbCeillingHeight.NumericUpDownControl.Value;
+            if (NumbceilingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
+            int value = (int)NumbceilingHeight.NumericUpDownControl.Value;
             int floorValue = (int)NumbFloorHeight.NumericUpDownControl.Value;
 
             if (value <= floorValue)
             {
-                NumbCeillingHeight.NumericUpDownControl.Value += Math.Clamp(floorValue - value, 1, decimal.MaxValue);
+                NumbceilingHeight.NumericUpDownControl.Value += Math.Clamp(floorValue - value, 1, decimal.MaxValue);
                 return;
             }
 
-            gridEditor.ChangedSectorCeillingHeight(value);
+            gridEditor.ChangedSectorceilingHeight(value);
         }
 
         void NumbFloorHeight_ValueChanged(object sender, EventArgs e)
         {
-            if (NumbCeillingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
+            if (NumbceilingHeight.NumericUpDownControl == null || NumbFloorHeight.NumericUpDownControl == null) return;
             int value = (int)NumbFloorHeight.NumericUpDownControl.Value;
-            int ceilValue = (int)NumbCeillingHeight.NumericUpDownControl.Value;
+            int ceilValue = (int)NumbceilingHeight.NumericUpDownControl.Value;
 
             if (value >= ceilValue)
             {
@@ -303,16 +303,16 @@ namespace LevelEditor
             gridEditor.ChangedSectorFloorHeight(value);
         }
 
-        void BtnCeillingColor_Click(object sender, EventArgs e)
+        void BtnceilingColor_Click(object sender, EventArgs e)
         {
             using (ColorDialog colorDialog = new ColorDialog())
             {
                 colorDialog.FullOpen = true;
-                colorDialog.Color = BtnCeillingColor.BackColor;
+                colorDialog.Color = BtnceilingColor.BackColor;
                 if (colorDialog.ShowDialog() != DialogResult.OK) return;
-                BtnCeillingColor.BackColor = colorDialog.Color;
-                BtnCeillingColor.ForeColor = colorDialog.Color;
-                gridEditor.ChangedSectorCeillingColor(colorDialog.Color);
+                BtnceilingColor.BackColor = colorDialog.Color;
+                BtnceilingColor.ForeColor = colorDialog.Color;
+                gridEditor.ChangedSectorceilingColor(colorDialog.Color);
             }
         }
 
@@ -329,7 +329,7 @@ namespace LevelEditor
             }
         }
 
-        void BtnCeillingtexture_Click(object sender, EventArgs e)
+        void Btnceilingtexture_Click(object sender, EventArgs e)
         {
 
         }

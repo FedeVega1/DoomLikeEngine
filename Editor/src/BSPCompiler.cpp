@@ -23,9 +23,9 @@ namespace Editor
         Core::Sector sector;
         sector.sectorID = eSector.sectorID;
         sector.floorHeight = eSector.floorHeight;
-        sector.ceillingHeight = eSector.ceillingHeight;
+        sector.ceilingHeight = eSector.ceilingHeight;
         sector.floorColor = eSector.floorColor;
-        sector.ceillingColor = eSector.ceillingColor;
+        sector.ceilingColor = eSector.ceilingColor;
 
         return sector;
     }
@@ -406,9 +406,9 @@ namespace Editor
         {
             WriteValue(file, sector.sectorID);
             WriteValue(file, sector.floorHeight);
-            WriteValue(file, sector.ceillingHeight);
+            WriteValue(file, sector.ceilingHeight);
             WriteColor(file, sector.floorColor);
-            WriteColor(file, sector.ceillingColor);
+            WriteColor(file, sector.ceilingColor);
         }
 
         uint32_t subSectorCount = static_cast<uint32_t>(result.subSectors.size());

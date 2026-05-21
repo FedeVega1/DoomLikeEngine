@@ -6,6 +6,7 @@
 #include "Editor/Config/EditorConfiguration.h"
 #include "Editor/CommandHistory.h"
 #include "Editor/EditorCommands.h"
+#include "Editor/SelectionManager.h"
 #include "Editor/MapView.h"
 
 namespace Editor
@@ -54,7 +55,6 @@ namespace Editor
 
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
 
-        selectedSectorIndex = selectedWallIndex = -1;
         lineTargetNode = lastCreatedWallID = std::nullopt;
         isDrawingLine = firstRender = false;
     }
@@ -64,24 +64,7 @@ namespace Editor
         /*sectors = std::move(loadedSectors);*/
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
         lineTargetNode = lastCreatedWallID = std::nullopt;
-        selectedSectorIndex = selectedWallIndex = -1;
         isDrawingLine = firstRender = false;
-    }
-
-    std::optional<std::reference_wrapper<EditorSector>> MapView::GetSelectedSector()
-    {
-        //if (selectedSectorIndex < 0 || selectedSectorIndex >= static_cast<int>(currentMapData->sectors.size())) return std::nullopt;
-        //return std::ref(sectors[selectedSectorIndex]);
-        return std::nullopt;
-    }
-
-    std::optional<std::reference_wrapper<EditorWall>> MapView::GetSelectedWall()
-    {
-        auto sector = GetSelectedSector();
-        if (!sector.has_value()) return std::nullopt;
-        if (selectedWallIndex < 0 || selectedWallIndex >= static_cast<int>(sector->get().walls.size())) return std::nullopt;
-        //return std::ref(sector->get().walls[selectedWallIndex]);
-        return std::nullopt;
     }
 
     void MapView::HandleInput()
@@ -122,10 +105,12 @@ namespace Editor
 
     GUID MapView::CreateWall(GUID leftNodeID, GUID rightNodeID)
     {
+        const DrawingData& drawingData = selectionManager->GetDrawingData();
+
         EditorWall wall = EditorWall
         {
             leftNodeID, rightNodeID,
-            Core::Color::Black, Core::Color::Black, Core::Color::Black,
+            drawingData.wallTopColor, drawingData.wallInnerColor, drawingData.wallBtmColor,
             false, false,
             Core::NULL_ID_32, Core::NULL_ID_32, Core::NULL_ID_32,
             Core::Vector2::ZERO, Core::Vector2::ZERO
@@ -178,6 +163,34 @@ namespace Editor
             lineTheme.drawingLineThickness);
     }
 
+    void MapView::SyncAfterUndo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd)
+    {
+        if (!isDrawingLine) return;
+
+        if (cmd.has_value())
+        {
+            auto target = cmd->get().GetRestoredUndoTarget();
+            if (target.has_value())
+            {
+                lineTargetNode = *target;
+                lastCreatedWallID = std::nullopt;
+                return;
+            }
+        }
+
+        if (!lineTargetNode.has_value()) return;
+        if (!currentMapData->HasNode(*lineTargetNode))
+            lineTargetNode = lastCreatedWallID = std::nullopt;
+    }
+
+    void MapView::SyncAfterRedo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd)
+    {
+        if (!isDrawingLine || !cmd.has_value()) return;
+        auto target = cmd->get().GetRestoredLineTarget();
+        if (target.has_value()) lineTargetNode = *target;
+        lastCreatedWallID = cmd->get().GetRestoredWallID();
+    }
+
     GUID MapData::AddNode(const Core::Vector2& pos)
     {
         EditorNode newNode = { pos, ++nodeCounter };
@@ -226,32 +239,16 @@ namespace Editor
         }
     }
 
-    void MapView::SyncAfterUndo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd)
+    void MapData::RefreshWallBoundsForNode(GUID nodeID)
     {
-        if (!isDrawingLine) return;
-
-        if (cmd.has_value())
+        for (auto& [wallID, wall] : walls)
         {
-            auto target = cmd->get().GetRestoredUndoTarget();
-            if (target.has_value())
+            if (wall.leftPoint == nodeID || wall.rightPoint == nodeID)
             {
-                lineTargetNode = *target;
-                lastCreatedWallID = std::nullopt;
-                return;
+                const EditorNode& leftNode = GetNode(wall.leftPoint);
+                const EditorNode& rightNode = GetNode(wall.rightPoint);
+                wall.UpdateBounds(leftNode.pos, rightNode.pos);
             }
         }
-
-        if (!lineTargetNode.has_value()) return;
-        if (!currentMapData->HasNode(*lineTargetNode))
-            lineTargetNode = lastCreatedWallID = std::nullopt;
     }
-
-    void MapView::SyncAfterRedo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd)
-    {
-        if (!isDrawingLine || !cmd.has_value()) return;
-        auto target = cmd->get().GetRestoredLineTarget();
-        if (target.has_value()) lineTargetNode = *target;
-        lastCreatedWallID = cmd->get().GetRestoredWallID();
-    }
-
 }

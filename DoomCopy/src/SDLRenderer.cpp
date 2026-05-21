@@ -32,7 +32,7 @@ long SDLRenderer::InitRenderer_SDL(const SDL_WindowID& windID)
 	loadedTexturesMap = std::map<std::wstring, BaseTexture>();
 
 	LoadTexture(L"test Wall.bmp");
-	LoadTexture(L"test Ceilling.bmp", 2);
+	LoadTexture(L"test ceiling.bmp", 2);
 	LoadTexture(L"test Floor.bmp", 2);
 	return 0L;
 }

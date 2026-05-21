@@ -73,12 +73,12 @@ namespace Editor
     {
         auto sectorID = ReadValue<GUID>(file);
         auto floorHeight = ReadValue<float>(file);
-        auto ceillingHeight = ReadValue<float>(file);
-        if (!sectorID || !floorHeight || !ceillingHeight) return std::nullopt;
+        auto ceilingHeight = ReadValue<float>(file);
+        if (!sectorID || !floorHeight || !ceilingHeight) return std::nullopt;
 
         auto floorColor = ReadColor(file);
-        auto ceillingColor = ReadColor(file);
-        if (!floorColor || !ceillingColor) return std::nullopt;
+        auto ceilingColor = ReadColor(file);
+        if (!floorColor || !ceilingColor) return std::nullopt;
 
         auto wallCount = ReadValue<uint32_t>(file);
         if (!wallCount) return std::nullopt;
@@ -86,9 +86,9 @@ namespace Editor
         EditorSector sector{};
         sector.sectorID = *sectorID;
         sector.floorHeight = *floorHeight;
-        sector.ceillingHeight = *ceillingHeight;
+        sector.ceilingHeight = *ceilingHeight;
         sector.floorColor = *floorColor;
-        sector.ceillingColor = *ceillingColor;
+        sector.ceilingColor = *ceilingColor;
         sector.walls.resize(*wallCount);
         //for (GUID& wallID : sector.walls)
         //{
@@ -123,9 +123,9 @@ namespace Editor
     {
         WriteValue(file, sector.sectorID);
         WriteValue(file, sector.floorHeight);
-        WriteValue(file, sector.ceillingHeight);
+        WriteValue(file, sector.ceilingHeight);
         WriteColor(file, sector.floorColor);
-        WriteColor(file, sector.ceillingColor);
+        WriteColor(file, sector.ceilingColor);
 
         uint32_t wallCount = static_cast<uint32_t>(sector.walls.size());
         WriteValue(file, wallCount);

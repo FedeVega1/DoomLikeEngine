@@ -47,9 +47,9 @@ namespace Core
     {
         uint32_t sectorID = NULL_ID_32;
         float floorHeight = 0.f;
-        float ceillingHeight = 128.f;
+        float ceilingHeight = 128.f;
         Color floorColor;
-        Color ceillingColor;
+        Color ceilingColor;
         Vector2 center;
     };
 

@@ -36,7 +36,7 @@ HRESULT GDIRenderer::InitRenderer(const HWND const _hwnd)
     SelectObject(memHDC, hbmp);
 
     LoadTexture(L"test Wall.bmp");
-    LoadTexture(L"test Ceilling.bmp", 2);
+    LoadTexture(L"test ceiling.bmp", 2);
     LoadTexture(L"test Floor.bmp", 2);
     return S_OK;
 }

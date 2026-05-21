@@ -30,7 +30,7 @@
 //
 //protected:
 //	virtual void DrawWall(const ProcessedWall& wall, SectorSurface surface, std::array<int, DEFAULT_BUFFER_WIDTH>& points) override;
-//	virtual void DrawBackWall(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceilling, Color floor) override;
+//	virtual void DrawBackWall(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceiling, Color floor) override;
 //	virtual void ProcessSector(const ProcessedSector& sector) override;
 //	virtual ScreenSpaceWall GetScreenSpaceWall(const ProcessedWall& wall) override;
 //

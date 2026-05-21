@@ -72,10 +72,10 @@ struct InPortalRenderData
 
 struct OutPortalRenderData
 {
-	int newCeillingY, newFloorY;
+	int newCeilingY, newFloorY;
 	bool hasDrawnC, hasDrawnF;
 
-	OutPortalRenderData() : newCeillingY(0), newFloorY(0), hasDrawnC(false), hasDrawnF(false) {}
+	OutPortalRenderData() : newCeilingY(0), newFloorY(0), hasDrawnC(false), hasDrawnF(false) {}
 };
 
 struct BaseTexture

@@ -4,11 +4,15 @@
 
 namespace Editor
 {
+    class SelectionManager;
+
     class MapRenderer
     {
     public:
         explicit MapRenderer(const Grid::MapGrid& grid);
         void Render(const MapData& data);
+
+        void SetSelectionManager(const SelectionManager* sm) { selectionManager = sm; }
 
     private:
         void DrawSector(ImDrawList* drawList, const EditorSector& sector, const MapData& data);
@@ -27,5 +31,6 @@ namespace Editor
         float GetNodeThickness() const;
 
         const Grid::MapGrid& grid;
+        const SelectionManager* selectionManager = nullptr;
     };
 }

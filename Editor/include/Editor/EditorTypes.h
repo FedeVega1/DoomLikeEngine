@@ -27,8 +27,8 @@ namespace Editor
     struct EditorSector
     {
         GUID sectorID = Core::NULL_ID_32;
-        float floorHeight = 0.f, ceillingHeight = 128.f;
-        Core::Color floorColor, ceillingColor;
+        float floorHeight = 0.f, ceilingHeight = 128.f;
+        Core::Color floorColor, ceilingColor;
         std::vector<GUID> walls;
         Core::Vector2 min, max;
 
@@ -43,6 +43,14 @@ namespace Editor
             min = Core::Vector2(std::min(min.x, point.x), std::min(min.y, point.y));
             max = Core::Vector2(std::max(max.x, point.x), std::max(max.y, point.y));
         }
+    };
+
+    enum class SelectableType { Node, Wall, Sector, Entity };
+
+    struct SelectedItem
+    {
+        GUID id;
+        SelectableType type;
     };
 
     class MapData
@@ -80,18 +88,7 @@ namespace Editor
         void ReinsertWall(const EditorWall& wall) { walls.emplace(wall.wallID, wall); }
         void ReinsertSector(const EditorSector& sect) { sectors.emplace(sect.sectorID, sect); }
 
-        void RefreshWallBoundsForNode(GUID nodeID)
-        {
-            for (auto& [wallID, wall] : walls)
-            {
-                if (wall.leftPoint == nodeID || wall.rightPoint == nodeID)
-                {
-                    const EditorNode& leftNode = GetNode(wall.leftPoint);
-                    const EditorNode& rightNode = GetNode(wall.rightPoint);
-                    wall.UpdateBounds(leftNode.pos, rightNode.pos);
-                }
-            }
-        }
+        void RefreshWallBoundsForNode(GUID nodeID);
 
     private:
         std::unordered_map<GUID, EditorNode> nodes;

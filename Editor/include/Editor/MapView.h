@@ -4,11 +4,11 @@
 
 namespace Editor
 {
-    class CommandHistory;
-    class IEditorCommand;
-
     inline constexpr int DEFAULT_MAX_MAP_SIZE_X = 200;
     inline constexpr int DEFAULT_MAX_MAP_SIZE_Y = 200;
+
+    inline constexpr int DEFAULT_FLOOR_SECTOR_HEIGHT = 0;
+    inline constexpr int DEFAULT_CEILING_SECTOR_HEIGHT = 16;
 
     class MapView
     {
@@ -22,8 +22,6 @@ namespace Editor
         void LoadSectors(std::vector<EditorSector> sectors);
         const std::vector<EditorSector>& GetSectors() const { return {}; }
 
-        std::optional<std::reference_wrapper<EditorSector>> GetSelectedSector();
-        std::optional<std::reference_wrapper<EditorWall>> GetSelectedWall();
         MapData& GetMapData() const { return *currentMapData; }
 
         float GetCurrentZoom() const { return grid->GetCurrentZoom(); }
@@ -55,11 +53,12 @@ namespace Editor
         std::unique_ptr<Grid::MapGrid> grid;
         std::unique_ptr<MapData> currentMapData;
         std::unique_ptr<MapRenderer> mapRenderer;
+
         CommandHistory* commandHistory;
+        SelectionManager* selectionManager;
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f, cursorTime;
-        int selectedSectorIndex = -1, selectedWallIndex = -1;
         std::optional<GUID> lineTargetNode, lastCreatedWallID;
         Core::Vector2 mapMaxSize;
     };

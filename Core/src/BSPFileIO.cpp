@@ -58,9 +58,9 @@ namespace Core
         {
             if (!ReadValue(file, sector.sectorID))       return false;
             if (!ReadValue(file, sector.floorHeight))    return false;
-            if (!ReadValue(file, sector.ceillingHeight)) return false;
+            if (!ReadValue(file, sector.ceilingHeight)) return false;
             if (!ReadColor(file, sector.floorColor))     return false;
-            if (!ReadColor(file, sector.ceillingColor))  return false;
+            if (!ReadColor(file, sector.ceilingColor))  return false;
         }
         return true;
     }

@@ -1,7 +1,10 @@
 #pragma once
 
+#include "SelectionManager.h"
+#include "CommandHistory.h"
 #include "Panels/PropertiesPanel.h"
 #include "Panels/OptionsPanel.h"
+#include "Editor/MapView.h"
 
 namespace Editor
 {
@@ -36,6 +39,7 @@ namespace Editor
         std::unique_ptr<MapView> mapView;
         std::unique_ptr<Panels::PropertiesPanel> propertiesPanel;
         std::unique_ptr<Panels::OptionsPanel> optionsPanel;
+        std::unique_ptr<SelectionManager> selectionManager;
         CommandHistory history;
 
         EditorMode currentMode = EditorMode::None;

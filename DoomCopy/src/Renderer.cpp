@@ -27,9 +27,9 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
     ScreenSpaceWall sWall = GetScreenSpaceWall(wall);
     SpanResult res;
 
-    BaseTexture wallText, ceillingText, floorText;
+    BaseTexture wallText, ceilingText, floorText;
     GetTextureMap(L"test Wall.bmp", wallText);
-    GetTextureMap(L"test Ceilling.bmp", ceillingText);
+    GetTextureMap(L"test ceiling.bmp", ceilingText);
     GetTextureMap(L"test Floor.bmp", floorText);
 
     if (IsWallOccluded(sWall.GetSegment(), res)) return;
@@ -61,7 +61,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
         yPoint.x = std::clamp(yPoint.x, 0, DEFAULT_BUFFER_HEIGHT);
         yPoint.y = std::clamp(yPoint.y, 0, DEFAULT_BUFFER_HEIGHT);
 
-        // Draw the Ceilling and Floor from their respective line into the Screen limits
+        // Draw the ceiling and Floor from their respective line into the Screen limits
 
         int floorEnd = DEFAULT_BUFFER_HEIGHT, ceilStart = 0;
         if (behindConn)
@@ -93,10 +93,10 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             Vector2 screenCoords = Vector2(static_cast<float>(x), static_cast<float>(y));
             Vector2 normalizedScreenCoords = Vector2(screenCoords.x / screenSize.x, screenCoords.y / screenSize.y);
 
-            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->ceillingHeight);
+            Vector2 hitPoint = camera->GetFloorCeilingHitPoint(normalizedScreenCoords, wall.parentSector->ceilingHeight);
 
             float distance = camera->GetDistanceToPoint(hitPoint) / brightnessDistanceFalloff;
-            DrawPixel(x, y, DarkenPixelColor(ceillingText.MapFloorCeilingTexturePoint(hitPoint), distance));
+            DrawPixel(x, y, DarkenPixelColor(ceilingText.MapFloorCeilingTexturePoint(hitPoint), distance));
         }
 
         if (wall.isConnection)
@@ -108,7 +108,7 @@ void Renderer::ProcessWall(const ProcessedWall& wall, Camera* const camera)
             OutPortalRenderData outData;
             RenderPortalWall(wall, renderData, outData);
 
-            if (outData.hasDrawnC) currentSpan.ceilPoints[x] = outData.newCeillingY;
+            if (outData.hasDrawnC) currentSpan.ceilPoints[x] = outData.newCeilingY;
             if (outData.hasDrawnF) currentSpan.floorPoints[x] = outData.newFloorY;
         }
         else
@@ -244,9 +244,9 @@ void Renderer::RenderPortalWall(const ProcessedWall& wall, const InPortalRenderD
         outData.hasDrawnF = true;
     }
 
-    if (wall.parentSector->ceillingHeight > portalWall->parentSector->ceillingHeight)
+    if (wall.parentSector->ceilingHeight > portalWall->parentSector->ceilingHeight)
     {
-        outData.newCeillingY = prevYPoint.y;
+        outData.newCeilingY = prevYPoint.y;
         for (int y = data.yPoint.y; y < prevYPoint.y; y++)
         {
             int relativeY = originalPrevYPoint.x - y - 1;

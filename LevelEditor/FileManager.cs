@@ -55,10 +55,10 @@
                         fileStream.Write(ToByteArray(sectors[i].walls[j].portalTargetWall, out arrSize), 0, arrSize);
                     }
 
-                    fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceilingHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
-                    fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceilingColor, out arrSize), 0, arrSize);
 
                     COLoggerImport.LogNormal("Saved sector {0} correct", sectors[i].SectorID);
                 }
@@ -157,7 +157,7 @@
                     }
 
                     fileStream.Read(intBuffer, 0, intSize);
-                    sector.ceillingHeight = ByteArrayToInt(intBuffer, isLittleEndian);
+                    sector.ceilingHeight = ByteArrayToInt(intBuffer, isLittleEndian);
 
                     fileStream.Read(intBuffer, 0, intSize);
                     sector.floorHeight = ByteArrayToInt(intBuffer, isLittleEndian);
@@ -166,7 +166,7 @@
                     sector.floorColor = ByteArrayToColor(colorBuffer);
 
                     fileStream.Read(colorBuffer, 0, colorSize);
-                    sector.ceillingColor = ByteArrayToColor(colorBuffer);
+                    sector.ceilingColor = ByteArrayToColor(colorBuffer);
 
                     sectors.Add(sector);
                     COLoggerImport.LogNormal("Load sector {0} correct", sector.SectorID);
@@ -207,10 +207,10 @@
                 for (int i = 0; i < size; i++)
                 {
                     fileStream.Write(ToByteArray(sectors[i].SectorID, out arrSize), 0, arrSize);
-                    fileStream.Write(ToByteArray(sectors[i].ceillingHeight, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceilingHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorHeight, out arrSize), 0, arrSize);
                     fileStream.Write(ToByteArray(sectors[i].floorColor, out arrSize), 0, arrSize);
-                    fileStream.Write(ToByteArray(sectors[i].ceillingColor, out arrSize), 0, arrSize);
+                    fileStream.Write(ToByteArray(sectors[i].ceilingColor, out arrSize), 0, arrSize);
 
                     COLoggerImport.LogNormal("Compiled sector {0} correct", sectors[i].SectorID);
                 }

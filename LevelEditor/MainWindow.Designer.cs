@@ -41,13 +41,13 @@ namespace LevelEditor
             ToolStripLabel LblEditModes;
             TableLayoutPanel LayoutPanel;
             Panel panel2;
-            ToolStripLabel LblCeillingHeight;
+            ToolStripLabel LblceilingHeight;
             ToolStripLabel LblFloorHeight;
             ToolStripSeparator toolStripSeparator4;
-            ToolStripLabel LblCeillingColor;
+            ToolStripLabel LblceilingColor;
             ToolStripLabel LblFloorColor;
             ToolStripSeparator toolStripSeparator5;
-            ToolStripLabel LblCeillingTexture;
+            ToolStripLabel LblceilingTexture;
             ToolStripLabel LblFloorTexture;
             toolStrip1 = new ToolStrip();
             BtnWallTopColor = new ToolStripButton();
@@ -62,11 +62,11 @@ namespace LevelEditor
             LblEditSectors = new ToolStripButton();
             ImgEditorDraw = new PictureBox();
             toolStrip2 = new ToolStrip();
-            NumbCeillingHeight = new ToolStripNumberControl();
+            NumbceilingHeight = new ToolStripNumberControl();
             NumbFloorHeight = new ToolStripNumberControl();
-            BtnCeillingColor = new ToolStripButton();
+            BtnceilingColor = new ToolStripButton();
             BtnFloorColor = new ToolStripButton();
-            BtnCeillingtexture = new ToolStripButton();
+            Btnceilingtexture = new ToolStripButton();
             BtnFloorTexture = new ToolStripButton();
             LblSelectionData = new ToolStripLabel();
             MainToolbar = new MenuStrip();
@@ -103,13 +103,13 @@ namespace LevelEditor
             LblEditModes = new ToolStripLabel();
             LayoutPanel = new TableLayoutPanel();
             panel2 = new Panel();
-            LblCeillingHeight = new ToolStripLabel();
+            LblceilingHeight = new ToolStripLabel();
             LblFloorHeight = new ToolStripLabel();
             toolStripSeparator4 = new ToolStripSeparator();
-            LblCeillingColor = new ToolStripLabel();
+            LblceilingColor = new ToolStripLabel();
             LblFloorColor = new ToolStripLabel();
             toolStripSeparator5 = new ToolStripSeparator();
-            LblCeillingTexture = new ToolStripLabel();
+            LblceilingTexture = new ToolStripLabel();
             LblFloorTexture = new ToolStripLabel();
             panel1.SuspendLayout();
             toolStrip1.SuspendLayout();
@@ -361,7 +361,7 @@ namespace LevelEditor
             toolStrip2.BackColor = SystemColors.Control;
             toolStrip2.Dock = DockStyle.Fill;
             toolStrip2.GripStyle = ToolStripGripStyle.Hidden;
-            toolStrip2.Items.AddRange(new ToolStripItem[] { LblCeillingHeight, NumbCeillingHeight, LblFloorHeight, NumbFloorHeight, toolStripSeparator4, LblCeillingColor, BtnCeillingColor, LblFloorColor, BtnFloorColor, toolStripSeparator5, LblCeillingTexture, BtnCeillingtexture, LblFloorTexture, BtnFloorTexture, LblSelectionData });
+            toolStrip2.Items.AddRange(new ToolStripItem[] { LblceilingHeight, NumbceilingHeight, LblFloorHeight, NumbFloorHeight, toolStripSeparator4, LblceilingColor, BtnceilingColor, LblFloorColor, BtnFloorColor, toolStripSeparator5, LblceilingTexture, Btnceilingtexture, LblFloorTexture, BtnFloorTexture, LblSelectionData });
             toolStrip2.Location = new Point(0, 0);
             toolStrip2.Name = "toolStrip2";
             toolStrip2.RenderMode = ToolStripRenderMode.System;
@@ -369,20 +369,20 @@ namespace LevelEditor
             toolStrip2.TabIndex = 0;
             toolStrip2.Text = "toolStrip2";
             // 
-            // LblCeillingHeight
+            // LblceilingHeight
             // 
-            LblCeillingHeight.BackColor = SystemColors.Control;
-            LblCeillingHeight.Name = "LblCeillingHeight";
-            LblCeillingHeight.Size = new Size(86, 52);
-            LblCeillingHeight.Text = "Ceilling Height";
+            LblceilingHeight.BackColor = SystemColors.Control;
+            LblceilingHeight.Name = "LblceilingHeight";
+            LblceilingHeight.Size = new Size(86, 52);
+            LblceilingHeight.Text = "ceiling Height";
             // 
-            // NumbCeillingHeight
+            // NumbceilingHeight
             // 
-            NumbCeillingHeight.Name = "NumbCeillingHeight";
-            NumbCeillingHeight.RightToLeft = RightToLeft.No;
-            NumbCeillingHeight.Size = new Size(41, 52);
-            NumbCeillingHeight.Text = "10";
-            NumbCeillingHeight.ValueChanged += NumbCeillingHeight_ValueChanged;
+            NumbceilingHeight.Name = "NumbceilingHeight";
+            NumbceilingHeight.RightToLeft = RightToLeft.No;
+            NumbceilingHeight.Size = new Size(41, 52);
+            NumbceilingHeight.Text = "10";
+            NumbceilingHeight.ValueChanged += NumbceilingHeight_ValueChanged;
             // 
             // LblFloorHeight
             // 
@@ -403,24 +403,24 @@ namespace LevelEditor
             toolStripSeparator4.Name = "toolStripSeparator4";
             toolStripSeparator4.Size = new Size(6, 55);
             // 
-            // LblCeillingColor
+            // LblceilingColor
             // 
-            LblCeillingColor.BackColor = SystemColors.Control;
-            LblCeillingColor.Name = "LblCeillingColor";
-            LblCeillingColor.Size = new Size(79, 52);
-            LblCeillingColor.Text = "Ceilling Color";
+            LblceilingColor.BackColor = SystemColors.Control;
+            LblceilingColor.Name = "LblceilingColor";
+            LblceilingColor.Size = new Size(79, 52);
+            LblceilingColor.Text = "ceiling Color";
             // 
-            // BtnCeillingColor
+            // BtnceilingColor
             // 
-            BtnCeillingColor.AutoToolTip = false;
-            BtnCeillingColor.BackColor = Color.Black;
-            BtnCeillingColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnCeillingColor.Image = (Image)resources.GetObject("BtnCeillingColor.Image");
-            BtnCeillingColor.ImageTransparentColor = Color.Magenta;
-            BtnCeillingColor.Name = "BtnCeillingColor";
-            BtnCeillingColor.Size = new Size(80, 52);
-            BtnCeillingColor.Text = ".......................";
-            BtnCeillingColor.Click += BtnCeillingColor_Click;
+            BtnceilingColor.AutoToolTip = false;
+            BtnceilingColor.BackColor = Color.Black;
+            BtnceilingColor.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            BtnceilingColor.Image = (Image)resources.GetObject("BtnceilingColor.Image");
+            BtnceilingColor.ImageTransparentColor = Color.Magenta;
+            BtnceilingColor.Name = "BtnceilingColor";
+            BtnceilingColor.Size = new Size(80, 52);
+            BtnceilingColor.Text = ".......................";
+            BtnceilingColor.Click += BtnceilingColor_Click;
             // 
             // LblFloorColor
             // 
@@ -446,24 +446,24 @@ namespace LevelEditor
             toolStripSeparator5.Name = "toolStripSeparator5";
             toolStripSeparator5.Size = new Size(6, 55);
             // 
-            // LblCeillingTexture
+            // LblceilingTexture
             // 
-            LblCeillingTexture.BackColor = SystemColors.Control;
-            LblCeillingTexture.Name = "LblCeillingTexture";
-            LblCeillingTexture.Size = new Size(88, 52);
-            LblCeillingTexture.Text = "Ceilling Texture";
+            LblceilingTexture.BackColor = SystemColors.Control;
+            LblceilingTexture.Name = "LblceilingTexture";
+            LblceilingTexture.Size = new Size(88, 52);
+            LblceilingTexture.Text = "ceiling Texture";
             // 
-            // BtnCeillingtexture
+            // Btnceilingtexture
             // 
-            BtnCeillingtexture.AutoToolTip = false;
-            BtnCeillingtexture.BackColor = Color.Black;
-            BtnCeillingtexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            BtnCeillingtexture.Image = (Image)resources.GetObject("BtnCeillingtexture.Image");
-            BtnCeillingtexture.ImageTransparentColor = Color.Magenta;
-            BtnCeillingtexture.Name = "BtnCeillingtexture";
-            BtnCeillingtexture.Size = new Size(80, 52);
-            BtnCeillingtexture.Text = ".......................";
-            BtnCeillingtexture.Click += BtnCeillingtexture_Click;
+            Btnceilingtexture.AutoToolTip = false;
+            Btnceilingtexture.BackColor = Color.Black;
+            Btnceilingtexture.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            Btnceilingtexture.Image = (Image)resources.GetObject("Btnceilingtexture.Image");
+            Btnceilingtexture.ImageTransparentColor = Color.Magenta;
+            Btnceilingtexture.Name = "Btnceilingtexture";
+            Btnceilingtexture.Size = new Size(80, 52);
+            Btnceilingtexture.Text = ".......................";
+            Btnceilingtexture.Click += Btnceilingtexture_Click;
             // 
             // LblFloorTexture
             // 
@@ -729,22 +729,22 @@ namespace LevelEditor
         private ToolStripButton LblEditSectors;
         private Panel panel2;
         private ToolStrip toolStrip2;
-        private ToolStripLabel LblCeillingHeight;
+        private ToolStripLabel LblceilingHeight;
         private ToolStripLabel LblFloorHeight;
         private ToolStripLabel LblFloorColor;
-        private ToolStripLabel LblCeillingColor;
+        private ToolStripLabel LblceilingColor;
         private ToolStripLabel LblWallTexture;
         private ToolStripLabel LblFloorTexture;
-        private ToolStripLabel LblCeillingTexture;
+        private ToolStripLabel LblceilingTexture;
         private ToolStripLabel LblWallColor;
         private ToolStripButton BtnWallBtmTexture;
         private ToolStripButton BtnWallBtmColor;
-        private ToolStripButton BtnCeillingColor;
+        private ToolStripButton BtnceilingColor;
         private ToolStripButton BtnFloorColor;
-        private ToolStripButton BtnCeillingtexture;
+        private ToolStripButton Btnceilingtexture;
         private ToolStripButton BtnFloorTexture;
         private ToolStripNumberControl NumbFloorHeight;
-        private ToolStripNumberControl NumbCeillingHeight;
+        private ToolStripNumberControl NumbceilingHeight;
         private ColorDialog ColorPanel;
         private ToolStripMenuItem BtnCompileMap;
         private ToolStripLabel LblSelectionData;

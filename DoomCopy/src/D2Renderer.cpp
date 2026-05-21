@@ -150,7 +150,7 @@
 //	}
 //}
 //
-//void D2Renderer::DrawBackWall(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceilling, Color floor)
+//void D2Renderer::DrawBackWall(const ProcessedWall& wall, SectorSurface surface, const std::array<int, DEFAULT_BUFFER_WIDTH>& points, Color ceiling, Color floor)
 //{
 //	if (wall.leftBtmPoint.y < 1 && wall.rightBtmPoint.y < 1) return;
 //

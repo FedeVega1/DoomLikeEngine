@@ -134,16 +134,16 @@
         public uint SectorID { get; private set; }
 
         public List<Wall> walls;
-        public Color floorColor, ceillingColor;
-        public int floorHeight, ceillingHeight;
+        public Color floorColor, ceilingColor;
+        public int floorHeight, ceilingHeight;
         public Point centroid, min, max;
 
         public Sector()
         {
             walls = new List<Wall>();
             floorHeight = 0;
-            ceillingHeight = 10;
-            ceillingColor = floorColor = Color.Black;
+            ceilingHeight = 10;
+            ceilingColor = floorColor = Color.Black;
 
             UpdateSectorValues();
         }
@@ -152,8 +152,8 @@
         {
             walls = wallList;
             floorHeight = fH;
-            ceillingHeight = cH;
-            ceillingColor = cC;
+            ceilingHeight = cH;
+            ceilingColor = cC;
             floorColor = fC;
             SectorID = sectorID;
 
@@ -167,8 +167,8 @@
 
             walls = new List<Wall>();
             floorHeight = 0;
-            ceillingHeight = 10;
-            ceillingColor = floorColor = Color.Black;
+            ceilingHeight = 10;
+            ceilingColor = floorColor = Color.Black;
 
             UpdateSectorValues();
         }
@@ -179,9 +179,9 @@
 
             walls = new List<Wall>(sector.walls);
             floorHeight = sector.floorHeight;
-            ceillingHeight = sector.ceillingHeight;
+            ceilingHeight = sector.ceilingHeight;
             floorColor = sector.floorColor;
-            ceillingColor = sector.ceillingColor;
+            ceilingColor = sector.ceilingColor;
 
             UpdateSectorValues();
         }
@@ -218,8 +218,8 @@
         {
             walls.Clear();
             //floorHeight = 0;
-            //ceillingHeight = 10;
-            //ceillingColor = floorColor = Color.Black;
+            //ceilingHeight = 10;
+            //ceilingColor = floorColor = Color.Black;
         }
 
         public void UpdateSectorValues()
@@ -693,12 +693,12 @@
         public void LoadSectors(ref List<Sector> sectors) => this.sectors = sectors;
 
         public void UpdateDrawnSectorFloorHeight(int newHeight) => currentDrawnSector.floorHeight = newHeight;
-        public void UpdateDrawnSectorCeillingHeight(int newHeight) => currentDrawnSector.ceillingHeight = newHeight;
+        public void UpdateDrawnSectorceilingHeight(int newHeight) => currentDrawnSector.ceilingHeight = newHeight;
         public void UpdateDrawnWallTopColor(Color color) => currentDrawnWallsColor[0] = color;
         public void UpdateDrawnWallInnerColor(Color color) => currentDrawnWallsColor[1] = color;
         public void UpdateDrawnWallBottomColor(Color color) => currentDrawnWallsColor[2] = color;
         public void UpdateDrawnSectorFloorColor(Color color) => currentDrawnSector.floorColor = color;
-        public void UpdateDrawnSectorCeillingColor(Color color) => currentDrawnSector.ceillingColor = color;
+        public void UpdateDrawnSectorceilingColor(Color color) => currentDrawnSector.ceilingColor = color;
 
         public bool CheckForNodesInPos(Point mousePoint, float dist, out (int, int) indx)
         {
