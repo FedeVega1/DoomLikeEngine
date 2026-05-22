@@ -27,7 +27,10 @@ namespace Editor
         float GetCurrentZoom() const { return grid->GetCurrentZoom(); }
         int GetCurrentGridSize() const { return grid->GetCurrentGridSize(); }
         void ToggleLineDrawMode(bool toggle) { isDrawingLine = toggle; }
+
         void SetCommandHistory(CommandHistory* history) { commandHistory = history; }
+        void SetSelectionManager(SelectionManager* selection) { selectionManager = selection; }
+
         void SyncAfterUndo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd);
         void SyncAfterRedo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd);
 
@@ -39,6 +42,14 @@ namespace Editor
         void DrawPreviewLine();
 
         GUID CreateWall(GUID leftNodeID, GUID rightNodeID);
+        GUID CreateSector();
+
+        void PlaceNewNode(const Core::Vector2& pos);
+
+        std::optional<GUID> IsPosOveralppingNode(const Core::Vector2& pos) const;
+        std::optional<GUID> IsPosOveralppingWall(const Core::Vector2& pos) const;
+
+        bool IsLastDrawPolygonConvex() const;
 
         Core::Vector2 GetSnappedWorldPos() const
         {
@@ -59,7 +70,7 @@ namespace Editor
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f, cursorTime;
-        std::optional<GUID> lineTargetNode, lastCreatedWallID;
+        std::optional<GUID> lineTargetNode, lastCreatedWallID, firstNodeID;
         Core::Vector2 mapMaxSize;
     };
 }

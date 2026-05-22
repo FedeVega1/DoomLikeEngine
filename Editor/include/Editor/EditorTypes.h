@@ -10,7 +10,7 @@ namespace Editor
 
     struct EditorWall
     {
-        GUID leftPoint = Core::NULL_ID_32, rightPoint = Core::NULL_ID_32;
+        GUID leftNodeID = Core::NULL_ID_32, rightNodeID = Core::NULL_ID_32;
         Core::Color topColor, innerColor, bottomColor;
         bool isPortal = false, isConnection = false;
         GUID wallID = Core::NULL_ID_32, portalWallTargetID = Core::NULL_ID_32;
@@ -70,6 +70,10 @@ namespace Editor
         const EditorWall& GetWall(GUID id) const { return walls.at(id); }
         const EditorSector& GetSector(GUID id) const { return sectors.at(id); }
 
+        std::optional<std::reference_wrapper<const EditorWall>> FindWallByNodeID(GUID id) const;
+
+        std::vector<GUID> FindSectorWalls() const;
+
         GUID AddNode(const Core::Vector2& pos);
         GUID AddWall(EditorWall& wall);
         GUID AddSector(EditorSector& sector);
@@ -88,6 +92,7 @@ namespace Editor
         void ReinsertWall(const EditorWall& wall) { walls.emplace(wall.wallID, wall); }
         void ReinsertSector(const EditorSector& sect) { sectors.emplace(sect.sectorID, sect); }
 
+        std::vector<GUID> FindSectorWallsByFirstNode(GUID nodeID) const;
         void RefreshWallBoundsForNode(GUID nodeID);
 
     private:

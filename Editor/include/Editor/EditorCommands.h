@@ -30,8 +30,8 @@ namespace Editor
 		void Execute(MapData& map) override;
 		void Undo(MapData& map) override;
 		std::string GetDescription() const override { return "Place Wall"; }
-		std::optional<GUID> GetRestoredLineTarget() const override { return wall.rightPoint; }
-		std::optional<GUID> GetRestoredUndoTarget() const override { return wall.leftPoint; }
+		std::optional<GUID> GetRestoredLineTarget() const override { return wall.rightNodeID; }
+		std::optional<GUID> GetRestoredUndoTarget() const override { return wall.leftNodeID; }
 		std::optional<GUID> GetRestoredWallID() const override { return wall.wallID; }
 	};
 

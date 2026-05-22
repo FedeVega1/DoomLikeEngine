@@ -66,6 +66,7 @@ namespace Core
         static Vector2 Normalize(const Vector2& v);
         static float Distance(const Vector2& a, const Vector2& b);
         static float Cross(const Vector2& a, const Vector2& b) { return a.x * b.y - a.y * b.x; }
+        static float Dot(const Vector2& a, const Vector2& b) { return a.x * b.x + a.y * b.y; }
         static Vector2 Clamp(const Vector2& vector, const float& min, const float& max);
         static Vector2 Abs(const Vector2& vector);
 

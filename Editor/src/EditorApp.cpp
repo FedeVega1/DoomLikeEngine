@@ -21,6 +21,8 @@ namespace Editor
 
         selectionManager = std::make_unique<SelectionManager>(mapView->GetMapData(), DEFAULT_CEILING_SECTOR_HEIGHT, 
             DEFAULT_FLOOR_SECTOR_HEIGHT);
+
+        mapView->SetSelectionManager(selectionManager.get());
     }
 
     EditorApp::~EditorApp() = default;

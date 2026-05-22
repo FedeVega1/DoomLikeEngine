@@ -325,7 +325,7 @@ namespace Editor::Panels
         ImGui::Text("Ceiling");
         ImGui::SameLine();
 
-        EditorColorCompact("##Ceiling Color", data.sectorceilingColor);
+        EditorColorCompact("##Ceiling Color", data.sectorCeilingColor);
         ImGui::SameLine();
 
         ImGui::SetNextItemWidth(150);

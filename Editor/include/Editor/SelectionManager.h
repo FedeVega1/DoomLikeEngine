@@ -5,7 +5,7 @@ namespace Editor
     struct DrawingData
     {
         Core::Color wallTopColor, wallInnerColor, wallBtmColor;
-        Core::Color sectorceilingColor, sectorFloorColor;
+        Core::Color sectorCeilingColor, sectorFloorColor;
         float sectorCeilingHeight = 0.f, sectorFloorHeight = 0.f;
     };
 

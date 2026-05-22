@@ -7,14 +7,14 @@ namespace Editor
 {
 	void PlaceLineSegmentCommand::Execute(MapData& map)
 	{
-		map.ReinsertNode(EditorNode{ rightNodePos, wall.rightPoint });
+		map.ReinsertNode(EditorNode{ rightNodePos, wall.rightNodeID });
 		map.ReinsertWall(wall);
 	}
 
 	void PlaceLineSegmentCommand::Undo(MapData& map)
 	{
 		map.RemoveWall(wall.wallID);
-		map.RemoveNode(wall.rightPoint);
+		map.RemoveNode(wall.rightNodeID);
 	}
 
 	void GeometryDragCommand::Execute(MapData& map)

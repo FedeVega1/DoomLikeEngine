@@ -17,6 +17,7 @@ set(SOURCES
     src/MapGrid.cpp
     src/EditorCommands.cpp
     src/SelectionManager.cpp
+    src/MapData.cpp
 )
 
 set(HEADERS

@@ -11,9 +11,8 @@
 
 namespace Editor
 {
-    MapView::MapView() : firstRender(false), isDrawingLine(false), isHoveringWindow(false),
-        currentMapData(std::make_unique<MapData>(0UL, 0UL, 0UL)), cursorTime(0.f),
-        commandHistory(nullptr)
+    MapView::MapView() : firstRender(false), isDrawingLine(false), isHoveringWindow(false), cursorTime(0.f), commandHistory(nullptr),
+        currentMapData(std::make_unique<MapData>(0UL, 0UL, 0UL)), selectionManager(nullptr)
     {
         mapMaxSize = Core::Vector2(DEFAULT_MAX_MAP_SIZE_X, DEFAULT_MAX_MAP_SIZE_Y);
         grid = std::make_unique<Grid::MapGrid>(mapMaxSize);
@@ -55,7 +54,7 @@ namespace Editor
 
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
 
-        lineTargetNode = lastCreatedWallID = std::nullopt;
+        lineTargetNode = lastCreatedWallID = firstNodeID = std::nullopt;
         isDrawingLine = firstRender = false;
     }
 
@@ -63,7 +62,7 @@ namespace Editor
     {
         /*sectors = std::move(loadedSectors);*/
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
-        lineTargetNode = lastCreatedWallID = std::nullopt;
+        lineTargetNode = lastCreatedWallID = firstNodeID = std::nullopt;
         isDrawingLine = firstRender = false;
     }
 
@@ -75,21 +74,7 @@ namespace Editor
         HandleHotKeys();
 
         if (!isDrawingLine || !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) return;
-
-        Core::Vector2 snappedPos = GetSnappedWorldPos();
-
-        if (lineTargetNode.has_value())
-        {
-            GUID rightNodeID = currentMapData->AddNode(snappedPos);
-            lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
-            if (commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
-                currentMapData->GetWall(*lastCreatedWallID), snappedPos));
-            lineTargetNode = rightNodeID;
-            return;
-        }
-
-        lineTargetNode = currentMapData->AddNode(snappedPos);
-        if (commandHistory) commandHistory->Push(std::make_unique<PlaceNodeCommand>(*lineTargetNode, snappedPos));
+        PlaceNewNode(GetSnappedWorldPos());
     }
 
     void MapView::HandleHotKeys()
@@ -101,6 +86,140 @@ namespace Editor
             commandHistory->Undo(*currentMapData);
 
         lineTargetNode = lastCreatedWallID = std::nullopt;
+    }
+
+    bool MapView::IsLastDrawPolygonConvex() const
+    {
+        if (!firstNodeID.has_value()) return false;
+
+        auto firstWall = currentMapData->FindWallByNodeID(firstNodeID.value());
+        if (!firstWall.has_value()) return false;
+
+        const EditorWall* currentWall = &firstWall.value().get();
+        int lastCrossSign = 0;
+
+        do
+        {
+            auto nextWall = currentMapData->FindWallByNodeID(currentWall->rightNodeID);
+            if (!nextWall.has_value()) return false;
+
+            const EditorWall& targetWall = nextWall.value().get();
+
+            const EditorNode& nodeA = currentMapData->GetNode(currentWall->leftNodeID);
+            const EditorNode& nodeB = currentMapData->GetNode(currentWall->rightNodeID);
+            const EditorNode& nodeC = currentMapData->GetNode(targetWall.rightNodeID);
+
+            currentWall = &targetWall;
+            float cross = Core::Vector2::Cross(nodeB.pos - nodeA.pos, nodeC.pos - nodeB.pos);
+            if (std::abs(cross) < Core::K_EPSILON) continue;
+
+            int sign = cross > 0 ? 1 : -1;
+
+            if (lastCrossSign != 0 && sign != lastCrossSign) return false;
+            lastCrossSign = sign;
+
+
+        } while (currentWall->leftNodeID != firstNodeID.value());
+
+        return true;
+    }
+
+    void MapView::PlaceNewNode(const Core::Vector2& pos)
+    {
+        std::optional<GUID> overlappingNode = IsPosOveralppingNode(pos);
+
+        if (lineTargetNode.has_value())
+        {
+            GUID rightNodeID = overlappingNode.has_value() ? overlappingNode.value() : currentMapData->AddNode(pos);
+            lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
+
+            if (commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
+                currentMapData->GetWall(*lastCreatedWallID), pos));
+
+            std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
+            if (overlappingWall)
+            {
+                // TODO
+            }
+
+            if (!overlappingNode.has_value())
+            {
+                lineTargetNode = rightNodeID;
+                return;
+            }
+
+            CreateSector();
+            lineTargetNode = std::nullopt;
+            return;
+        }
+
+        if (overlappingNode.has_value()) lineTargetNode = overlappingNode.value();
+        else
+        {
+            std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
+            if (overlappingWall)
+            {
+                // TODO
+                return;
+            }
+
+            lineTargetNode = currentMapData->AddNode(pos);
+            if (commandHistory) commandHistory->Push(std::make_unique<PlaceNodeCommand>(*lineTargetNode, pos));
+        }
+
+        if (!firstNodeID.has_value()) firstNodeID = lineTargetNode;
+    }
+
+    std::optional<GUID> MapView::IsPosOveralppingNode(const Core::Vector2& pos) const
+    {
+        std::optional<GUID> overlappingNode = std::nullopt;
+
+        currentMapData->ForEachNode([&](const EditorNode& node) 
+        {  
+            if (Core::Vector2::Abs(node.pos - pos).Magnitude() >= Core::K_EPSILON) return;
+            overlappingNode = node.nodeID;
+        });
+
+        return std::nullopt;
+    }
+
+    std::optional<GUID> MapView::IsPosOveralppingWall(const Core::Vector2& pos) const
+    {
+        std::optional<GUID> overlappingWall = std::nullopt;
+
+        currentMapData->ForEachWall([&](const EditorWall& wall)
+        {
+            const EditorNode& leftNode = currentMapData->GetNode(wall.leftNodeID);
+            const EditorNode& rightNode = currentMapData->GetNode(wall.rightNodeID);
+
+            Core::Vector2 ab = rightNode.pos - leftNode.pos;
+            Core::Vector2 ap = pos - leftNode.pos;
+
+            float cross = Core::Vector2::Cross(ab, ap);
+            if (std::abs(cross) > Core::K_EPSILON) return;
+
+            float dot = Core::Vector2::Dot(ab, ap);
+            if (dot >= .0f && dot <= 1.f) overlappingWall = wall.wallID;
+        });
+
+        return overlappingWall;
+    }
+
+    GUID MapView::CreateSector()
+    {
+        const DrawingData& drawingData = selectionManager->GetDrawingData();
+
+        std::vector<GUID> sectorWalls = currentMapData->FindSectorWallsByFirstNode(firstNodeID.value());
+
+        EditorSector sector = EditorSector
+        {
+            Core::NULL_ID_32,
+            drawingData.sectorFloorHeight, drawingData.sectorCeilingHeight,
+            drawingData.sectorFloorColor, drawingData.sectorCeilingColor,
+            sectorWalls, Core::Vector2::ZERO, Core::Vector2::ZERO
+        };
+
+        return currentMapData->AddSector(sector);
     }
 
     GUID MapView::CreateWall(GUID leftNodeID, GUID rightNodeID)
@@ -189,66 +308,5 @@ namespace Editor
         auto target = cmd->get().GetRestoredLineTarget();
         if (target.has_value()) lineTargetNode = *target;
         lastCreatedWallID = cmd->get().GetRestoredWallID();
-    }
-
-    GUID MapData::AddNode(const Core::Vector2& pos)
-    {
-        EditorNode newNode = { pos, ++nodeCounter };
-        nodes.emplace(newNode.nodeID, newNode);
-        return newNode.nodeID;
-    }
-
-    GUID MapData::AddWall(EditorWall& wall)
-    {
-        wall.wallID = ++wallCounter;
-        walls.emplace(wall.wallID, wall);
-        return wall.wallID;
-    }
-
-    GUID MapData::AddSector(EditorSector& sector)
-    {
-        sector.sectorID = ++sectorCounter;
-        sectors.emplace(sector.sectorID, sector);
-        return sector.sectorID;
-    }
-
-    void MapData::ForEachNode(const std::function<void(const EditorNode&)>& callback) const
-    {
-        for (const auto& [id, node] : nodes)
-        {
-            if (callback == nullptr) continue;
-            callback(node);
-        }
-    }
-
-    void MapData::ForEachWall(const std::function<void(const EditorWall&)>& callback) const
-    {
-        for (const auto& [id, wall] : walls)
-        {
-            if (callback == nullptr) continue;
-            callback(wall);
-        }
-    }
-
-    void MapData::ForEachSector(const std::function<void(const EditorSector&)>& callback) const
-    {
-        for (const auto& [id, sector] : sectors)
-        {
-            if (callback == nullptr) continue;
-            callback(sector);
-        }
-    }
-
-    void MapData::RefreshWallBoundsForNode(GUID nodeID)
-    {
-        for (auto& [wallID, wall] : walls)
-        {
-            if (wall.leftPoint == nodeID || wall.rightPoint == nodeID)
-            {
-                const EditorNode& leftNode = GetNode(wall.leftPoint);
-                const EditorNode& rightNode = GetNode(wall.rightPoint);
-                wall.UpdateBounds(leftNode.pos, rightNode.pos);
-            }
-        }
     }
 }

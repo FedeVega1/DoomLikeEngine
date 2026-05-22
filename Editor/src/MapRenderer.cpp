@@ -77,7 +77,7 @@ namespace Editor
         for (const GUID& wallID : sector.walls)
         {
             const EditorWall& wall = data.GetWall(wallID);
-            const EditorNode& node = data.GetNode(wall.leftPoint);
+            const EditorNode& node = data.GetNode(wall.leftNodeID);
             sectorPoints.push_back(grid.WorldToScreen(node.pos));
         }
 
@@ -88,8 +88,8 @@ namespace Editor
     {
         if (!IsInViewport(grid.WorldToScreen(wall.min), grid.WorldToScreen(wall.max))) return;
 
-        const EditorNode& leftNode = data.GetNode(wall.leftPoint);
-        const EditorNode& rightNode = data.GetNode(wall.rightPoint);
+        const EditorNode& leftNode = data.GetNode(wall.leftNodeID);
+        const EditorNode& rightNode = data.GetNode(wall.rightNodeID);
 
         ImVec4 color = wall.isPortal ? GetPortalColor(wall.isConnection) : GetWallColor();
         float thickness = wall.isPortal ? GetPortalThickness(wall.isConnection) : GetWallThickness();
