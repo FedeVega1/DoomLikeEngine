@@ -54,7 +54,8 @@ namespace Editor
 
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
 
-        lineTargetNode = lastCreatedWallID = firstNodeID = std::nullopt;
+        pendingSector = std::nullopt;
+        lineTargetNode = lastCreatedWallID = std::nullopt;
         isDrawingLine = firstRender = false;
     }
 
@@ -62,7 +63,8 @@ namespace Editor
     {
         /*sectors = std::move(loadedSectors);*/
         currentMapData = std::make_unique<MapData>(0UL, 0UL, 0UL);
-        lineTargetNode = lastCreatedWallID = firstNodeID = std::nullopt;
+        pendingSector = std::nullopt;
+        lineTargetNode = lastCreatedWallID = std::nullopt;
         isDrawingLine = firstRender = false;
     }
 
@@ -82,17 +84,19 @@ namespace Editor
         const MapEditorHotKeys& hotKeys = ConfigurationManager::INS.GetMapEditorHotKeys();
         if (!hotKeys.cancelAction.IsKeyPressed(false) || !lineTargetNode.has_value()) return;
 
-        if (!lastCreatedWallID.has_value() && commandHistory)
+        bool noWallsDrawn = !pendingSector.has_value() || pendingSector->walls.empty();
+        if (noWallsDrawn && commandHistory)
             commandHistory->Undo(*currentMapData);
 
+        pendingSector = std::nullopt;
         lineTargetNode = lastCreatedWallID = std::nullopt;
     }
 
     bool MapView::IsLastDrawPolygonConvex() const
     {
-        if (!firstNodeID.has_value()) return false;
+        if (!pendingSector.has_value()) return false;
 
-        auto firstWall = currentMapData->FindWallByNodeID(firstNodeID.value());
+        auto firstWall = currentMapData->FindWallByNodeID(pendingSector->firstNodeID);
         if (!firstWall.has_value()) return false;
 
         const EditorWall* currentWall = &firstWall.value().get();
@@ -118,8 +122,7 @@ namespace Editor
             if (lastCrossSign != 0 && sign != lastCrossSign) return false;
             lastCrossSign = sign;
 
-
-        } while (currentWall->leftNodeID != firstNodeID.value());
+        } while (currentWall->leftNodeID != pendingSector->firstNodeID);
 
         return true;
     }
@@ -131,10 +134,20 @@ namespace Editor
         if (lineTargetNode.has_value())
         {
             GUID rightNodeID = overlappingNode.has_value() ? overlappingNode.value() : currentMapData->AddNode(pos);
-            lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
 
-            if (commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
-                currentMapData->GetWall(*lastCreatedWallID), pos));
+            lastCreatedWallID = std::nullopt;
+            auto existingWall = currentMapData->FindWallBetweenNodes(*lineTargetNode, rightNodeID);
+            if (!existingWall.has_value())
+            {
+                lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
+                if (pendingSector.has_value()) pendingSector->walls.push_back(*lastCreatedWallID);
+                if (commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
+                    currentMapData->GetWall(*lastCreatedWallID), pos));
+            }
+            else if (pendingSector.has_value())
+            {
+                pendingSector->walls.push_back(*existingWall);
+            }
 
             std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
             if (overlappingWall)
@@ -142,7 +155,8 @@ namespace Editor
                 // TODO
             }
 
-            if (!overlappingNode.has_value())
+            if (!overlappingNode.has_value() || !pendingSector.has_value()
+                || overlappingNode.value() != pendingSector->firstNodeID)
             {
                 lineTargetNode = rightNodeID;
                 return;
@@ -153,7 +167,10 @@ namespace Editor
             return;
         }
 
-        if (overlappingNode.has_value()) lineTargetNode = overlappingNode.value();
+        if (overlappingNode.has_value())
+        {
+            lineTargetNode = overlappingNode.value();
+        }
         else
         {
             std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
@@ -167,7 +184,8 @@ namespace Editor
             if (commandHistory) commandHistory->Push(std::make_unique<PlaceNodeCommand>(*lineTargetNode, pos));
         }
 
-        if (!firstNodeID.has_value()) firstNodeID = lineTargetNode;
+        if (!pendingSector.has_value())
+            pendingSector = PendingSector{ *lineTargetNode, {} };
     }
 
     std::optional<GUID> MapView::IsPosOveralppingNode(const Core::Vector2& pos) const
@@ -180,7 +198,7 @@ namespace Editor
             overlappingNode = node.nodeID;
         });
 
-        return std::nullopt;
+        return overlappingNode;
     }
 
     std::optional<GUID> MapView::IsPosOveralppingWall(const Core::Vector2& pos) const
@@ -207,18 +225,20 @@ namespace Editor
 
     GUID MapView::CreateSector()
     {
-        const DrawingData& drawingData = selectionManager->GetDrawingData();
+        if (!pendingSector.has_value() || pendingSector->walls.size() < 3)
+            return Core::NULL_ID_32;
 
-        std::vector<GUID> sectorWalls = currentMapData->FindSectorWallsByFirstNode(firstNodeID.value());
+        const DrawingData& drawingData = selectionManager->GetDrawingData();
 
         EditorSector sector = EditorSector
         {
             Core::NULL_ID_32,
             drawingData.sectorFloorHeight, drawingData.sectorCeilingHeight,
             drawingData.sectorFloorColor, drawingData.sectorCeilingColor,
-            sectorWalls, Core::Vector2::ZERO, Core::Vector2::ZERO
+            pendingSector->walls, Core::Vector2::ZERO, Core::Vector2::ZERO
         };
 
+        pendingSector = std::nullopt;
         return currentMapData->AddSector(sector);
     }
 
@@ -293,20 +313,33 @@ namespace Editor
             {
                 lineTargetNode = *target;
                 lastCreatedWallID = std::nullopt;
+                if (pendingSector.has_value() && !pendingSector->walls.empty())
+                    pendingSector->walls.pop_back();
                 return;
             }
         }
 
         if (!lineTargetNode.has_value()) return;
         if (!currentMapData->HasNode(*lineTargetNode))
+        {
             lineTargetNode = lastCreatedWallID = std::nullopt;
+            pendingSector = std::nullopt;
+        }
     }
 
     void MapView::SyncAfterRedo(std::optional<std::reference_wrapper<const IEditorCommand>> cmd)
     {
         if (!isDrawingLine || !cmd.has_value()) return;
+
         auto target = cmd->get().GetRestoredLineTarget();
+        auto restoredWall = cmd->get().GetRestoredWallID();
+
         if (target.has_value()) lineTargetNode = *target;
-        lastCreatedWallID = cmd->get().GetRestoredWallID();
+        lastCreatedWallID = restoredWall;
+
+        if (!pendingSector.has_value() && target.has_value() && !restoredWall.has_value())
+            pendingSector = PendingSector{ *target, {} };
+        else if (pendingSector.has_value() && restoredWall.has_value())
+            pendingSector->walls.push_back(*restoredWall);
     }
 }

@@ -45,6 +45,12 @@ namespace Editor
         }
     };
 
+    struct PendingSector
+    {
+        GUID firstNodeID;
+        std::vector<GUID> walls;
+    };
+
     enum class SelectableType { Node, Wall, Sector, Entity };
 
     struct SelectedItem
@@ -71,8 +77,7 @@ namespace Editor
         const EditorSector& GetSector(GUID id) const { return sectors.at(id); }
 
         std::optional<std::reference_wrapper<const EditorWall>> FindWallByNodeID(GUID id) const;
-
-        std::vector<GUID> FindSectorWalls() const;
+        std::optional<GUID> FindWallBetweenNodes(GUID nodeA, GUID nodeB) const;
 
         GUID AddNode(const Core::Vector2& pos);
         GUID AddWall(EditorWall& wall);
@@ -83,14 +88,14 @@ namespace Editor
         void ForEachSector(const std::function<void(const EditorSector&)>& callback) const;
 
         void RemoveNode(GUID id) { nodes.erase(id); }
-        void RemoveWall(GUID id) { walls.erase(id); }
-        void RemoveSector(GUID id) { sectors.erase(id); }
+        void RemoveWall(GUID id);
+        void RemoveSector(GUID id);
 
         bool HasNode(GUID id) const { return nodes.count(id) > 0; }
 
         void ReinsertNode(const EditorNode& node) { nodes.emplace(node.nodeID, node); }
-        void ReinsertWall(const EditorWall& wall) { walls.emplace(wall.wallID, wall); }
-        void ReinsertSector(const EditorSector& sect) { sectors.emplace(sect.sectorID, sect); }
+        void ReinsertWall(const EditorWall& wall);
+        void ReinsertSector(const EditorSector& sect);
 
         std::vector<GUID> FindSectorWallsByFirstNode(GUID nodeID) const;
         void RefreshWallBoundsForNode(GUID nodeID);
@@ -99,6 +104,9 @@ namespace Editor
         std::unordered_map<GUID, EditorNode> nodes;
         std::unordered_map<GUID, EditorWall> walls;
         std::unordered_map<GUID, EditorSector> sectors;
+
+        std::unordered_map<GUID, std::vector<GUID>> wallAdjacency;
+        std::unordered_set<GUID> usedWalls;
 
         GUID nodeCounter, wallCounter, sectorCounter;
     };

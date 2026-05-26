@@ -71,14 +71,16 @@ namespace Editor
 
     void MapRenderer::DrawSector(ImDrawList* drawList, const EditorSector& sector, const MapData& data)
     {
-        if (!IsInViewport(grid.WorldToScreen(sector.min), grid.WorldToScreen(sector.max))) return;
+        if (sector.walls.empty() || !IsInViewport(grid.WorldToScreen(sector.min), grid.WorldToScreen(sector.max))) return;
 
         std::vector<ImVec2> sectorPoints;
+        GUID currentNode = data.GetWall(sector.walls[0]).leftNodeID;
+
         for (const GUID& wallID : sector.walls)
         {
             const EditorWall& wall = data.GetWall(wallID);
-            const EditorNode& node = data.GetNode(wall.leftNodeID);
-            sectorPoints.push_back(grid.WorldToScreen(node.pos));
+            sectorPoints.push_back(grid.WorldToScreen(data.GetNode(currentNode).pos));
+            currentNode = (wall.leftNodeID == currentNode) ? wall.rightNodeID : wall.leftNodeID;
         }
 
         drawList->AddConvexPolyFilled(sectorPoints.data(), sectorPoints.size(), ImGui::GetColorU32(GetSectorColor()));

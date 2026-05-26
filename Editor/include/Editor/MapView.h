@@ -26,7 +26,7 @@ namespace Editor
 
         float GetCurrentZoom() const { return grid->GetCurrentZoom(); }
         int GetCurrentGridSize() const { return grid->GetCurrentGridSize(); }
-        void ToggleLineDrawMode(bool toggle) { isDrawingLine = toggle; }
+        void ToggleLineDrawMode(bool toggle) { isDrawingLine = toggle; if (!toggle) pendingSector = std::nullopt; }
 
         void SetCommandHistory(CommandHistory* history) { commandHistory = history; }
         void SetSelectionManager(SelectionManager* selection) { selectionManager = selection; }
@@ -70,7 +70,8 @@ namespace Editor
 
         bool firstRender, isDrawingLine, isHoveringWindow;
         float zoom = 1.f, cursorTime;
-        std::optional<GUID> lineTargetNode, lastCreatedWallID, firstNodeID;
+        std::optional<GUID> lineTargetNode, lastCreatedWallID;
+        std::optional<PendingSector> pendingSector;
         Core::Vector2 mapMaxSize;
     };
 }
