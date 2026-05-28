@@ -127,50 +127,114 @@ namespace Editor
         return true;
     }
 
+    bool MapView::IsPosInsidePendingSectorWall(const Core::Vector2& pos) const
+    {
+        if (!pendingSector.has_value()) return false;
+
+        for (GUID wallID : pendingSector->walls)
+        {
+            const EditorWall& wall = currentMapData->GetWall(wallID);
+            const EditorNode& leftNode = currentMapData->GetNode(wall.leftNodeID);
+            const EditorNode& rightNode = currentMapData->GetNode(wall.rightNodeID);
+
+            if (Core::Vector2::IsPointInsideSegment(pos, leftNode.pos, rightNode.pos))
+                return true;
+        }
+
+        return false;
+    }
+
+    bool MapView::IsPendingSectorInteriorNode(GUID nodeID) const
+    {
+        if (!pendingSector.has_value()) return false;
+
+        for (GUID wallID : pendingSector->walls)
+        {
+            const EditorWall& wall = currentMapData->GetWall(wallID);
+            if (wall.leftNodeID == nodeID || wall.rightNodeID == nodeID)
+                return true;
+        }
+
+        return false;
+    }
+
+    bool MapView::DoesNewWallCrossPendingSectorWalls(const Core::Vector2& from, const Core::Vector2& to) const
+    {
+        if (!pendingSector.has_value()) return false;
+
+        for (GUID wallID : pendingSector->walls)
+        {
+            const EditorWall& wall = currentMapData->GetWall(wallID);
+            const EditorNode& leftNode = currentMapData->GetNode(wall.leftNodeID);
+            const EditorNode& rightNode = currentMapData->GetNode(wall.rightNodeID);
+
+            if (Core::Vector2::DoSegmentsIntersect(from, to, leftNode.pos, rightNode.pos))
+                return true;
+        }
+
+        return false;
+    }
+
     void MapView::PlaceNewNode(const Core::Vector2& pos)
     {
         std::optional<GUID> overlappingNode = IsPosOveralppingNode(pos);
 
         if (lineTargetNode.has_value())
         {
-            GUID rightNodeID = overlappingNode.has_value() ? overlappingNode.value() : currentMapData->AddNode(pos);
-
-            lastCreatedWallID = std::nullopt;
-            auto existingWall = currentMapData->FindWallBetweenNodes(*lineTargetNode, rightNodeID);
-            bool isClosingSector = overlappingNode.has_value() && pendingSector.has_value()
-                && overlappingNode.value() == pendingSector->firstNodeID;
-
-            if (!existingWall.has_value())
-            {
-                lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
-                if (pendingSector.has_value()) pendingSector->walls.push_back(*lastCreatedWallID);
-                if (!isClosingSector && commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
-                    currentMapData->GetWall(*lastCreatedWallID), pos, !overlappingNode.has_value()));
-            }
-            else if (pendingSector.has_value())
-            {
-                pendingSector->walls.push_back(*existingWall);
-            }
-
-            std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
-            if (overlappingWall)
-            {
-                OLOG_L("A");
-                // TODO
-            }
-
-            if (!isClosingSector)
-            {
-                lineTargetNode = rightNodeID;
-                return;
-            }
-
-            GUID prevLineTarget = *lineTargetNode;
-            CreateSector(prevLineTarget);
-            lineTargetNode = std::nullopt;
+            if (!ValidateWallPlacement(pos, overlappingNode)) return;
+            ExtendLine(pos, overlappingNode);
             return;
         }
 
+        StartLine(pos, overlappingNode);
+    }
+
+    bool MapView::ValidateWallPlacement(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode) const
+    {
+        if (IsPosInsidePendingSectorWall(pos)) return false;
+
+        bool isInteriorNode = overlappingNode.has_value() && pendingSector.has_value()
+            && overlappingNode.value() != pendingSector->firstNodeID && IsPendingSectorInteriorNode(overlappingNode.value());
+        if (isInteriorNode) return false;
+
+        const Core::Vector2& fromPos = currentMapData->GetNode(*lineTargetNode).pos;
+        if (DoesNewWallCrossPendingSectorWalls(fromPos, pos)) return false;
+
+        return true;
+    }
+
+    void MapView::ExtendLine(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode)
+    {
+        GUID rightNodeID = overlappingNode.has_value() ? overlappingNode.value() : currentMapData->AddNode(pos);
+
+        lastCreatedWallID = std::nullopt;
+        auto existingWall = currentMapData->FindWallBetweenNodes(*lineTargetNode, rightNodeID);
+        bool isClosingSector = overlappingNode.has_value() && pendingSector.has_value()
+            && overlappingNode.value() == pendingSector->firstNodeID && pendingSector->walls.size() >= 2;
+
+        if (!existingWall.has_value())
+        {
+            lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
+            if (pendingSector.has_value()) pendingSector->walls.push_back(*lastCreatedWallID);
+            if (!isClosingSector && commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
+                currentMapData->GetWall(*lastCreatedWallID), pos, !overlappingNode.has_value()));
+        }
+        else if (pendingSector.has_value())
+            pendingSector->walls.push_back(*existingWall);
+
+        if (!isClosingSector)
+        {
+            lineTargetNode = rightNodeID;
+            return;
+        }
+
+        GUID prevLineTarget = *lineTargetNode;
+        CreateSector(prevLineTarget);
+        lineTargetNode = std::nullopt;
+    }
+
+    void MapView::StartLine(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode)
+    {
         if (overlappingNode.has_value())
         {
             lineTargetNode = overlappingNode.value();
@@ -213,15 +277,8 @@ namespace Editor
         {
             const EditorNode& leftNode = currentMapData->GetNode(wall.leftNodeID);
             const EditorNode& rightNode = currentMapData->GetNode(wall.rightNodeID);
-
-            Core::Vector2 ab = rightNode.pos - leftNode.pos;
-            Core::Vector2 ap = pos - leftNode.pos;
-
-            float cross = Core::Vector2::Cross(ab, ap);
-            if (std::abs(cross) > Core::K_EPSILON) return;
-
-            float dot = Core::Vector2::Dot(ab, ap);
-            if (dot >= .0f && dot <= 1.f) overlappingWall = wall.wallID;
+            if (Core::Vector2::IsPointOnSegment(pos, leftNode.pos, rightNode.pos))
+                overlappingWall = wall.wallID;
         });
 
         return overlappingWall;
@@ -230,7 +287,10 @@ namespace Editor
     GUID MapView::CreateSector(GUID lastLineTarget)
     {
         if (!pendingSector.has_value() || pendingSector->walls.size() < 3)
+        {
+            pendingSector = std::nullopt;
             return Core::NULL_ID_32;
+        }
 
         const DrawingData& drawingData = selectionManager->GetDrawingData();
         EditorWall closingWall = currentMapData->GetWall(pendingSector->walls.back());

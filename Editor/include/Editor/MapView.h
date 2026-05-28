@@ -45,9 +45,15 @@ namespace Editor
         GUID CreateSector(GUID lastLineTarget);
 
         void PlaceNewNode(const Core::Vector2& pos);
+        bool ValidateWallPlacement(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode) const;
+        void ExtendLine(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode);
+        void StartLine(const Core::Vector2& pos, const std::optional<GUID>& overlappingNode);
 
         std::optional<GUID> IsPosOveralppingNode(const Core::Vector2& pos) const;
         std::optional<GUID> IsPosOveralppingWall(const Core::Vector2& pos) const;
+        bool IsPosInsidePendingSectorWall(const Core::Vector2& pos) const;
+        bool IsPendingSectorInteriorNode(GUID nodeID) const;
+        bool DoesNewWallCrossPendingSectorWalls(const Core::Vector2& from, const Core::Vector2& to) const;
 
         bool IsLastDrawPolygonConvex() const;
 

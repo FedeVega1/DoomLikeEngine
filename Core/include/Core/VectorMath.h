@@ -70,6 +70,10 @@ namespace Core
         static Vector2 Clamp(const Vector2& vector, const float& min, const float& max);
         static Vector2 Abs(const Vector2& vector);
 
+        static bool IsPointOnSegment(const Vector2& point, const Vector2& segA, const Vector2& segB);
+        static bool IsPointInsideSegment(const Vector2& point, const Vector2& segA, const Vector2& segB);
+        static bool DoSegmentsIntersect(const Vector2& p1, const Vector2& p2, const Vector2& q1, const Vector2& q2);
+
         static const Vector2 ZERO;
         static const Vector2 ONE;
         static const Vector2 LEFT;
@@ -112,6 +116,10 @@ namespace Core
         static float Distance(const Vector3& a, const Vector3& b);
         static Vector3 Clamp(const Vector3& value, const Vector3& min, const Vector3& max);
         static Vector3 Clamp(const Vector3& vector, const float& min, const float& max);
+
+        static bool IsPointOnSegment(const Vector3& point, const Vector3& segA, const Vector3& segB);
+        static bool IsPointInsideSegment(const Vector3& point, const Vector3& segA, const Vector3& segB);
+        static bool DoSegmentsIntersect(const Vector3& p1, const Vector3& p2, const Vector3& q1, const Vector3& q2);
 
         static const Vector3 ZERO;
         static const Vector3 ONE;
