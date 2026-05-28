@@ -133,15 +133,24 @@ namespace Editor
 
         return std::nullopt;
     }
+}
 
-    std::vector<GUID> MapData::FindSectorWallsByFirstNode(GUID nodeID) const
+namespace
+{
+    using namespace Editor;
+
+    struct SectorWallTraverser
     {
-        GUID currentNode = nodeID;
+        const std::unordered_map<GUID, EditorWall>& walls;
+        const std::unordered_map<GUID, EditorNode>& nodes;
+        const std::unordered_set<GUID>& usedWalls;
+
+        GUID currentNode;
         GUID previousNode = Core::NULL_ID_32;
         std::vector<GUID> result;
         std::unordered_set<GUID> visitedWalls;
 
-        auto getBestWall = [&](const std::vector<GUID>& candidates, bool newOnly) -> GUID
+        GUID GetBestWall(const std::vector<GUID>& candidates, bool newOnly) const
         {
             if (previousNode == Core::NULL_ID_32)
             {
@@ -151,65 +160,70 @@ namespace Editor
                     if (newOnly && usedWalls.count(wallID)) continue;
                     return wallID;
                 }
+
                 return Core::NULL_ID_32;
             }
 
             const Core::Vector2& currPos = nodes.at(currentNode).pos;
-            const Core::Vector2& prevPos = nodes.at(previousNode).pos;
-            float incomingAngle = std::atan2(prevPos.y - currPos.y, prevPos.x - currPos.x);
+            Core::Vector2 diff = nodes.at(previousNode).pos - currPos;
+            float incomingAngle = std::atan2(diff.y, diff.x);
 
             GUID bestWall = Core::NULL_ID_32;
             float bestRotation = std::numeric_limits<float>::max();
 
             for (GUID wallID : candidates)
             {
-                if (visitedWalls.count(wallID)) continue;
-                if (newOnly && usedWalls.count(wallID)) continue;
+                if (visitedWalls.count(wallID) || (newOnly && usedWalls.count(wallID))) continue;
 
                 const EditorWall& wall = walls.at(wallID);
                 GUID nextNode = (wall.leftNodeID == currentNode) ? wall.rightNodeID : wall.leftNodeID;
-                const Core::Vector2& nextPos = nodes.at(nextNode).pos;
 
-                float wallAngle = std::atan2(nextPos.y - currPos.y, nextPos.x - currPos.x);
+                diff = nodes.at(nextNode).pos - currPos;
+                float wallAngle = std::atan2(diff.y, diff.x);
+
                 float rotation = wallAngle - incomingAngle;
-                if (rotation <= 0.f) rotation += 6.28318530f;
+                if (rotation <= 0.f) rotation += std::numbers::pi_v<float> * 2.f;
 
-                if (rotation < bestRotation)
-                {
-                    bestRotation = rotation;
-                    bestWall = wallID;
-                }
+                if (rotation >= bestRotation) continue;
+                bestRotation = rotation;
+                bestWall = wallID;
             }
 
             return bestWall;
-        };
+        }
 
-        auto advance = [&](GUID wallID)
+        void Advance(GUID wallID)
         {
             const EditorWall& wall = walls.at(wallID);
             result.push_back(wallID);
             visitedWalls.insert(wallID);
             previousNode = currentNode;
             currentNode = (wall.leftNodeID == currentNode) ? wall.rightNodeID : wall.leftNodeID;
-        };
+        }
+    };
+}
+
+namespace Editor
+{
+    std::vector<GUID> MapData::FindSectorWallsByFirstNode(GUID nodeID) const
+    {
+        SectorWallTraverser traverser = SectorWallTraverser{ walls, nodes, usedWalls, nodeID };
 
         do
         {
-            auto adjIt = wallAdjacency.find(currentNode);
+            auto adjIt = wallAdjacency.find(traverser.currentNode);
             if (adjIt == wallAdjacency.end()) break;
 
             const std::vector<GUID>& candidates = adjIt->second;
 
-            GUID next = getBestWall(candidates, true);
-            if (next == Core::NULL_ID_32)
-                next = getBestWall(candidates, false);
+            GUID next = traverser.GetBestWall(candidates, true);
+            if (next == Core::NULL_ID_32 && (next = traverser.GetBestWall(candidates, false)) == Core::NULL_ID_32)
+                break;
 
-            if (next == Core::NULL_ID_32) break;
+            traverser.Advance(next);
 
-            advance(next);
+        } while (traverser.currentNode != nodeID);
 
-        } while (currentNode != nodeID);
-
-        return result;
+        return traverser.result;
     }
 }

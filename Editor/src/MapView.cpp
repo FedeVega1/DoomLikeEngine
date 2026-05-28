@@ -137,12 +137,15 @@ namespace Editor
 
             lastCreatedWallID = std::nullopt;
             auto existingWall = currentMapData->FindWallBetweenNodes(*lineTargetNode, rightNodeID);
+            bool isClosingSector = overlappingNode.has_value() && pendingSector.has_value()
+                && overlappingNode.value() == pendingSector->firstNodeID;
+
             if (!existingWall.has_value())
             {
                 lastCreatedWallID = CreateWall(*lineTargetNode, rightNodeID);
                 if (pendingSector.has_value()) pendingSector->walls.push_back(*lastCreatedWallID);
-                if (commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
-                    currentMapData->GetWall(*lastCreatedWallID), pos));
+                if (!isClosingSector && commandHistory) commandHistory->Push(std::make_unique<PlaceLineSegmentCommand>(
+                    currentMapData->GetWall(*lastCreatedWallID), pos, !overlappingNode.has_value()));
             }
             else if (pendingSector.has_value())
             {
@@ -152,17 +155,18 @@ namespace Editor
             std::optional<GUID> overlappingWall = IsPosOveralppingWall(pos);
             if (overlappingWall)
             {
+                OLOG_L("A");
                 // TODO
             }
 
-            if (!overlappingNode.has_value() || !pendingSector.has_value()
-                || overlappingNode.value() != pendingSector->firstNodeID)
+            if (!isClosingSector)
             {
                 lineTargetNode = rightNodeID;
                 return;
             }
 
-            CreateSector();
+            GUID prevLineTarget = *lineTargetNode;
+            CreateSector(prevLineTarget);
             lineTargetNode = std::nullopt;
             return;
         }
@@ -223,23 +227,28 @@ namespace Editor
         return overlappingWall;
     }
 
-    GUID MapView::CreateSector()
+    GUID MapView::CreateSector(GUID lastLineTarget)
     {
         if (!pendingSector.has_value() || pendingSector->walls.size() < 3)
             return Core::NULL_ID_32;
 
         const DrawingData& drawingData = selectionManager->GetDrawingData();
+        EditorWall closingWall = currentMapData->GetWall(pendingSector->walls.back());
+        GUID firstNodeID = pendingSector->firstNodeID;
 
         EditorSector sector = EditorSector
         {
             Core::NULL_ID_32,
+            firstNodeID,
             drawingData.sectorFloorHeight, drawingData.sectorCeilingHeight,
             drawingData.sectorFloorColor, drawingData.sectorCeilingColor,
             pendingSector->walls, Core::Vector2::ZERO, Core::Vector2::ZERO
         };
 
         pendingSector = std::nullopt;
-        return currentMapData->AddSector(sector);
+        currentMapData->AddSector(sector);
+        if (commandHistory) commandHistory->Push(std::make_unique<CreateSectorCommand>(sector, closingWall, lastLineTarget, firstNodeID));
+        return sector.sectorID;
     }
 
     GUID MapView::CreateWall(GUID leftNodeID, GUID rightNodeID)
@@ -315,6 +324,15 @@ namespace Editor
                 lastCreatedWallID = std::nullopt;
                 if (pendingSector.has_value() && !pendingSector->walls.empty())
                     pendingSector->walls.pop_back();
+
+                const auto* createCmd = dynamic_cast<const CreateSectorCommand*>(&cmd->get());
+                if (createCmd)
+                {
+                    const auto& walls = createCmd->sector.walls;
+                    pendingSector = PendingSector{ createCmd->firstNodeID,
+                        std::vector<GUID>(walls.begin(), walls.end() - 1) };
+                }
+
                 return;
             }
         }

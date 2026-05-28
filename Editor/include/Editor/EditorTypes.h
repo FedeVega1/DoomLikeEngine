@@ -27,6 +27,7 @@ namespace Editor
     struct EditorSector
     {
         GUID sectorID = Core::NULL_ID_32;
+        GUID firstNodeID = Core::NULL_ID_32;
         float floorHeight = 0.f, ceilingHeight = 128.f;
         Core::Color floorColor, ceilingColor;
         std::vector<GUID> walls;

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <numeric>
 #include <optional>
 
 #include "Core/VectorMath.h"

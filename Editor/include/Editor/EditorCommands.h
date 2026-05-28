@@ -24,8 +24,10 @@ namespace Editor
 	{
 		EditorWall wall;
 		Core::Vector2 rightNodePos;
+		bool rightNodeIsNew;
 
-		PlaceLineSegmentCommand(const EditorWall& w, const Core::Vector2& pos) : wall(w), rightNodePos(pos) {}
+		PlaceLineSegmentCommand(const EditorWall& w, const Core::Vector2& pos, bool nodeIsNew)
+			: wall(w), rightNodePos(pos), rightNodeIsNew(nodeIsNew) {}
 
 		void Execute(MapData& map) override;
 		void Undo(MapData& map) override;
@@ -33,6 +35,22 @@ namespace Editor
 		std::optional<GUID> GetRestoredLineTarget() const override { return wall.rightNodeID; }
 		std::optional<GUID> GetRestoredUndoTarget() const override { return wall.leftNodeID; }
 		std::optional<GUID> GetRestoredWallID() const override { return wall.wallID; }
+	};
+
+	struct CreateSectorCommand : IEditorCommand
+	{
+		EditorSector sector;
+		EditorWall closingWall;
+		GUID lastLineTarget;
+		GUID firstNodeID;
+
+		CreateSectorCommand(const EditorSector& s, const EditorWall& closing, GUID lastTarget, GUID firstNode)
+			: sector(s), closingWall(closing), lastLineTarget(lastTarget), firstNodeID(firstNode) {}
+
+		void Execute(MapData& map) override { map.ReinsertWall(closingWall); map.ReinsertSector(sector); }
+		void Undo(MapData& map) override { map.RemoveSector(sector.sectorID); map.RemoveWall(closingWall.wallID); }
+		std::string GetDescription() const override { return "Create Sector"; }
+		std::optional<GUID> GetRestoredUndoTarget() const override { return lastLineTarget; }
 	};
 
 	// Sector property changes

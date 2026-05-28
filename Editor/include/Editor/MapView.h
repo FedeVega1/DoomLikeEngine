@@ -42,7 +42,7 @@ namespace Editor
         void DrawPreviewLine();
 
         GUID CreateWall(GUID leftNodeID, GUID rightNodeID);
-        GUID CreateSector();
+        GUID CreateSector(GUID lastLineTarget);
 
         void PlaceNewNode(const Core::Vector2& pos);
 
