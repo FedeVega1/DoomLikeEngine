@@ -1,9 +1,9 @@
 #pragma once
 
-typedef uint32_t GUID;
-
 namespace Core
 {
+    typedef uint32_t GUID;
+
     inline constexpr uint64_t NULL_ID_64 = 0xFFFFFFFFFFFFFFFFULL;
     inline constexpr GUID NULL_ID_32 = 0xFFFFFFFFU;
 

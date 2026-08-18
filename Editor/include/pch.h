@@ -19,6 +19,8 @@
 
 #include "imconfig.h"
 
+using namespace Core;
+
 namespace Editor
 {
 	inline constexpr int DEFAULT_WINDOW_WIDTH = 1280;
