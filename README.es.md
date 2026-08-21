@@ -4,7 +4,7 @@
 [![Lenguaje](https://img.shields.io/badge/lenguaje-C%2B%2B20-00599C?logo=cplusplus&logoColor=white)](#stack-tecnológico)
 [![Build](https://img.shields.io/badge/build-CMake%20%2B%20VS2022-064F8C?logo=cmake&logoColor=white)](#compilación)
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)](#estado-del-proyecto)
-[![Licencia](https://img.shields.io/badge/licencia-sin%20especificar-lightgrey)](#licencia)
+[![Licencia](https://img.shields.io/badge/licencia-MIT-blue)](#licencia)
 
 **Leer en otros idiomas:** [English](README.md)
 
@@ -15,6 +15,7 @@ El objetivo es reproducir el clásico enfoque de renderizado por sectores/portal
 
 ## Tabla de contenidos
 
+- [Demo](#demo)
 - [Resumen](#resumen)
 - [Características](#características)
 - [Estructura del proyecto](#estructura-del-proyecto)
@@ -27,6 +28,18 @@ El objetivo es reproducir el clásico enfoque de renderizado por sectores/portal
 - [Contribuir](#contribuir)
 - [Licencia](#licencia)
 - [Agradecimientos](#agradecimientos)
+
+---
+
+## Demo
+
+**Vista previa del estado actual**
+
+![Vista previa](docs/media/gameplay.gif)
+
+**Renderizado paso a paso** — una vista acelerada de cómo el motor renderiza cada píxel.
+
+![Renderizado por píxel](docs/media/pixel-rendering.gif)
 
 ---
 
@@ -142,15 +155,28 @@ Este es un proyecto hobby en constante evolución — es esperable encontrar ari
 
 ## Hoja de ruta
 
+# Motor
+
 - [ ] Pulir el renderizado de paredes/piso/techo con texturas
-- [ ] Triangulación de sectores más robusta y mejor manejo de autointersecciones
 - [ ] Sistemas de entidades/gameplay más allá de los componentes básicos
+- [ ] Renderizado de sprites para objetos
+- [ ] Menú principal y HUD
+- [ ] Selección de nivel, eliminar la carga de mapa codificada
+
+# Editor
+
+- [ ] Triangulación de sectores más robusta y mejor manejo de autointersecciones
 - [ ] Retirar o reemplazar por completo el `LevelEditor` heredado
 - [ ] Tests automatizados para la matemática de `Core` y la compilación de BSP
+- [ ] Colocación de entidades
 
 ## Contribuir
 
 Este es actualmente un proyecto personal/individual y no está preparado para contribuciones externas, pero issues, sugerencias y forks son bienvenidos.
+
+## Licencia
+
+Este proyecto está licenciado bajo la [Licencia MIT](LICENSE).
 
 ## Agradecimientos
 

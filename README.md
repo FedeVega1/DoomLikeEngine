@@ -4,7 +4,7 @@
 [![Language](https://img.shields.io/badge/language-C%2B%2B20-00599C?logo=cplusplus&logoColor=white)](#tech-stack)
 [![Build](https://img.shields.io/badge/build-CMake%20%2B%20VS2022-064F8C?logo=cmake&logoColor=white)](#building)
 [![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)](#project-status)
-[![License](https://img.shields.io/badge/license-unspecified-lightgrey)](#license)
+[![License](https://img.shields.io/badge/license-MIT-blue)](#license)
 
 **Read this in other languages:** [Español](README.es.md)
 
@@ -15,6 +15,7 @@ The goal is to reproduce the classic sector/portal rendering approach of id Soft
 
 ## Table of Contents
 
+- [Demo](#demo)
 - [Overview](#overview)
 - [Features](#features)
 - [Project Structure](#project-structure)
@@ -27,6 +28,18 @@ The goal is to reproduce the classic sector/portal rendering approach of id Soft
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
+
+---
+
+## Demo
+
+**Current Working Preview**
+
+![Preview](docs/media/gameplay.gif)
+
+**Step by Step Rendering** — a sped-up look at how each pixel is rendered by the engine.
+
+![Pixel rendering](docs/media/pixel-rendering.gif)
 
 ---
 
@@ -142,15 +155,28 @@ This is an actively evolving hobby project — expect rough edges, especially ar
 
 ## Roadmap
 
+# Engine
+
 - [ ] Texture-mapped wall/floor/ceiling rendering polish
-- [ ] More robust sector triangulation & self-intersection handling
 - [ ] Entity/gameplay systems beyond basic components
+- [ ] Sprite rendering for objects
+- [ ] Main menu and HUD
+- [ ] Level Selection, remove hardcoded map load
+
+# Editor
+
+- [ ] More robust sector triangulation & self-intersection handling
 - [ ] Retire or fully replace the legacy `LevelEditor`
 - [ ] Automated tests for `Core` math and BSP compilation
+- [ ] Entity placement
 
 ## Contributing
 
 This is currently a personal/solo project and not set up for external contributions, but issues, suggestions and forks are welcome.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
